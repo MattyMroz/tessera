@@ -40,11 +40,6 @@ repos:
       # Work happens on branches in .worktrees/; main only receives merges.
       - id: no-commit-to-branch
 
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
-    hooks:
-      - id: text-unicode-replacement-char
-
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:
@@ -67,8 +62,10 @@ repos:
           - revert
 
   - repo: https://github.com/MattyMroz/agents
-    rev: hooks-v1.1.0
+    rev: hooks-v1.2.0
     hooks:
+      # U+FFFD is what a botched encoding leaves behind.
+      - id: no-replacement-char
       - id: commit-validation
       # Tests carry no comments or docstrings; it covers TypeScript as well as Python.
       - id: no-test-prose
