@@ -18,7 +18,7 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 
 - IMPORTANT: commit i push tylko na wyraźne słowo właściciela. Subagenci nie wykonują żadnych komend git.
 - `main` dostaje tylko squash merge PR (hook `no-commit-to-branch`). Praca na branchach w worktree `.worktrees/<nazwa>`. Tytuł PR = nagłówek commita, opis PR = streszczenie i blok `Validation:` (ustawienie repo: domyślna wiadomość squash = tytuł i opis PR).
-- Commit: `type(scope): description`, scope obowiązkowy z zamkniętej listy `--scopes` w `.pre-commit-config.yaml`; pod nagłówkiem streszczenie i blok `Validation:` z kontrolami faktycznie uruchomionymi przez `mm-validate` (hook `commit-validation`; instalacja `uv tool install git+https://github.com/MattyMroz/agents@hooks-v1.3.1`). Format: `presets/hooks/references/commit-message.md` w repo MattyMroz/agents. Zero śladów AI w commitach i PR.
+- Commit: `type(scope): description`, scope obowiązkowy z zamkniętej listy `--scopes` w `.pre-commit-config.yaml`; pod nagłówkiem streszczenie i blok `Validation:` z kontrolami faktycznie uruchomionymi przez `mm-validate` (hook `commit-validation`; instalacja `uv tool install git+https://github.com/MattyMroz/agents@hooks-v1.3.2`). Format: `presets/hooks/references/commit-message.md` w repo MattyMroz/agents. Zero śladów AI w commitach i PR.
 - Kod etapu nie powstaje bez kontraktu w `docs/plans/` zaakceptowanego przez właściciela.
 - Status przed oceną właściciela na żywo, w kompozycji, to najwyżej „gotowe do oceny”.
 - Zero legacy: bez warstw zgodności z v1/v2, aliasów starych nazw i słowa `legacy` w kodzie. Kod przenoszony z v2 przepisuj na model v3.
