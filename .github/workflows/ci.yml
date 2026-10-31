@@ -1,0 +1,103 @@
+name: CI
+
+# One trigger and one job: every job is billed as at least a full minute.
+# Work lands on main through a squash-merged PR, so branches run too: the run
+# on a branch head is the status its PR shows. Before a push, the pre-push
+# hooks run the same gates as `bun run check`.
+on: push
+
+permissions:
+  contents: read
+
+# No cancelling: a cancelled run would leave the commits of its push unchecked.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Full history brings the range of pushed commits.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # One source of the bun version: packageManager in package.json.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # Typecheck, lint, build, then bunx vitest run: the pre-push gates.
+      - name: Check
+        run: bun run check
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      # The hook package pinned in .pre-commit-config.yaml (commit-validation).
+      - name: Install prek and commit-validation
+        run: pip install --quiet prek==0.5.4 "mattymroz-hooks @ git+https://github.com/MattyMroz/agents@hooks-v1.1.0"
+
+      # The commit hooks again, because --no-verify and edits on GitHub skip them locally.
+      # no-commit-to-branch guards local commits only; CI checks the result, not where it was made.
+      - name: Hooks
+        env:
+          SKIP: no-commit-to-branch
+        run: prek run --all-files
+
+      # Main only: GitHub writes the squash commit from the PR title and
+      # description, so no local commit-msg hook ever sees it, and branch
+      # commits vanish in the squash.
+      # Header and body shape only: the records that bind results to trees
+      # live in the author's .git, not here. Catches --no-verify, revert and
+      # cherry-pick, which skip the local commit-msg hook. Fails closed when
+      # the range cannot be built (force-push past a gone commit): checking
+      # one commit there would pass the rest unchecked. The squash message is
+      # the PR title and description only with the repository setting
+      # "Default commit message: Pull request title and description".
+      - name: Check every pushed commit
+        if: github.ref == 'refs/heads/main'
+        env:
+          # Via env, never inlined into run: — event data is untrusted input.
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+        run: |
+          range="$PUSH_BEFORE..$PUSH_AFTER"
+          # All zeros: GitHub's "before" of the first push of main, so every commit it brings is new.
+          case "$PUSH_BEFORE" in *[!0]*) ;; *) range="$PUSH_AFTER" ;; esac
+          for rev in ${range/../ }; do
+            git cat-file -e "$rev^{commit}" 2>/dev/null && continue
+            echo "::error::cannot build the commit range $range: '$rev' is no commit in this clone" \
+              "(force-push past a gone commit). Check the new commits locally with" \
+              "commit-validation --shape-only, then re-run on a later push."
+            exit 1
+          done
+          if ! shas=$(git log --no-merges --format=%H "$range"); then
+            echo "::error::git log $range failed; no commit was checked"
+            exit 1
+          fi
+          failed=0
+          for sha in $shas; do
+            author=$(git log -1 --format=%an "$sha")
+            case "$author" in
+              *'[bot]') echo "skip $sha ($author)"; continue ;;
+            esac
+            git log -1 --format=%B "$sha" > "$RUNNER_TEMP/message"
+            if ! prek run conventional-pre-commit --stage commit-msg --commit-msg-filename "$RUNNER_TEMP/message"; then
+              echo "::error::$sha has no Conventional Commits header (see .pre-commit-config.yaml)"
+              failed=1
+            fi
+            if ! commit-validation --shape-only "$RUNNER_TEMP/message"; then
+              echo "::error::$sha does not follow presets/hooks/references/commit-message.md in MattyMroz/agents"
+              failed=1
+            fi
+          done
+          exit "$failed"

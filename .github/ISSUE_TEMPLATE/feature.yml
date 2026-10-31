@@ -1,0 +1,58 @@
+name: ✨ Feature
+description: Nowa funkcja lub ulepszenie
+title: "feat(scope): "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Cel
+      description: Co ma powstać i po co? Jaką wartość wnosi?
+      placeholder: "Silnik depth daje cień dla okienek, żeby menu i dialog miały wspólną głębię."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Zakres / jak to zrobić
+      description: Z grubsza, które piętra trzeba dotknąć (silnik, przepis, komponent, motyw, laboratorium). Bez przesadnego planowania.
+      placeholder: "Wyjście --depth-overlay w silniku depth + użycie w przepisie surface + próbka w laboratorium."
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Domena
+      multiple: true
+      options:
+        - engine
+        - recipe
+        - component
+        - theme
+        - lab
+        - lib
+        - eslint
+        - docs
+        - repo
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: Rozmiar
+      options:
+        - małe (do 1 dnia)
+        - średnie (kilka dni)
+        - duże (epik, podzielić)
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Kryteria ukończenia
+      value: |
+        - [ ] działa w laboratorium, w kompozycji
+        - [ ] testy i strażnicy zielone
+        - [ ] bramki przed pushem zielone
+    validations:
+      required: false

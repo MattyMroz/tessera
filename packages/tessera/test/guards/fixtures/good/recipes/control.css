@@ -1,0 +1,17 @@
+@layer components {
+  .ts-control {
+    --_height: var(--size-h);
+    --_inset: max(var(--space-2), var(--shape-control));
+    height: var(--_height);
+    padding-inline: calc(var(--_inset) + var(--space-1));
+    border-radius: clamp(var(--shape-min), var(--shape-control), var(--shape-max));
+    border-style: solid;
+    background: var(--color-surface-raised);
+    cursor: pointer;
+    transition: transform var(--motion-fast) var(--motion-ease-standard), opacity var(--motion-fast);
+
+    &[data-variant='ghost'] {
+      background: transparent;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+@layer components {
+  .ts-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-gap);
+    column-gap: var(--_gap);
+    flex: 1 1 0;
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  .ts-button-parts {
+    display: grid;
+    grid-template-columns: auto 1fr max-content;
+    grid-column: 1 / -1;
+    grid-auto-flow: column dense;
+
+    &[data-orientation='vertical'] {
+      flex-direction: column;
+    }
+  }
+}

@@ -1,0 +1,26 @@
+@import "../styles/look.css";
+@layer components, utilities;
+
+@media (min-width: 640px) {
+  .ts-panel {
+    gap: 0;
+  }
+}
+
+@container (min-width: 1px) {
+}
+
+@supports (display: grid) {
+}
+
+@keyframes pulse {
+}
+
+@layer utilities {
+}
+
+@layer components {
+  .ts-panel {
+    display: grid;
+  }
+}

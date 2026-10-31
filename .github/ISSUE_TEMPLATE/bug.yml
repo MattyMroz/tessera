@@ -1,0 +1,56 @@
+name: 🐛 Bug
+description: Coś nie działa jak powinno
+title: "fix(scope): "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Co i gdzie nie działa? Jak to wywołać?
+      placeholder: "Menu w ekranie workbench miga przy otwarciu, gdy motyw ma ruch ustawiony na reduced."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Oczekiwane zachowanie
+      description: Jak powinno być?
+      placeholder: "Menu otwiera się bez animacji wejścia, tak jak dialog przy reduced motion."
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Kontekst
+      description: Pliki, ścieżki, ekran laboratorium, przeglądarka, logi, screeny, commit, od którego się pojawiło.
+      placeholder: "packages/tessera/src/engines/motion/motion.css, ekran screens/workbench, Edge (WebView2), od commitu abc123"
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Domena
+      multiple: true
+      options:
+        - engine
+        - recipe
+        - component
+        - theme
+        - lab
+        - lib
+        - eslint
+        - docs
+        - repo
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Kryteria zamknięcia
+      description: Kiedy uznajemy, że naprawione? (checklist)
+      value: |
+        - [ ] błąd nie występuje w laboratorium
+        - [ ] test albo strażnik pokrywa przypadek
+    validations:
+      required: false

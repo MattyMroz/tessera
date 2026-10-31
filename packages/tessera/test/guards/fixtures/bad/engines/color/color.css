@@ -1,0 +1,9 @@
+:root {
+  --color-text: var(--type-size);
+}
+
+.ts-button {
+  background: red;
+  border-radius: 9px;
+  transition: width 300ms;
+}

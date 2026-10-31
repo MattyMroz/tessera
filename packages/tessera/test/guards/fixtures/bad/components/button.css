@@ -1,0 +1,23 @@
+.ts-button {
+  display: inline-flex;
+  border-radius: 8px;
+  background: #fff;
+  gap: 8px;
+  --button-height: 28px;
+  transition: opacity 150ms;
+  --_bg: hotpink;
+  --_gap: 13px;
+  gap: var(--_gap);
+  width: var(--size-h, 999px);
+  gap: var(--size-gap, 999px);
+  display: none !important;
+  order: 99;
+  order: -5;
+  flex-grow: 1.5;
+  grid-template-columns: 37% 1fr;
+  gap: calc(var(--space-2) * 1.5);
+  gap: var(--brand-gap);
+  padding-inline: var(--space-2);
+  position: absolute;
+  min-width: 0;
+}

@@ -1,0 +1,3 @@
+[default.extend-words]
+# Stylus file extension, matched by the no-local-css rule.
+styl = "styl"

@@ -1,0 +1,4 @@
+/* The style entry of the package and the only place of the cascade order. The order matches Tailwind's, so importing
+   Tessera before or after Tailwind never reorders layers: engine tokens live in theme, recipes and components in
+   components, and the application's utilities win over both. */
+@layer theme, base, components, utilities;

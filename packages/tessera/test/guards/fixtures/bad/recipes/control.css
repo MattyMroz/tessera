@@ -1,0 +1,26 @@
+.ts-control {
+  padding: 0 12px;
+  color: var(--brand-blue);
+  --control-height: var(--size-h);
+  border-radius: var(--shape-control);
+  --_c: var(--brand-blue);
+  color: var(--_c);
+  --_h: 28px;
+  height: var(--_h);
+  background: var(--color-surface, red);
+  gap: calc(var(--space-2) * 1.5);
+  transition: width var(--motion-fast);
+  background: var(--color-surface) !important;
+  background: rgb(0 0 0);
+  color: var(--in-accent);
+  hotpink;
+}
+
+@media (hover: hover) {
+  .ts-control {
+    background: var(--color-surface-hover);
+  }
+}
+
+@layer theme {
+}
