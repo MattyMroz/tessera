@@ -62,7 +62,7 @@ repos:
           - revert
 
   - repo: https://github.com/MattyMroz/agents
-    rev: hooks-v1.2.0
+    rev: hooks-v1.3.0
     hooks:
       # U+FFFD is what a botched encoding leaves behind.
       - id: no-replacement-char
