@@ -1,0 +1,52 @@
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('ArialMT');
+  font-weight: 100 599;
+  size-adjust: 106.7%;
+  ascent-override: 90.79%;
+  descent-override: 22.61%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT');
+  font-weight: 600 900;
+  size-adjust: 101.8%;
+  ascent-override: 95.16%;
+  descent-override: 23.69%;
+  line-gap-override: 0%;
+}
+
+@layer theme {
+  :root,
+  [data-typeset='inter'] {
+    --ts-type-family-sans: 'Inter Variable', 'Inter Fallback', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    --ts-type-family-mono: 'Cascadia Code Variable', 'Cascadia Code', 'Cascadia Mono', ui-monospace, monospace;
+    --ts-type-family-heading: var(--ts-type-family-sans);
+  }
+
+  :root {
+    --ts-type-mini-size: 10px;
+    --ts-type-mini-leading: 14px;
+    --ts-type-small-size: 11px;
+    --ts-type-small-leading: 15px;
+    --ts-type-detail-size: 12px;
+    --ts-type-detail-leading: 16px;
+    --ts-type-body-size: 13px;
+    --ts-type-body-leading: 18px;
+    --ts-type-title-size: 15px;
+    --ts-type-title-leading: 20px;
+    --ts-type-screen-title-size: 20px;
+    --ts-type-screen-title-leading: 28px;
+    --ts-type-display-size: 28px;
+    --ts-type-display-leading: 34px;
+    --ts-type-measure: 44ch;
+    --ts-type-measure-narrow: 36ch;
+
+    --ts-type-weight-regular: 400;
+    --ts-type-weight-medium: 500;
+    --ts-type-weight-semibold: 600;
+    --ts-type-tracking-caps: 0.04em;
+  }
+}

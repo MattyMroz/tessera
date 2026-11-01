@@ -1,0 +1,61 @@
+# Button
+
+Native `<button>`, or `<a>` with `href`, styled by the `control` and `focus` recipes. Import: `@mattymroz/tessera/components/button/button`. Groups of buttons: [button-group.md](button-group.md).
+
+## Props
+
+| Prop       | Type                                                                                 | Default   | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `variant`  | `'solid' \| 'soft' \| 'outline' \| 'raised' \| 'ghost'` (the list `BUTTON_VARIANTS`) | `'ghost'` | `solid` fills with the accent and gets the neon glow; `raised` takes the background and shadow of the `raised` depth level, without an outline                                                                                                                                                                                                                                                                                                                                                                                     |
+| `tone`     | `'neutral' \| 'accent' \| 'danger' \| 'success' \| 'warning' \| 'info'`              | —         | sets `data-tone`, an axis beside the variant: `solid` fills with the tone and its `on-*` text (without a tone it fills with the accent); `soft`, `ghost`, `outline` and `raised` take the tone for the text and the state step, `outline` also for its border; `raised` keeps its background and shadow; the neon glow, also of the focus ring, stays only with the accent. A destructive action is `tone="danger"`; an inverted button is `variant="solid" tone="neutral"` (in the Contrast accent it looks like a plain `solid`) |
+| `busy`     | `boolean`                                                                            | `false`   | sets `aria-busy="true"` and blocks activation (below); with `icon` the lucide `LoaderCircle` replaces that icon in its slot and turns with the `spin` loop of the motion engine; without `icon` it stands in the middle of the button (`<span data-slot="busy">`) and the label and the icons stay in the layout at `opacity: 0`, so the button keeps its width. The loop stands still with the motion off or reduced. A busy button is not dimmed                                                                                 |
+| `size`     | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'`                                               | inherited | sets `data-size`; without it the button follows the nearest `data-size`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `icon`     | `ReactNode`                                                                          | —         | icon before the label                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `iconEnd`  | `ReactNode`                                                                          | —         | icon after the label, e.g. an arrow on a link                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `href`     | `string`                                                                             | —         | renders `<a href>` instead of `<button>`; the type then refuses `type` and `disabled` (use `aria-disabled`)                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `link`     | component taking anchor props and `href`                                             | `'a'`     | only with `href`: the anchor component of the framework for client navigation, e.g. `next/link`; it gets the anchor props, `href`, `ref` and the attributes of the recipe, never look props                                                                                                                                                                                                                                                                                                                                        |
+| `children` | `ReactNode`                                                                          | —         | label; without it the button is icon-only and `aria-label` is required by the type                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+Every other `<button>` (or `<a>`) prop, including `ref`, reaches the element. `type` defaults to `"button"`. The button takes no `className` or `style`: the parent lays it out.
+
+## Rendered attributes
+
+`data-recipe="control"`, `data-variant`, `data-tone` and `data-size` (when set), `aria-busy` (when busy), `data-focus="outer"`. Icons render in `<span data-slot="icon">` (an `<svg>` inside fills the slot and takes its stroke width from `--ts-size-icon-stroke`, over its own `stroke-width`; take icons from `lucide-react`, one icon per import, without size or stroke props), the label in `<span data-slot="label">` (ellipsis on overflow, one line). An icon as the only child makes the button square; no button is narrower than it is tall.
+
+## Behaviour
+
+- Hover and press take a step of the state ramp of the recipe; hover only on devices with hover.
+- `lib/press.ts` sets `data-pressing` on primary pointer down and holds it at least `--ts-motion-duration-fast` of the button (its own `motion` subtree), so a short tap still shows the press scale. A middle click does not press.
+- The press scales only the plate of the button: background, border and shadow are painted by `::before` of the `control` recipe, and only the plate takes `--ts-motion-press-scale`. The box of the button and its icon and label stay still, so a menu, popover or tooltip anchored to the button never moves, and the content of a wide button does not slide toward its centre.
+- Focus ring only for keyboard input: the script of `ThemeScript` keeps `data-input` on `<html>` (`pointer` or `keyboard`). The neon glow of the focus joins the shadow of a `raised` button, it does not replace it; a button with a tone other than the accent gets the ring without the glow.
+- `disabled` dims the button and turns off hover and press; it also leaves the Tab order.
+- `aria-disabled="true"` (also `aria-disabled` as a boolean) dims the button like `disabled` but keeps it focusable and in the Tab order. `busy` and `aria-disabled` block activation as in v2: no `onClick`, no submit of the form (also not by Enter in a field of the form), and a link does not navigate, also not by a middle click; the press step and the press scale stay off. A busy button keeps its hover.
+- Announcing the work belongs to the consumer: `aria-busy` alone says nothing to a screen reader, so put the progress text in a `role="status"` region.
+- A label cut by the ellipsis gets its full text as the native `title` (`lib/title-when-cut.ts`), checked when the pointer enters and when focus comes in, and removed when the label fits again. A `title` of the consumer is never replaced, and a button inside a `Tooltip` (a Base UI tooltip trigger) gets no `title`, so there is never a native tip beside the Tessera tooltip. On touch `title` is not shown; the accessible name holds the full label anyway.
+- `aria-pressed="true"` (and `aria-selected`) paints the flat selected fill (`--ts-state-selected-fill`); hover and press keep that fill. `aria-checked` paints no fill: a checkbox, a switch and a radio show their state in their own parts.
+- The hit area is the box of the button. With a coarse pointer the button is at least 24 px tall, so its box is at least 24 × 24 px.
+- In forced colors a pressed button paints `Highlight` with `HighlightText`, also under the pointer and while pressed, a disabled one (also `aria-disabled`) `GrayText`.
+- Cursor from the `platform` (`--ts-state-cursor` of the `state` engine): `default` on `desktop`, `pointer` on `web`; a link (`href`) always shows `pointer`; a disabled button keeps `default` and a field (`Input`) shows `text`. Hover, cursor and press belong to interactive elements only: a `<span data-recipe="control">` (badge, keycap) stays still with the `default` cursor.
+- A link keeps the native behaviour of `<a>`: Enter activates it, Space does not, Ctrl+click and a middle click open a new tab.
+- A link looks like a button of its variant, without an underline; a text link is a `ghost` button with an arrow in `iconEnd`.
+
+## Overflow
+
+A button is never wider than its parent (`max-inline-size: 100%` of the `control` recipe) and never narrower than it is tall: a long label, a URL or a number without spaces ends with an ellipsis on one line, the icons keep their size, and the full label comes back as the native `title`. In a flex row the button shrinks with its neighbours down to its height.
+
+## Example
+
+```tsx
+import { Button } from '@mattymroz/tessera/components/button/button'
+import ArrowRight from 'lucide-react/icons/arrow-right'
+import Plus from 'lucide-react/icons/plus'
+import Save from 'lucide-react/icons/save'
+import Settings from 'lucide-react/icons/settings'
+import Link from 'next/link'
+
+<Button variant="solid" icon={<Plus />}>New project</Button>
+<Button aria-label="Settings" icon={<Settings />} />
+<Button variant="solid" busy={saving} icon={<Save />}>Save</Button>
+<Button variant="solid" tone="danger">Delete project</Button>
+<Button href="/docs" link={Link} variant="solid" iconEnd={<ArrowRight />}>Get started</Button>
+```

@@ -1,0 +1,46 @@
+@layer theme {
+  :root {
+    --ts-space-segment: 2px;
+  }
+
+  :root,
+  [data-density='compact'] {
+    --ts-space-inset: 4px;
+    --ts-space-group: 8px;
+    --ts-space-card: 16px;
+    --ts-space-card-small: 12px;
+    --ts-space-indent: 12px;
+  }
+
+  [data-density='snug'] {
+    --ts-space-inset: 5px;
+    --ts-space-group: 10px;
+    --ts-space-card: 20px;
+    --ts-space-card-small: 14px;
+    --ts-space-indent: 14px;
+  }
+
+  [data-density='default'] {
+    --ts-space-inset: 6px;
+    --ts-space-group: 12px;
+    --ts-space-card: 24px;
+    --ts-space-card-small: 16px;
+    --ts-space-indent: 16px;
+  }
+
+  [data-density='relaxed'] {
+    --ts-space-inset: 7px;
+    --ts-space-group: 14px;
+    --ts-space-card: 28px;
+    --ts-space-card-small: 18px;
+    --ts-space-indent: 18px;
+  }
+
+  [data-density='spacious'] {
+    --ts-space-inset: 8px;
+    --ts-space-group: 16px;
+    --ts-space-card: 32px;
+    --ts-space-card-small: 20px;
+    --ts-space-indent: 20px;
+  }
+}

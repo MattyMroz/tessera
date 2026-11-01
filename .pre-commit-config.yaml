@@ -116,21 +116,28 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-      - id: lint
-        name: eslint
-        entry: bun run lint
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
+      # Build before lint: the consumer ESLint plugin is read from dist.
       - id: build
         name: build
         entry: bun run build
         language: system
         pass_filenames: false
         stages: [pre-push]
+      - id: lint
+        name: eslint
+        entry: bun run lint
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
       - id: vitest
         name: vitest
-        entry: bunx vitest run
+        entry: bunx vitest run --maxWorkers=6
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: test-browser
+        name: playwright
+        entry: bun run --filter @mattymroz/tessera-docs test:browser
         language: system
         pass_filenames: false
         stages: [pre-push]

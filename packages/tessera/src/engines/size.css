@@ -1,0 +1,85 @@
+@property --ts-i-value {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --ts-i-inline-size {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-block-size {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@layer theme {
+  :root,
+  [data-size='lg'] {
+    --_ts-size-step: 28px;
+    --ts-size-text: var(--ts-type-body-size);
+    --ts-size-leading: var(--ts-type-body-leading);
+    --ts-size-icon: 16px;
+    --ts-size-icon-stroke: 2.25;
+    --ts-size-gap: 5px;
+  }
+
+  [data-size='xs'] {
+    --_ts-size-step: 16px;
+    --ts-size-text: var(--ts-type-mini-size);
+    --ts-size-leading: var(--ts-type-mini-leading);
+    --ts-size-icon: 10px;
+    --ts-size-icon-stroke: 2.4;
+    --ts-size-gap: 3px;
+  }
+
+  [data-size='sm'] {
+    --_ts-size-step: 20px;
+    --ts-size-text: var(--ts-type-small-size);
+    --ts-size-leading: var(--ts-type-small-leading);
+    --ts-size-icon: 12px;
+    --ts-size-icon-stroke: 2.25;
+    --ts-size-gap: 3px;
+  }
+
+  [data-size='md'] {
+    --_ts-size-step: 24px;
+    --ts-size-text: var(--ts-type-detail-size);
+    --ts-size-leading: var(--ts-type-detail-leading);
+    --ts-size-icon: 14px;
+    --ts-size-icon-stroke: 2.25;
+    --ts-size-gap: 4px;
+  }
+
+  [data-size='xl'] {
+    --_ts-size-step: 36px;
+    --ts-size-text: var(--ts-type-title-size);
+    --ts-size-leading: var(--ts-type-title-leading);
+    --ts-size-icon: 18px;
+    --ts-size-icon-stroke: 2;
+    --ts-size-gap: 7px;
+  }
+
+  :root,
+  [data-size] {
+    --ts-size-step: var(--_ts-size-step);
+    --ts-size-height: var(--ts-size-step);
+    --ts-size-box: var(--ts-size-icon);
+    --ts-size-track-block: calc(var(--ts-size-icon) + 4px);
+    --ts-size-track-inline: round(var(--ts-size-track-block) * 1.75, 1px);
+    --ts-size-thumb: calc(var(--ts-size-track-block) - 4px);
+    --ts-size-rail: max(2px, round(var(--ts-size-height) / 7, 1px));
+    --ts-size-cap-pad: calc((var(--ts-size-leading) - 1cap) / 2);
+    --ts-size-icon-cap-pad: calc((var(--ts-size-icon) - 1cap) / 2);
+  }
+
+  @media (pointer: coarse) {
+    :root,
+    [data-size] {
+      --ts-size-height: max(var(--ts-size-step), 24px);
+    }
+  }
+}

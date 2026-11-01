@@ -1,0 +1,90 @@
+@property --ts-color-k {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+  color: red;
+}
+
+@property --ts-in-color-k {
+  syntax: '<number>';
+}
+
+@layer theme {
+  :root {
+    --ts-shape-control: 8px;
+    --ts-color-surface: #000;
+    --ts-in-color-accent: 1;
+    --_ts-color-step: 1;
+    --_shape-step: 1;
+    --shape-control: 1;
+    --ts-shape-ring: var(--ts-depth-shadow);
+    --ts-shape-tint: var(--brand-blue);
+    --ts-shape-mix: var(--_ts-size-step);
+    --ts-shape-pick: var(--ts-in-size-scale);
+    --ts-shape-cap: 1 !important;
+    border-radius: 9px;
+  }
+
+  .ts-button {
+    --ts-shape-control: 2px;
+  }
+
+  button {
+    --ts-shape-control: 2px;
+  }
+
+  :root:not(.dark) {
+    --ts-shape-control: 2px;
+  }
+
+  [data-corners]:hover {
+    --ts-shape-control: 2px;
+  }
+
+  @supports (corner-shape: superellipse(2)) or (display: grid) {
+  }
+
+  @media (prefers-reduced-motion: reduce) and (min-width: 1px) {
+  }
+
+  @media not (pointer: coarse) {
+  }
+
+  @media (corner-shape: superellipse(2)) {
+  }
+
+  @layer theme {
+  }
+
+  @property --ts-shape-nested {
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --ts-shape-control: 4px;
+  }
+}
+
+@supports (corner-shape: superellipse(2)) {
+}
+
+:root {
+  --ts-shape-control: 1px;
+}
+
+@font-face {
+  font-family: 'Shape Fallback';
+}
+
+@keyframes ts-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@property --ts-i-value {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}

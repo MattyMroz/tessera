@@ -1,0 +1,18 @@
+@layer components {
+  [data-focus] {
+    --_offset: var(--ts-focus-offset);
+  }
+
+  :root:not([data-input='pointer']) [data-focus]:focus-visible {
+    outline-offset: var(--_offset);
+  }
+
+  [data-focus]:has(> [data-slot='input']:focus-visible) {
+    outline-offset: var(--_offset);
+  }
+
+  [data-recipe="focus"],
+  [data-focus='inset'] {
+    outline-offset: calc(var(--_offset) * -1);
+  }
+}

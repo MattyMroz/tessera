@@ -1,0 +1,38 @@
+@layer components {
+  [data-component='field'] {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: baseline;
+    gap: var(--ts-space-inset);
+  }
+
+  [data-component='card'] > [data-component='field'] {
+    grid-column: 1 / -1;
+  }
+
+  @container (inline-size >= 400px) {
+    [data-component='card'] > [data-component='field']:not(:has(textarea)) {
+      grid-template-columns: subgrid;
+    }
+
+    [data-component='field']:not(:has(textarea)) {
+      grid-template-columns: 1fr auto;
+      grid-auto-flow: row dense;
+      column-gap: var(--ts-space-group);
+      row-gap: 0;
+    }
+
+    [data-component='field']:not(:has(textarea)) > [data-slot='label'] {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    [data-component='field']:not(:has(textarea)) > [data-slot='description'] {
+      grid-column: 1;
+    }
+
+    [data-component='field']:not(:has(textarea)) > [data-slot='error'] {
+      grid-column: span 1 / -1;
+    }
+  }
+}

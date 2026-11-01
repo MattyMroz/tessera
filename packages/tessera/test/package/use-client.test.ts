@@ -102,6 +102,20 @@ it('marks exactly the dist modules that use hooks, handlers or the compiler runt
   expect(misplacedDirectives(resolve(packageDir, 'dist'))).toEqual([])
 })
 
+it('ships the theme hook as the only client module of the theme cascade', () => {
+  const modules = ['theme.js', 'theme-script.js', 'use-theme.js']
+  const directives = modules.map((file) => [file, hasClientDirective(parse(resolve(packageDir, 'dist/lib', file)))])
+  expect(directives).toEqual([['theme.js', false], ['theme-script.js', false], ['use-theme.js', true]])
+})
+
+it('ships every component as a client module', () => {
+  const directory = resolve(packageDir, 'dist/components')
+  const components = filesIn(directory, /\.js$/)
+  expect(components.length).toBeGreaterThan(0)
+  const server = components.filter((file) => !hasClientDirective(parse(file))).map((file) => relative(directory, file).replaceAll('\\', '/'))
+  expect(server).toEqual([])
+})
+
 it('flags every fixture module whose use-client directive is missing or needless', () => {
   expect(misplacedDirectives(resolve(fixtureDir, 'dist'))).toEqual(['button.js', 'client-format.js', 'handlers.js', 'label.js', 'use-open.js'])
 })

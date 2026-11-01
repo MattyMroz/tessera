@@ -1,0 +1,61 @@
+@layer theme {
+  :root,
+  [data-mode] {
+    --ts-state-ink: #000000;
+    --ts-state-rest: 0.04;
+    --ts-state-hover: 0.07;
+    --ts-state-press: 0.1;
+    --ts-state-indicator: 0.1;
+    --_ts-state-contrast-active: 0.1;
+    --ts-state-invalid-color: var(--ts-color-danger);
+  }
+
+  [data-mode='dark'] {
+    --ts-state-ink: #ffffff;
+    --ts-state-rest: 0.08;
+    --ts-state-hover: 0.12;
+    --ts-state-press: 0.16;
+    --ts-state-indicator: 0.12;
+    --_ts-state-contrast-active: 0.16;
+  }
+
+  :root {
+    --ts-state-indicator-track: 0.04;
+    --ts-state-tint-rest: 0.08;
+    --ts-state-tint-hover: 0.16;
+    --ts-state-tint-press: 0.24;
+    --ts-state-tint-border: 0.25;
+    --ts-state-disabled: 0.4;
+  }
+
+  :root,
+  [data-platform='desktop'] {
+    --ts-state-cursor: default;
+  }
+
+  [data-platform='web'] {
+    --ts-state-cursor: pointer;
+  }
+  :root,
+  [data-accent='contrast'] {
+    --_ts-state-accent: 0;
+  }
+
+  [data-accent]:not([data-accent='contrast']) {
+    --_ts-state-accent: 1;
+  }
+
+  :root,
+  [data-mode],
+  [data-accent],
+  [data-neutral] {
+    --ts-state-selected-fill: calc(
+      var(--_ts-state-accent) * 0.16 + (1 - var(--_ts-state-accent)) * var(--_ts-state-contrast-active)
+    );
+    --ts-state-selected-fill-color: color-mix(
+      in oklab,
+      var(--ts-color-tint) calc(var(--_ts-state-accent) * 100%),
+      var(--ts-state-ink)
+    );
+  }
+}

@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'Inter Fallback';
+  font-feature-settings: 'ss01';
+  color: red;
+}
+
+@layer theme {
+  @font-face {
+    font-family: 'Nested Fallback';
+  }
+}

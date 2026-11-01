@@ -34,7 +34,12 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
-      # Typecheck, lint, build, then bunx vitest run: the pre-push gates.
+      # The browsers of the lab tests, with their system libraries; the version comes from the lockfile.
+      - name: Install browsers
+        working-directory: apps/docs
+        run: bunx playwright install --with-deps chromium webkit
+
+      # Typecheck, build, lint, bunx vitest run --maxWorkers=6, then the Playwright lab tests: the pre-push gates.
       - name: Check
         run: bun run check
 

@@ -1,0 +1,25 @@
+@keyframes ts-bounce {
+  to {
+    translate: 0 -4px;
+  }
+}
+
+@keyframes ts-spin {
+  from {
+    width: 0;
+  }
+
+  half {
+    rotate: 1turn;
+  }
+
+  to {
+    rotate: 1turn !important;
+    opacity: var(--ts-size-height);
+  }
+}
+
+@layer theme {
+  @keyframes ts-sweep {
+  }
+}

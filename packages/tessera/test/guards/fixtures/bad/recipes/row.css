@@ -1,0 +1,49 @@
+@layer components {
+  [data-recipe='row'][aria-level] {
+    --_level: 7;
+    padding-inline-start: calc(var(--ts-shape-control-side) + var(--_level) * var(--ts-space-indent));
+  }
+
+  [data-recipe='row'][aria-level='1'] {
+    --_level: 0;
+  }
+
+  [data-recipe='row'][aria-level='2'] {
+    --_level: 1;
+  }
+
+  [data-recipe='row'][aria-level='3'] {
+    --_level: 2;
+  }
+
+  [data-recipe='row'][aria-level='4'] {
+    --_level: 3;
+  }
+
+  [data-recipe='row'][aria-level='5'] {
+    --_level: 4;
+  }
+
+  [data-recipe='row'][aria-level='6'] {
+    --_level: 5;
+  }
+
+  [data-recipe='row'][aria-level='8'] {
+    --_level: 7;
+  }
+
+  [data-recipe='row'][aria-level='2'],
+  [data-recipe='row'][aria-level='3'] {
+    --_level: 2;
+  }
+
+  [data-recipe='row'][data-tone='neutral'] {
+    color: var(--ts-color-label);
+  }
+
+  @supports (overflow-clip-margin: border-box) {
+    [data-recipe='row'] {
+      overflow: clip;
+    }
+  }
+}

@@ -2,7 +2,7 @@
 @layer components, utilities;
 
 @media (min-width: 640px) {
-  .ts-panel {
+  [data-component='panel'] {
     gap: 0;
   }
 }
@@ -20,7 +20,19 @@
 }
 
 @layer components {
-  .ts-panel {
+  [data-component='panel'] {
     display: grid;
+  }
+
+  @container (inline-size < 500px) {
+  }
+
+  @container (inline-size <= 400px) {
+  }
+
+  @container panel (inline-size < 400px) {
+  }
+
+  @layer components {
   }
 }

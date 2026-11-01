@@ -1,0 +1,51 @@
+@layer components {
+  [data-recipe='surface'] {
+    background: color-mix(in srgb, var(--ts-color-background) calc(var(--ts-state-tint-rest) * 100%), transparent);
+    color: color-mix(var(--ts-color-label), transparent);
+    color: CanvasText;
+    border-color: Highlight;
+    max-block-size: var(--anchor-height);
+    min-inline-size: var(--anchor-width);
+    inline-size: var(--ts-i-other);
+    animation-timing-function: linear(0, 1);
+    animation: ts-spin var(--ts-motion-loop) linear infinite;
+
+    &[data-tone='danger'] {
+      border-color: var(--ts-color-danger);
+      background: var(--ts-color-danger);
+      --_border: var(--ts-color-danger);
+      outline: var(--ts-shape-stroke) solid var(--ts-color-danger);
+      box-shadow: inset 0 0 0 var(--ts-shape-stroke) var(--ts-color-danger);
+    }
+  }
+
+  @starting-style {
+    [data-recipe='surface'] {
+      opacity: 0;
+    }
+  }
+
+  @container (inline-size < 500px) {
+    [data-recipe='surface'] {
+      padding: 0;
+    }
+  }
+
+  @container card (inline-size < 400px) {
+  }
+
+  @container (min-width: 400px) {
+  }
+
+  @media (forced-colors: none) {
+  }
+
+  @keyframes ts-spin {
+  }
+}
+
+@media (forced-colors: active) {
+  [data-recipe='surface'] {
+    color: ButtonText;
+  }
+}

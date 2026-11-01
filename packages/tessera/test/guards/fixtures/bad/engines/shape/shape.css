@@ -1,25 +1,5 @@
-@property --color-k {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-  color: red;
-}
-
-:root {
-  --shape-control: 8px;
-  --color-surface: #000;
-  --shape-ring: var(--depth-shadow);
-  --shape-tint: var(--brand-blue);
-  --shape-cap: 1 !important;
-  border-radius: 9px;
-}
-
-.ts-button {
-  --shape-control: 2px;
-}
-
-@media (min-width: 640px) {
+@layer theme {
   :root {
-    --shape-control: 4px;
+    --ts-shape-control: 8px;
   }
 }

@@ -1,0 +1,1 @@
+export const TOOLTIP_GROUP_GRACE = 400

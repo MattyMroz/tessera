@@ -1,0 +1,4 @@
+@theme inline {
+  --spacing-inset: var(--ts-space-inset);
+  --spacing-card: var(--ts-space-card);
+}

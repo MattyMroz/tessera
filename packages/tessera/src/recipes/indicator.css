@@ -1,0 +1,90 @@
+@layer components {
+  :has(> [data-recipe='indicator']) {
+    position: relative;
+  }
+
+  [data-recipe='indicator'] ~ [data-recipe='control']::before {
+    background: var(--_base);
+  }
+
+  [data-recipe='indicator'] {
+    --_fill: var(--ts-state-ink);
+    --_fill-opacity: var(--ts-state-indicator);
+    position: absolute;
+    top: 0;
+    left: 0;
+    inline-size: var(--ts-i-inline-size);
+    block-size: var(--ts-i-block-size);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--ts-motion-duration-instant) var(--ts-motion-ease-out);
+
+    &[data-visible='true'] {
+      opacity: 1;
+    }
+
+    &[data-variant='hover']:not([data-visible='true']) {
+      transition-duration: var(--ts-motion-duration-hover-exit);
+    }
+
+    &[data-variant='active'] {
+      --_fill: var(--ts-state-selected-fill-color);
+      --_fill-opacity: var(--ts-state-selected-fill);
+    }
+
+    &[data-variant='raised'] {
+      --_fill: var(--ts-depth-raised-bg);
+      --_fill-opacity: 1;
+
+      & > [data-slot='squash'] {
+        box-shadow: var(--ts-depth-raised-shadow);
+      }
+    }
+
+    [data-level='sunken'] > &[data-variant='hover'] {
+      --_fill-opacity: var(--ts-state-indicator-track);
+    }
+
+    & > [data-slot='squash'] {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--ts-shape-control-radius);
+      corner-shape: var(--ts-shape-control-corner);
+      background: var(--_fill);
+      opacity: var(--_fill-opacity);
+    }
+
+    &[data-axis='x'][data-wall='start'] > [data-slot='squash'] {
+      transform-origin: left;
+    }
+
+    &[data-axis='x'][data-wall='end'] > [data-slot='squash'] {
+      transform-origin: right;
+    }
+
+    &[data-axis='y'][data-wall='start'] > [data-slot='squash'] {
+      transform-origin: top;
+    }
+
+    &[data-axis='y'][data-wall='end'] > [data-slot='squash'] {
+      transform-origin: bottom;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-recipe='indicator']:is([data-variant='raised'], [data-variant='active']) {
+      --_fill: Highlight;
+      --_fill-opacity: 1;
+    }
+
+    [data-recipe='indicator'][data-variant='hover'] > [data-slot='squash'] {
+      outline: var(--ts-shape-stroke) solid ButtonText;
+      outline-offset: calc(var(--ts-shape-stroke) * -1);
+      background: transparent;
+    }
+
+    [data-recipe='indicator'] ~ [data-recipe='control'][aria-checked='true']:not(:disabled, [data-disabled]) {
+      color: HighlightText;
+    }
+  }
+}

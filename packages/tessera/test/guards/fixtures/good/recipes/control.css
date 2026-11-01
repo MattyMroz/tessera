@@ -1,17 +1,137 @@
 @layer components {
-  .ts-control {
-    --_height: var(--size-h);
-    --_inset: max(var(--space-2), var(--shape-control));
+  [data-recipe='control'] {
+    --_height: var(--ts-size-height);
+    --_inset: max(var(--ts-space-inset), var(--ts-shape-control));
+    --_rest: 0;
+    --_side: var(--_inset);
+    position: relative;
+    inset: 0;
+    z-index: -1;
+    opacity: 1;
+    flex-basis: 100%;
     height: var(--_height);
-    padding-inline: calc(var(--_inset) + var(--space-1));
-    border-radius: clamp(var(--shape-min), var(--shape-control), var(--shape-max));
+    padding-inline: calc(var(--_side) + var(--ts-space-inset));
+    border-radius: clamp(var(--ts-shape-inner), var(--ts-shape-control), var(--ts-shape-surface));
     border-style: solid;
-    background: var(--color-surface-raised);
+    background: var(--ts-color-background);
     cursor: pointer;
-    transition: transform var(--motion-fast) var(--motion-ease-standard), opacity var(--motion-fast);
+    text-transform: uppercase;
+    field-sizing: content;
+    transition: transform var(--ts-motion-duration-fast) var(--ts-motion-ease-standard), opacity var(--ts-motion-duration-fast);
+    transition-property: translate, scale, rotate;
+    will-change: transform, opacity;
+    margin-inline: calc(var(--ts-size-height) * -1) max(100%, var(--ts-size-height));
+
+    & > [data-slot='icon'] {
+      width: var(--ts-size-icon);
+
+      & > svg {
+        width: 100%;
+      }
+    }
+
+    & > [data-slot='busy'] > svg {
+      width: 100%;
+    }
+
+    & > [data-slot='icon'][data-dot] > svg {
+      fill: currentColor;
+    }
+
+    & [data-slot='label'] {
+      min-width: 0;
+    }
 
     &[data-variant='ghost'] {
       background: transparent;
+    }
+
+    &:has(> [data-slot='icon']:only-child) {
+      width: var(--ts-size-height);
+    }
+
+    &:is([aria-expanded='true'], [data-popup-open])::after {
+      opacity: var(--ts-state-hover);
+    }
+
+    &::after {
+      content: '';
+      opacity: var(--_rest);
+    }
+  }
+
+  [data-recipe='control'][data-tone='neutral'] {
+    --_tint: var(--ts-color-label);
+    --_on-tint: var(--ts-color-background);
+  }
+
+  [data-recipe='control'][data-tone='accent'] {
+    --_tint: var(--ts-color-accent);
+    --_on-tint: var(--ts-color-on-accent);
+  }
+
+  [data-recipe='control'][data-tone='danger'] {
+    --_tint: var(--ts-color-danger);
+    --_on-tint: var(--ts-color-on-danger);
+  }
+
+  [data-recipe='control'][data-tone='success'] {
+    --_tint: var(--ts-color-success);
+    --_on-tint: var(--ts-color-on-success);
+  }
+
+  [data-recipe='control'][data-tone='warning'] {
+    --_tint: var(--ts-color-warning);
+    --_on-tint: var(--ts-color-on-warning);
+  }
+
+  [data-recipe='control'][data-tone='info'] {
+    --_tint: var(--ts-color-info);
+    --_on-tint: var(--ts-color-on-info);
+  }
+
+  [data-recipe='control'][data-variant='raised'][data-tone]:not([data-tone='neutral']) {
+    color: var(--_tint);
+  }
+
+  [data-recipe='control'][data-variant='soft'] {
+    background: color-mix(in oklab, var(--_tint) calc(var(--ts-state-tint-rest) * 100%), transparent);
+    font-variant-numeric: tabular-nums;
+    inline-size: var(--ts-i-inline-size);
+  }
+
+  [data-recipe='control'][aria-busy='true'] > [data-slot='icon'] {
+    animation: var(--ts-motion-spin) var(--ts-motion-loop) linear infinite;
+  }
+
+  @supports (overflow-clip-margin: border-box) {
+    [data-recipe='control'][aria-busy='true'] {
+      overflow: clip;
+      overflow-clip-margin: border-box;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-recipe='control'][aria-pressed='true'] {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+
+    [data-recipe='control']:disabled {
+      color: GrayText;
+      outline-color: ButtonText;
+    }
+  }
+
+  [data-level='overlay'] [data-recipe='control'],
+  [data-surface] > [data-recipe='control'] > [data-slot='label'] {
+    color: var(--ts-color-label);
+  }
+
+  @media (hover: hover) {
+    [data-recipe='control']:hover::after {
+      opacity: var(--ts-state-hover);
     }
   }
 }

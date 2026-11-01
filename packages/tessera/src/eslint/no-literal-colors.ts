@@ -15,7 +15,6 @@ export const noLiteralColors: Rule.RuleModule = {
   create(context) {
     return stylingVisitor(context, (node, classes) => {
       for (const token of classTokens(classes, true)) {
-        // An unknown interpolation counts as a plain number, so the static text alone decides.
         const known = token.replaceAll(HOLE, '0')
         if (unsafeValue(known)) context.report({ node, messageId: 'value', data: { value: token.replaceAll(HOLE, '${…}') } })
         const color = classColor(known)

@@ -1,0 +1,5 @@
+@layer theme {
+  :root {
+    --ts-neon-glow: 1;
+  }
+}

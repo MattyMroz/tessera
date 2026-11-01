@@ -1,0 +1,73 @@
+'use client'
+
+import { Button } from '@mattymroz/tessera/components/button/button'
+import { Menu, MenuCheckboxItem, MenuContent, MenuTrigger } from '@mattymroz/tessera/components/menu/menu'
+import { ToggleGroup, ToggleGroupItem } from '@mattymroz/tessera/components/toggle-group/toggle-group'
+import { THEME_CONFIG, type Axis, type Choices } from '@mattymroz/tessera/lib/theme'
+import { useTheme } from '@mattymroz/tessera/lib/use-theme'
+import { mangashift } from '@mattymroz/tessera/themes/mangashift'
+import { MotionLab } from './motion-lab'
+
+const OPTIONS: Readonly<Record<Axis, readonly string[]>> = THEME_CONFIG.axes
+
+function isAxis(name: string): name is Axis {
+  return Object.hasOwn(OPTIONS, name)
+}
+
+function isChoice<A extends Axis>(axis: A, value: string): value is Choices[A] {
+  return OPTIONS[axis].includes(value)
+}
+
+const MENU_AXES: readonly Axis[] = Object.keys(OPTIONS)
+  .filter(isAxis)
+  .filter((axis) => axis !== 'mode')
+
+export function Panel() {
+  const { choices, setChoice, reset } = useTheme(mangashift)
+
+  return (
+    <aside aria-label="Theme" className="flex flex-col gap-group">
+      <ToggleGroup
+        aria-label="mode"
+        value={choices.mode}
+        onValueChange={(value) => {
+          if (isChoice('mode', value)) setChoice('mode', value)
+        }}
+      >
+        {THEME_CONFIG.axes.mode.map((mode) => (
+          <ToggleGroupItem key={mode} value={mode}>
+            {mode}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      {MENU_AXES.map((axis) => (
+        <div key={axis} className="flex flex-col gap-inset">
+          <span id={`axis-${axis}`}>{axis}</span>
+          <Menu>
+            <MenuTrigger variant="soft" aria-labelledby={`axis-${axis} axis-${axis}-value`}>
+              <span id={`axis-${axis}-value`}>{choices[axis]}</span>
+            </MenuTrigger>
+            <MenuContent width="trigger">
+              {OPTIONS[axis].map((option) => (
+                <MenuCheckboxItem
+                  key={option}
+                  checked={choices[axis] === option}
+                  onCheckedChange={() => {
+                    if (isChoice(axis, option)) setChoice(axis, option)
+                  }}
+                  closeOnClick
+                >
+                  {option}
+                </MenuCheckboxItem>
+              ))}
+            </MenuContent>
+          </Menu>
+        </div>
+      ))}
+      <Button variant="outline" onClick={reset}>
+        Reset
+      </Button>
+      <MotionLab />
+    </aside>
+  )
+}
