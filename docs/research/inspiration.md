@@ -459,6 +459,12 @@ Opisane: 470 pozycji · wysokie 55 · średnie 60 · niskie 132 · bez wartości
 
 ## Dialog i popup
 
+### ★ L938 · [Haz (@diegohaz)](https://x.com/diegohaz/status/2117004745047228730) · czat 2026-11-02
+
+- **Co pokazuje:** Ariakit „design tip” (wideo 1:02, opis z klatek) o promieniu koncentrycznym: ten sam promień wewnątrz i na zewnątrz daje odstęp puchnący w rogach; wspólny środek to promień wewnętrzny = zewnętrzny − padding; obrys jest częścią odległości (np. wiersz popovera 7 = 12 − 1 − 4); popover jest ciasny, więc wiersze potrzebują wzoru; w dialogu (padding 16) wzór „kończy się” (12 − 16 = 0, kwadratowe przyciski), więc od ok. 16 px odstępu kontrolki zachowują własny promień (przycisk 6, pole 8).
+- **Dla Tessery:** Kroki 1–3 silnik `shape` już robi (odstęp + obrys odjęte, próg 4 px). Kroku 4 brakowało: pomiar 02.11 przy rogach `sm`/`md`/`lg` — kontrolki w karcie i dialogu 4 / 4 / 7,3 px zamiast własnych 6,4 / 9,6 / 12,6 px (przy `full` niewidoczne, bo kapsuła). Decyzja R12 (`decisions/e3-owner-review-2026-11-01.md`) i `decisions/e3-size-scale.md`.
+- **Też:** Przycisk, Pola, Menu
+
 ### ★ L244 · [Designmotionhq](https://vm.tiktok.com/ZN8JJxkrR/) · ms 2026-07-22
 
 - **Co pokazuje:** Ciemne plansze 'secrets' czasów animacji: Entrance 200–300 ms (50 ms za szybko, 700 ms za wolno), Exit szybszy od wejścia (250 ms in → 150 ms out, o 30% szybciej), Feedback poniżej 100 ms (press, hover, toggle; próg Doherty'ego), Attention 500–800 ms z bounce (błędy, alerty; shake), Stagger 50 ms między elementami listy/menu (30 za szybko, 100 za wolno). Na końcu ściąga liczb.
