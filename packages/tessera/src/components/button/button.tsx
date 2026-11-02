@@ -3,7 +3,7 @@
 import LoaderCircle from 'lucide-react/icons/loader-circle'
 import type { ComponentProps, ComponentType, MouseEvent, MouseEventHandler, ReactNode, Ref } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
-import { trackPress } from '../../lib/press'
+import { pressable } from '../../lib/press'
 import type { Choices } from '../../lib/theme'
 import { titleWhenCut } from '../../lib/title-when-cut'
 import type { Tone } from '../../lib/tone'
@@ -18,6 +18,7 @@ type ButtonLook = {
   tone?: Tone
   size?: Choices['size']
   busy?: boolean
+  hug?: boolean
   icon?: ReactNode
   iconEnd?: ReactNode
 }
@@ -27,6 +28,7 @@ type LookAttributes = {
   tone: Tone | undefined
   size: Choices['size'] | undefined
   busy: boolean | undefined
+  hug: boolean | undefined
 }
 
 type ContentProps = {
@@ -52,10 +54,6 @@ export type ButtonLinkProps = ButtonLook &
   ButtonName &
   Unstyled<ComponentProps<'a'>, 'children' | 'aria-busy' | 'href' | 'type'> & { href: string; link?: ButtonLink; type?: undefined; disabled?: undefined }
 
-function pressable(node: HTMLElement | null): (() => void) | undefined {
-  return node ? trackPress(node) : undefined
-}
-
 function titled(node: HTMLElement | null): (() => void) | undefined {
   return node ? titleWhenCut(node) : undefined
 }
@@ -68,13 +66,14 @@ function isBlocked(busy: boolean | undefined, ariaDisabled: ButtonProps['aria-di
   return busy === true || ariaDisabled === true || ariaDisabled === 'true'
 }
 
-function lookOf({ variant, tone, size, busy }: LookAttributes) {
+function lookOf({ variant, tone, size, busy, hug }: LookAttributes) {
   return {
     'aria-busy': busy || undefined,
     'data-recipe': 'control',
     'data-variant': variant ?? 'ghost',
     'data-tone': tone,
     'data-size': size,
+    'data-hug': hug || undefined,
     'data-focus': 'outer',
   } as const
 }
@@ -95,10 +94,10 @@ function Content({ busy, icon, iconEnd, children }: ContentProps) {
   )
 }
 
-function NativeButton({ variant, tone, size, busy, icon, iconEnd, children, ref, onClick, ...button }: ButtonProps) {
+function NativeButton({ variant, tone, size, busy, hug, icon, iconEnd, children, ref, onClick, ...button }: ButtonProps) {
   const blocked = isBlocked(busy, button['aria-disabled'])
   return (
-    <button type="button" {...button} {...lookOf({ variant, tone, size, busy })} ref={composeRefs(ref, pressable, titled)} onClick={blocked ? stop : onClick}>
+    <button type="button" {...button} {...lookOf({ variant, tone, size, busy, hug })} ref={composeRefs(ref, pressable, titled)} onClick={blocked ? stop : onClick}>
       <Content busy={busy} icon={icon} iconEnd={iconEnd}>
         {children}
       </Content>
@@ -106,13 +105,13 @@ function NativeButton({ variant, tone, size, busy, icon, iconEnd, children, ref,
   )
 }
 
-function AnchorButton({ variant, tone, size, busy, icon, iconEnd, children, ref, link, onClick, onAuxClick, ...anchor }: ButtonLinkProps) {
+function AnchorButton({ variant, tone, size, busy, hug, icon, iconEnd, children, ref, link, onClick, onAuxClick, ...anchor }: ButtonLinkProps) {
   const blocked = isBlocked(busy, anchor['aria-disabled'])
   const Anchor = link ?? 'a'
   return (
     <Anchor
       {...anchor}
-      {...lookOf({ variant, tone, size, busy })}
+      {...lookOf({ variant, tone, size, busy, hug })}
       ref={composeRefs(ref, pressable, titled)}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => (blocked ? stop(event) : onClick?.(event))}
       onAuxClick={(event: MouseEvent<HTMLAnchorElement>) => (blocked ? stop(event) : onAuxClick?.(event))}

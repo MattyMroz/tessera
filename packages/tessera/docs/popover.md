@@ -24,7 +24,7 @@ The same model as [Dialog](dialog.md#slots): `PopoverPopup` takes `PopoverTitle`
 ## Overflow
 
 - Title, description and text: wrap and break a word longer than the line anywhere.
-- Labels of the buttons in `PopoverActions`: one line with an ellipsis.
+- Labels of the buttons in `PopoverActions`: one line with an ellipsis; the row wraps to a new line at the end when the buttons do not fit.
 - The popup: never wider or taller than the room in the window; taller content scrolls inside it without a sideways scroll.
 
 ## Rendered attributes

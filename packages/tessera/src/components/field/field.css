@@ -16,8 +16,9 @@
     }
 
     [data-component='field']:not(:has(textarea)) {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: auto auto;
       grid-auto-flow: row dense;
+      justify-content: space-between;
       column-gap: var(--ts-space-group);
       row-gap: 0;
     }

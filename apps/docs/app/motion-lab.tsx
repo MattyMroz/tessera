@@ -37,7 +37,7 @@ function readAll(): Record<string, string> {
 
 export function MotionLab() {
   const [values, setValues] = useState<Record<string, string>>({})
-  const [exit, setExit] = useState<HoverExit>('cut')
+  const [exit, setExit] = useState<HoverExit>('fade')
 
   const tune = (tunable: Tunable, value: string): void => {
     setValues((current) => ({ ...current, [tunable.name]: value }))
@@ -47,7 +47,7 @@ export function MotionLab() {
   const reset = (): void => {
     for (const tunable of TUNABLES) document.documentElement.style.removeProperty(tunable.name)
     document.documentElement.style.removeProperty(HOVER_FADE)
-    setExit('cut')
+    setExit('fade')
     setValues(readAll())
   }
 

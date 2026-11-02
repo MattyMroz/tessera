@@ -43,6 +43,7 @@
     --ts-type-display-leading: 34px;
     --ts-type-measure: 44ch;
     --ts-type-measure-narrow: 36ch;
+    --ts-type-measure-min: 12ch;
 
     --ts-type-weight-regular: 400;
     --ts-type-weight-medium: 500;

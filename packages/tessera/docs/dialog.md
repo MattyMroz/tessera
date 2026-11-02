@@ -31,7 +31,7 @@ A part wrapped in an element of the consumer still renders: the check sees the h
 ## Overflow
 
 - Title, description and any text inside: wrap, and a word longer than the line (a URL, a Windows path, a hash) breaks anywhere (`overflow-wrap: anywhere` of the `surface` and `text` recipes).
-- Labels of the buttons in `DialogActions`: one line with an ellipsis; the buttons shrink together down to their height.
+- Labels of the buttons in `DialogActions`: one line with an ellipsis; a button keeps its least width (2.5 heights with a label) and the row wraps to a new line at the end when the buttons do not fit.
 - The dialog: never wider than the window minus the `card` gap on each side and never taller; taller content scrolls inside it.
 
 ## Rendered attributes

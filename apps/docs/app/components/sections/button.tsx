@@ -120,6 +120,20 @@ export function ButtonSection() {
           </Button>
         ))}
       </div>
+      <div role="group" aria-label="Least width" className="flex flex-wrap items-end gap-inset">
+        {THEME_CONFIG.axes.size.map((size) => (
+          <Button key={size} variant="outline" size={size}>
+            OK
+          </Button>
+        ))}
+      </div>
+      <div role="group" aria-label="Hug" className="flex flex-wrap items-end gap-inset">
+        {THEME_CONFIG.axes.size.map((size) => (
+          <Button key={size} variant="outline" size={size} hug>
+            OK
+          </Button>
+        ))}
+      </div>
       <div className="flex flex-wrap items-center gap-inset">
         {VARIANTS.map((variant) => (
           <Button key={variant} variant={variant} disabled>

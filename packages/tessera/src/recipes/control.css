@@ -28,7 +28,7 @@
     height: var(--ts-size-height);
     margin: 0;
     padding-block: 0;
-    padding-inline: calc(var(--_side-start) - var(--ts-shape-stroke)) calc(var(--_side-end) - var(--ts-shape-stroke));
+    padding-inline: var(--_side-start) var(--_side-end);
     border: var(--ts-shape-stroke) solid transparent;
     border-radius: var(--ts-shape-control-radius);
     corner-shape: var(--ts-shape-control-corner);
@@ -64,6 +64,10 @@
       cursor: pointer;
     }
 
+    &:where(button, a[href]):not([role], [data-hug], [data-surface='track'] > *, [data-surface='joined'] > *):has(> [data-slot='label']) {
+      min-width: var(--ts-size-label-min);
+    }
+
     &:not(:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input']))) {
       min-width: var(--ts-size-step);
       height: var(--ts-size-step);
@@ -74,8 +78,8 @@
     }
 
     &[data-numeric] {
-      --_side-start: var(--ts-shape-control-side-icon);
-      --_side-end: var(--ts-shape-control-side-icon);
+      --_side-start: calc(var(--ts-shape-control-side-icon) - var(--ts-shape-stroke));
+      --_side-end: calc(var(--ts-shape-control-side-icon) - var(--ts-shape-stroke));
       font-variant-numeric: tabular-nums;
     }
 
@@ -127,6 +131,7 @@
       background: transparent;
       color: inherit;
       font: inherit;
+      text-overflow: ellipsis;
       appearance: none;
     }
 
@@ -143,7 +148,7 @@
       align-self: stretch;
       height: auto;
       min-block-size: calc(var(--ts-size-leading) + var(--ts-size-leading) + var(--ts-size-leading));
-      padding-block: calc(var(--ts-shape-control-side) - var(--ts-shape-stroke) - var(--ts-size-cap-pad));
+      padding-block: calc(var(--ts-shape-control-side) - var(--ts-size-cap-pad));
       resize: none;
       field-sizing: content;
       overflow-wrap: anywhere;
@@ -312,7 +317,7 @@
     --_step: var(--_press);
   }
 
-  [data-recipe='control']:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex])[data-pressing]:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'])::before {
+  [data-recipe='control']:where(button, a[href], input, select, textarea, [role='button'], [role='tab'], [role='menuitem'], [tabindex])[data-pressing]:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [role='radio'], [data-variant='field'])::before {
     scale: var(--ts-motion-press-scale);
   }
 

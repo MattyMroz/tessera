@@ -1,3 +1,4 @@
+import { THEME_CONFIG } from '@mattymroz/tessera/lib/theme'
 import { TONES } from '@mattymroz/tessera/lib/tone'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { box, colorOf, raisedShadow, settle, srgbOf, TONE_ROLES, visit } from './helpers'
@@ -14,6 +15,7 @@ const LINK_WAIT = 600
 const TOLERANCE = 0.5
 const DISABLED_OPACITY = '0.4'
 const LONG = 'Export every chapter of this volume as one continuous vertical video'
+const LABEL_MIN = 2.5
 
 function variant(page: Page, name: string): Locator {
   return page.getByRole('region', { name: 'Button', exact: true }).getByRole('button', { name, exact: true })
@@ -149,6 +151,23 @@ test('presses a button while the pointer is down', async ({ page }) => {
   await expect(button).not.toHaveAttribute('data-pressing')
 })
 
+test('lifts the press of a menu trigger on release although the menu opened on pointer down', async ({ page }) => {
+  for (const trigger of [page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true }), page.getByRole('button', { name: /^accent / })]) {
+    await trigger.scrollIntoViewIfNeeded()
+    const target = await box(trigger)
+    await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2)
+    await page.mouse.down()
+    await expect(page.getByRole('menu')).toBeVisible()
+    await expect(trigger).toHaveAttribute('data-pressing', '')
+    await page.waitForTimeout(PRESS_HOLD)
+    await page.mouse.up()
+    await expect(trigger).not.toHaveAttribute('data-pressing')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('menu')).toHaveCount(0)
+  }
+})
+
 test('presses only the plate of a control, so no control, anchor or ancestor of an anchor is ever transformed', async ({ page }) => {
   for (const path of [PAGE, EDGES, '/screens/overlays']) {
     await visit(page, path)
@@ -191,12 +210,16 @@ test('keeps a popup and its trigger still before, while and after the trigger is
         }
         const frames: { trigger: string; popup: string; animations: number }[] = []
         Object.assign(window, { stillFrames: frames })
-        const timer = setInterval(() => {
+        const sample = (): void => {
           frames.push({
             trigger: rect('[data-still-trigger]'),
             popup: rect('[data-still-popup]'),
             animations: document.querySelector('[data-still-popup]')?.getAnimations({ subtree: true }).length ?? 0,
           })
+        }
+        sample()
+        const timer = setInterval(() => {
+          sample()
           if (frames.length >= count) clearInterval(timer)
         }, every)
       },
@@ -338,6 +361,34 @@ test('keeps the width of a busy button and turns a spinner in place of its icon'
   expect(Math.abs(spinner.y + spinner.height / 2 - (button.y + button.height / 2))).toBeLessThanOrEqual(TOLERANCE)
   await form.getByRole('button', { name: 'Work', exact: true }).click()
   await expect(upload.locator(':scope > [data-slot="icon"] > svg.lucide-upload')).toHaveCount(1)
+})
+
+test('keeps a lone button with a label at least 2.5 heights wide, and a hug button, a segment of a joined group and an icon-only button as narrow as their content allows', async ({ page }) => {
+  const section = page.getByRole('region', { name: 'Button', exact: true })
+  const rects = (buttons: Locator): Promise<{ width: number; height: number }[]> =>
+    buttons.evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect()).map(({ width, height }) => ({ width, height })))
+  const least = await rects(section.getByRole('group', { name: 'Least width', exact: true }).getByRole('button'))
+  const hugged = await rects(section.getByRole('group', { name: 'Hug', exact: true }).getByRole('button'))
+  expect(least).toHaveLength(THEME_CONFIG.axes.size.length)
+  expect(hugged).toHaveLength(least.length)
+  for (const [index, { width, height }] of least.entries()) {
+    expect(Math.abs(width - height * LABEL_MIN), `least ${index}`).toBeLessThanOrEqual(TOLERANCE)
+    const hug = hugged[index] ?? { width: 0, height: 0 }
+    expect(hug.height, `hug ${index}`).toBe(height)
+    expect(hug.width, `hug ${index}`).toBeLessThan(height * LABEL_MIN - TOLERANCE)
+    expect(hug.width, `hug ${index}`).toBeGreaterThanOrEqual(height - TOLERANCE)
+  }
+  const icons = await rects(section.getByRole('button', { name: /^Add \(/ }))
+  expect(icons.length).toBeGreaterThan(0)
+  for (const { width, height } of icons) expect(Math.abs(width - height)).toBeLessThanOrEqual(TOLERANCE)
+  const segments = await rects(
+    page
+      .locator('[data-surface="joined"]')
+      .getByRole('button')
+      .filter({ hasText: /^(xs|sm|md|lg|xl)$/ }),
+  )
+  expect(segments).toHaveLength(THEME_CONFIG.axes.size.length)
+  for (const { width, height } of segments) expect(width).toBeLessThan(height * LABEL_MIN - TOLERANCE)
 })
 
 test('renders a link as an anchor with its href and no type, with the pointer cursor on every platform', async ({ page }) => {

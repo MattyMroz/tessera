@@ -270,11 +270,21 @@
 
     & > [data-slot='actions'] {
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
       gap: var(--ts-space-inset);
+      min-inline-size: 0;
     }
 
-    & > [data-slot='actions'],
+    & > [data-slot='header'] {
+      min-inline-size: 0;
+    }
+
+    & > [data-slot='header'] > [data-slot='title'] {
+      flex: 1 1 min(var(--ts-type-measure-min), 100%);
+      min-inline-size: min(var(--ts-type-measure-min), 100%);
+    }
+
     & > [data-slot='header'] > [data-slot='action'] {
       min-inline-size: 0;
     }

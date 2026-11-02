@@ -412,7 +412,7 @@ for (const mode of ['light', 'dark'] as const) {
   })
 }
 
-test('fades the hover pill out over the overlay time only when the hover fade input is on, and cuts it at once with motion off', async ({ page }) => {
+test('fades the hover pill out over the overlay time by default, cuts it with the hover fade input off and at once with motion off', async ({ page }) => {
   const range = group(page, 'Range (raised)')
   const exit = (): Promise<string> => hoverPill(range).evaluate((element) => getComputedStyle(element).transitionDuration)
   const durations = await page.evaluate(() => {
@@ -420,9 +420,10 @@ test('fades the hover pill out over the overlay time only when the hover fade in
     return { instant: style.getPropertyValue('--ts-motion-duration-instant'), overlay: style.getPropertyValue('--ts-motion-duration-overlay') }
   })
   const seconds = (time: number): string => `${time / MILLISECONDS}s`
-  expect(await exit()).toBe(seconds(milliseconds(durations.instant)))
-  await page.evaluate(() => document.documentElement.style.setProperty('--ts-in-motion-hover-fade', '1'))
+  expect(milliseconds(durations.overlay)).toBeGreaterThan(0)
   expect(await exit()).toBe(seconds(milliseconds(durations.instant) + milliseconds(durations.overlay)))
+  await page.evaluate(() => document.documentElement.style.setProperty('--ts-in-motion-hover-fade', '0'))
+  expect(await exit()).toBe(seconds(milliseconds(durations.instant)))
   await page.evaluate(() => document.documentElement.setAttribute('data-motion', 'off'))
   expect(await exit()).toBe('0s')
 })
@@ -488,6 +489,32 @@ test('keeps every pill unpressed while the option under the active pill is press
   await page.mouse.up()
   expect(parts.length).toBeGreaterThan(0)
   expect(parts).toEqual(parts.map(() => ({ scale: 'none', pressing: false })))
+})
+
+test('darkens the hover pill by one press step under a pressed option and scales neither the option nor a pill', async ({ page }) => {
+  const range = group(page, 'Range (md)')
+  const month = range.getByRole('radio', { name: 'Month', exact: true })
+  await expect(month).toHaveAttribute('aria-checked', 'false')
+  const fill = (): Promise<number> => hoverPill(range).locator('[data-slot="squash"]').evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))
+  const steps = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement)
+    const read = (name: string): number => Number.parseFloat(style.getPropertyValue(name))
+    return { track: read('--ts-state-indicator-track'), lift: read('--ts-state-press') - read('--ts-state-hover') }
+  })
+  await month.hover()
+  await expect(hoverPill(range)).toHaveAttribute('data-visible', 'true')
+  expect(await fill()).toBeCloseTo(steps.track, 3)
+  await page.mouse.down()
+  await expect(month).toHaveAttribute('data-pressing', '')
+  expect(steps.lift).toBeGreaterThan(0)
+  expect(await fill()).toBeCloseTo(steps.track + steps.lift, 3)
+  const scales = await range.locator('[role="radio"], [data-recipe="indicator"], [data-recipe="indicator"] *').evaluateAll((elements) => [
+    ...new Set(elements.flatMap((element) => [getComputedStyle(element).scale, getComputedStyle(element, '::before').scale])),
+  ])
+  expect(scales).toEqual(['none'])
+  await page.mouse.up()
+  await expect(month).not.toHaveAttribute('data-pressing')
+  await expect(month).toHaveAttribute('aria-checked', 'true')
 })
 
 test('keeps the track concentric with the active pill for every corner and curve', async ({ page }) => {

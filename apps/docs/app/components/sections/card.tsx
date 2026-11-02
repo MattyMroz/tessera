@@ -30,7 +30,7 @@ export function CardSection() {
         <Card data-testid="export-card" level="base" container>
           <CardHeader level={3} title="Export" action={<Button variant="soft">Settings</Button>} />
           <Text as="p" variant="description">
-            With container the header stacks its action when the card is narrower than the narrow container width.
+            With container the actions stack in a column when the card is narrower than the narrow container width.
           </Text>
         </Card>
         <Card data-testid="link-card" href="#card-title">

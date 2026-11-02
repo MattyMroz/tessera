@@ -13,6 +13,7 @@ import {
   hydrated,
   installCommitProbe,
   INTERACTIVE_CONTROL,
+  letterBreaks,
   MIN_CONTRAST,
   overflowProblems,
   pageScroll,
@@ -293,6 +294,17 @@ for (const width of EDGE_WIDTHS) {
       }
       expect(broken).toEqual([])
     })
+
+    test('breaks no text of any lab page into lines of a letter or two', async ({ page }) => {
+      const broken: string[] = []
+      for (const path of LAB_PAGES) {
+        await page.goto(path)
+        await page.evaluate(() => document.fonts.ready.then(() => undefined))
+        await hydrated(page)
+        broken.push(...(await letterBreaks(page.locator('body'))).map((problem) => `${path}: ${problem}`))
+      }
+      expect(broken).toEqual([])
+    })
   })
 }
 
@@ -352,6 +364,12 @@ for (const edge of OVERFLOW_EDGES) {
       expect(await namesOf(page, 'data-overflow-component')).toEqual(await namesOf(page, 'data-edge-component'))
       expect(await overflowProblems(page.locator(OVERFLOW_FRAME))).toEqual([])
       expect(await overflowProblems(page.locator(`${SECTION} [data-testid="narrow"]`))).toEqual([])
+      expect(await letterBreaks(page.locator(OVERFLOW_FRAME))).toEqual([])
+      const inputs = page.locator(`${OVERFLOW_FRAME} input`)
+      expect(await inputs.count()).toBeGreaterThan(0)
+      expect(await inputs.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).textOverflow))).toEqual(
+        Array.from({ length: await inputs.count() }, () => 'ellipsis'),
+      )
     })
 
     test('keeps every popup with long strings in the window and its content inside it without a sideways scroll', async ({ page }) => {

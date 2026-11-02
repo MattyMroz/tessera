@@ -22,7 +22,7 @@
 
 @layer theme {
   :root {
-    --ts-in-motion-hover-fade: 0;
+    --ts-in-motion-hover-fade: 1;
   }
 
   :root,
