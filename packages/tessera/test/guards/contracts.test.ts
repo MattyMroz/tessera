@@ -204,9 +204,11 @@ const LAB_BLOCKS: Readonly<Record<string, string>> = {
     "files: ['apps/docs/app/foundation/page.tsx'], rules: { 'tessera/no-local-appearance': 'off' },",
   'lab/first-frame-probe':
     "files: ['apps/docs/tests/lab.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the anti-FOUC test reads the theme attributes in the first rendering frame' }, ], },",
+  'lab/tooltip-frame-probe':
+    "files: ['apps/docs/tests/tooltip.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the tooltip guards read the shown tooltip in every rendering frame' }, ], },",
 }
 
-it('configures the lab with the consumer plugin, one rule turned off for the foundation page and one rule configured for the first-frame probe', () => {
+it('configures the lab with the consumer plugin, one rule turned off for the foundation page and one rule configured for each frame probe', () => {
   const blocks = [...eslintConfig.matchAll(CONFIG_BLOCK)].map(([, body = '']) => body.replace(/\s+/g, ' ').trim())
   const lab = blocks.filter((body) => body.includes('apps/docs'))
   expect(Object.fromEntries(lab.map((body) => [BLOCK_NAME.exec(body)?.[1], body.replace(BLOCK_NAME, '').trim()]))).toEqual(LAB_BLOCKS)
@@ -339,9 +341,17 @@ it('gives every component a section on the edges screen', () => {
   expect(missingEdgeSections(COMPONENTS, screen)).toEqual([])
 })
 
-const TIME_CONSTANTS = ['SAMPLE_STEP', 'SUBMENU_FLIGHT_GRACE', 'TOOLTIP_GROUP_GRACE', 'TYPEAHEAD_RESET']
+const TIME_CONSTANTS = [
+  'SAMPLE_STEP',
+  'SUBMENU_FLIGHT_GRACE',
+  'TOOLTIP_OPEN_DELAY',
+  'TOOLTIP_GROUP_GRACE',
+  'TOOLTIP_CLOSE_DELAY',
+  'TYPEAHEAD_RESET',
+]
 const NUMERIC_CONSTANT = /^\s*(?:export )?const ([A-Za-z_$][\w$]*)(?::\s*number)? = [\d\s.+*/()e-]+$/gm
-const TIME_USE = /\b(?:setTimeout|setInterval)\([^\n]*?,\s*([A-Za-z_$][\w$]*)\s*\)|\b(?:duration|delay|endDelay|grace|timeout)\s*(?::|=\{)\s*([A-Za-z_$][\w$]*)\b/g
+const TIME_USE =
+  /\b(?:setTimeout|setInterval)\([^\n]*?,\s*([A-Za-z_$][\w$]*)\s*\)|\b(?:duration|delay|closeDelay|endDelay|grace|timeout)\s*(?::|=\{)\s*([A-Za-z_$][\w$]*)\b/g
 const CONSTANT_NAME = /^[A-Z][A-Z\d_]*$/
 
 function numericConstants(entries: readonly (readonly [string, string])[]): Set<string> {
@@ -365,11 +375,13 @@ it('accepts the listed time constants defined in lib and used by lib and compone
     'lib/flight.ts': 'export const SAMPLE_STEP = 1 / 60\nconst MAX_SAMPLES = 600',
     'lib/motion.ts': 'export const MILLISECONDS_PER_SECOND = 1000',
     'lib/popup-flight.ts': 'export const SUBMENU_FLIGHT_GRACE = 150',
-    'lib/tooltip-group.ts': 'export const TOOLTIP_GROUP_GRACE: number = 400',
+    'lib/tooltip-group.ts':
+      'export const TOOLTIP_OPEN_DELAY = 400\nexport const TOOLTIP_GROUP_GRACE: number = 400\nexport const TOOLTIP_CLOSE_DELAY = 100',
     'lib/collection.ts': "export const TYPEAHEAD_RESET = 500\nif (now - last > TYPEAHEAD_RESET) buffer = ''",
     'lib/press.ts': 'timer = setTimeout(lift, delay)',
     'components/menu/menu.tsx': 'createPopupFlight({ grace: SUBMENU_FLIGHT_GRACE })',
-    'components/tooltip/tooltip.tsx': '<BaseTooltip.Provider timeout={TOOLTIP_GROUP_GRACE}>{children}</BaseTooltip.Provider>',
+    'components/tooltip/tooltip.tsx':
+      '<BaseTooltip.Provider timeout={TOOLTIP_GROUP_GRACE}>{children}</BaseTooltip.Provider>\nconst TIMING = { delay: TOOLTIP_OPEN_DELAY, closeDelay: TOOLTIP_CLOSE_DELAY }',
   })).toEqual([])
 })
 
@@ -378,16 +390,20 @@ it('finds a listed time constant missing from lib and a time constant outside th
     'lib/flight.ts': 'export const SAMPLE_STEP = 1 / 60',
     'lib/popup-flight.ts': 'export const SUBMENU_FLIGHT_GRACE = 150\nconst HOLD = 300\nsetTimeout(release, HOLD)',
     'components/menu/menu.tsx': 'const SWITCH_DELAY = 150\ncreatePopupFlight({ grace: SWITCH_DELAY })',
-    'components/tooltip/tooltip.tsx': '<BaseTooltip.Provider timeout={OPEN_WINDOW}>{children}</BaseTooltip.Provider>',
+    'components/tooltip/tooltip.tsx':
+      '<BaseTooltip.Provider timeout={OPEN_WINDOW}>{children}</BaseTooltip.Provider>\n<BaseTooltip.Trigger closeDelay={LEAVE_WINDOW} />',
     'components/text/text.tsx': 'const TOOLTIP_GROUP_GRACE = 400',
     'lib/press.ts': 'function hold() {\n  const wait = 300\n  setTimeout(lift, wait)\n}',
     'lib/scope.ts': 'const holdTime: number = 0.3e3\nanimate(frames, { duration: holdTime })',
   })).toEqual([
+    'TOOLTIP_OPEN_DELAY: no numeric constant in lib',
     'TOOLTIP_GROUP_GRACE: no numeric constant in lib',
+    'TOOLTIP_CLOSE_DELAY: no numeric constant in lib',
     'TYPEAHEAD_RESET: no numeric constant in lib',
     'HOLD: time constant outside the list',
     'SWITCH_DELAY: time constant outside the list',
     'OPEN_WINDOW: time constant outside the list',
+    'LEAVE_WINDOW: time constant outside the list',
     'wait: time constant outside the list',
     'holdTime: time constant outside the list',
   ])
