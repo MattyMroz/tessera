@@ -301,7 +301,7 @@
 
   [data-surface='joined'] > [data-recipe='control'] {
     --_edge: transparent;
-    --_shade: none;
+    --_shade: calc(-1 * var(--ts-shape-stroke)) 0 0 var(--_base);
     box-shadow: none;
   }
 

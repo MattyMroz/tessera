@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { box, edgeContext, raisedShadow, visit } from './helpers'
+import { box, edgeContext, lightness, pixels, raisedShadow, visit } from './helpers'
 
 const PAGE = '/components'
 const EDGES = '/screens/edges'
@@ -10,6 +10,13 @@ const NARROW = 320
 const CORNER = 10
 const CHANNEL_TOLERANCE = 48
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
+const FRACTIONAL_RATIOS: readonly number[] = [1.25, 1.5]
+const SEAM_OFFSETS: readonly number[] = [-3, -1, -0.5, 0, 0.5, 1, 3]
+const SEAM_ROW = 4
+const OPAQUE_GROUPS: readonly string[] = ['Export', 'Filter']
+const TRANSLUCENT_GROUPS: readonly string[] = ['Pages']
+const SEAM_STEP = 0.01
+const HALF = 2
 
 type Box = { x: number; y: number; width: number; height: number }
 
@@ -197,6 +204,37 @@ test.describe('on the edges screen at 320 px', () => {
     expect(lines.filter((line) => line.rows !== 1 || line.left < -TOLERANCE || line.right > line.frame + TOLERANCE)).toEqual([])
   })
 })
+
+for (const ratio of FRACTIONAL_RATIOS) {
+  test.describe(`on the components page at DPR ${ratio}`, () => {
+    test.use({ deviceScaleFactor: ratio })
+
+    test('paints the seams between the segments of a joined group in the colour of the segments, without a light or dark line', async ({ page, browserName }) => {
+      await visit(page, PAGE)
+      for (const mode of ['light', 'dark'] as const) {
+        await page.evaluate((value) => document.documentElement.setAttribute('data-mode', value), mode)
+        for (const name of browserName === 'webkit' ? OPAQUE_GROUPS : [...OPAQUE_GROUPS, ...TRANSLUCENT_GROUPS]) {
+          const joined = group(page, name)
+          await joined.scrollIntoViewIfNeeded()
+          const seams = await joined.evaluate((element) =>
+            [...element.children]
+              .filter((child) => child.matches('[data-recipe="control"]'))
+              .slice(1)
+              .map((child) => child.getBoundingClientRect())
+              .map((rect) => ({ x: rect.x, y: rect.y })),
+          )
+          expect(seams.length, name).toBeGreaterThan(0)
+          for (const seam of seams) {
+            const [outsideStart = 0, ...rest] = (await pixels(page, SEAM_OFFSETS.map((offset) => ({ x: seam.x + offset, y: seam.y + SEAM_ROW })))).map(lightness)
+            const outsideEnd = rest.pop() ?? 0
+            const ground = (outsideStart + outsideEnd) / HALF
+            expect(Math.max(...rest.map((value) => Math.abs(value - ground))), `${mode} ${name} at ${seam.x}`).toBeLessThanOrEqual(SEAM_STEP)
+          }
+        }
+      }
+    })
+  })
+}
 
 test.describe('on the edges screen at 200% zoom', () => {
   test.use(edgeContext({ zoom: 2 }))

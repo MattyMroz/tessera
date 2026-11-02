@@ -428,6 +428,33 @@ test('fades the hover pill out over the overlay time by default, cuts it with th
   expect(await exit()).toBe('0s')
 })
 
+test('fades the hover pill out over the exit time when the option under the cursor is chosen, while the chosen pill slides there, and keeps it out', async ({ page }) => {
+  const range = group(page, 'Range (raised)')
+  const month = range.getByRole('radio', { name: 'Month', exact: true })
+  const exitTime = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement)
+    return [style.getPropertyValue('--ts-motion-duration-instant'), style.getPropertyValue('--ts-motion-duration-overlay')]
+  })
+  await month.hover()
+  await expect(hoverPill(range)).toHaveAttribute('data-visible', 'true')
+  await page.waitForTimeout(SETTLE)
+  await month.click()
+  const motion = await range.evaluate((element) => {
+    const hover = element.querySelector('[data-recipe="indicator"][data-variant="hover"]')
+    const chosen = element.querySelector('[data-recipe="indicator"]:not([data-variant="hover"])')
+    const fades = (hover?.getAnimations() ?? []).flatMap((animation) =>
+      animation instanceof CSSTransition && animation.transitionProperty === 'opacity' ? [Number(animation.effect?.getComputedTiming().duration)] : [],
+    )
+    return { fades, slides: chosen?.getAnimations().length ?? 0 }
+  })
+  expect(motion.fades).toEqual([exitTime.reduce((total, time) => total + milliseconds(time), 0)])
+  expect(motion.fades[0]).toBeGreaterThan(0)
+  expect(motion.slides).toBeGreaterThan(0)
+  await expect(hoverPill(range)).toHaveAttribute('data-visible', 'false')
+  await page.waitForTimeout(SETTLE)
+  expect(await hoverPill(range).evaluate((element) => ({ visible: element.getAttribute('data-visible'), opacity: getComputedStyle(element).opacity }))).toEqual({ visible: 'false', opacity: '0' })
+})
+
 test('keeps the hover pill on the last option over a disabled option', async ({ page }) => {
   const options = group(page, 'With a disabled option')
   const hover = hoverPill(options)
