@@ -640,7 +640,7 @@ test.describe('in forced colors', () => {
     await page.mouse.up()
   })
 
-  test('keeps the chosen option, the hover pill, disabled parts, fields, tracks and the focus ring visible', async ({ page, browserName }) => {
+  test('keeps the chosen option, the hover pill, disabled parts, fields, tracks, the edge of a menu and the focus ring visible', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'WebKit does not force colors, see docs/structure.md')
     await open(page)
     const groups = [
@@ -686,6 +686,9 @@ test.describe('in forced colors', () => {
     await states.getByRole('button', { name: 'With a disabled item', exact: true }).click()
     const menu = page.getByRole('menu')
     await expect(menu).toBeVisible()
+    const menuBorder = await menu.evaluate((element) => ({ width: Number.parseFloat(getComputedStyle(element).borderTopWidth), color: getComputedStyle(element).borderTopColor }))
+    expect(menuBorder.width).toBeGreaterThan(0)
+    expect(menuBorder.color).not.toBe(TRANSPARENT)
     await menu.getByRole('menuitem', { name: /Open/ }).hover()
     const hoverPill = menu.locator('[data-recipe="indicator"][data-variant="hover"]')
     await expect(hoverPill).toHaveAttribute('data-visible', 'true')

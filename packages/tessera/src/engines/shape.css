@@ -3,9 +3,11 @@
     --ts-in-shape-radius: 1;
     --ts-shape-stroke: 1px;
     --ts-shape-inner: 9999px;
+    --ts-shape-inset: 0px;
     --_ts-shape-squircle: 0;
     --_ts-shape-squircle-gain: 0.6;
     --_ts-shape-min: 4px;
+    --_ts-shape-loose-inset: 16px;
     --_ts-shape-square-ratio: calc(10 / 28);
     --ts-shape-corner: round;
     --ts-shape-control-corner: round;
@@ -127,10 +129,11 @@
   [data-surface='track'],
   [data-surface='joined'],
   [data-surface][data-content='controls'] {
+    --_ts-shape-gap: var(--ts-size-wrap);
     --ts-shape-inset: calc(var(--_ts-shape-gap) + var(--ts-shape-stroke));
   }
 
-  [data-surface='']:not([data-surface] [data-surface]) {
+  [data-surface='']:not([data-content='controls'], [data-surface] [data-surface]) {
     --ts-shape-surface: calc(
       (
           var(--_ts-shape-ref) * var(--ts-in-shape-radius) + var(--_ts-shape-rounded) * var(--_ts-shape-spread) *
@@ -142,25 +145,26 @@
     --ts-shape-inner: var(--_ts-shape-c1);
   }
 
-  [data-surface] [data-surface='']:not([data-surface] [data-surface] [data-surface]) {
+  [data-surface] [data-surface='']:not([data-content='controls'], [data-surface] [data-surface] [data-surface]) {
     --ts-shape-surface: var(--_ts-shape-c1);
     --_ts-shape-c2: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
     --ts-shape-inner: var(--_ts-shape-c2);
   }
 
-  [data-surface] [data-surface] [data-surface='']:not([data-surface] [data-surface] [data-surface] [data-surface]) {
+  [data-surface] [data-surface] [data-surface='']:not([data-content='controls'], [data-surface] [data-surface] [data-surface] [data-surface]) {
     --ts-shape-surface: var(--_ts-shape-c2);
     --_ts-shape-c3: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
     --ts-shape-inner: var(--_ts-shape-c3);
   }
 
-  [data-surface] [data-surface] [data-surface] [data-surface='']:not([data-surface] [data-surface] [data-surface] [data-surface] [data-surface]) {
+  [data-surface] [data-surface] [data-surface] [data-surface='']:not([data-content='controls'], [data-surface] [data-surface] [data-surface] [data-surface] [data-surface]) {
     --ts-shape-surface: var(--_ts-shape-c3);
     --_ts-shape-c4: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
     --ts-shape-inner: var(--_ts-shape-c4);
   }
 
-  [data-surface='track'] {
+  [data-surface='track'],
+  [data-surface][data-content='controls'] {
     --ts-shape-surface: calc(var(--ts-shape-control) + var(--_ts-shape-rounded) * var(--ts-shape-inset));
     --ts-shape-inner: var(--ts-shape-control);
     --ts-shape-corner: var(--ts-shape-control-corner);
@@ -171,12 +175,17 @@
   [data-corners],
   [data-curve],
   [data-surface] {
-    --_ts-shape-fit: max(
+    --_ts-shape-loose: clamp(0, sign(var(--ts-shape-inset) - var(--_ts-shape-loose-inset)) + 1, 1);
+    --_ts-shape-tight: max(
       min(var(--ts-shape-control), var(--ts-shape-inner)),
       var(--_ts-shape-capsule) * var(--ts-shape-control)
     );
+    --_ts-shape-fit: calc(var(--_ts-shape-tight) * (1 - var(--_ts-shape-loose)) + var(--ts-shape-control) * var(--_ts-shape-loose));
     --ts-shape-control-radius: var(--_ts-shape-fit);
-    --ts-shape-concentric: min(var(--ts-shape-inner), var(--ts-size-height) / 2);
+    --ts-shape-concentric: calc(
+      min(var(--ts-shape-inner), var(--ts-size-height) / 2) * (1 - var(--_ts-shape-loose)) + var(--ts-shape-control) *
+        var(--_ts-shape-loose)
+    );
   }
 
   [data-surface='joined'] {

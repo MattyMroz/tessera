@@ -13,15 +13,15 @@ export function KbdSection() {
       <h2 id="kbd-title">Kbd</h2>
       <div className="flex flex-wrap items-center gap-group">
         <Text>
-          Press <Kbd>K</Kbd> to open the search
+          Press <Kbd size="xs">K</Kbd> to open the search
         </Text>
         <Text>
-          Save as <Kbd keys={['Ctrl', 'Shift', 'S']} />
+          Save as <Kbd size="xs" keys={['Ctrl', 'Shift', 'S']} />
         </Text>
         <Tooltip
           content={
             <>
-              Save <Kbd keys={['Ctrl', 'S']} />
+              Save <Kbd size="xs" keys={['Ctrl', 'S']} />
             </>
           }
         >
@@ -30,13 +30,17 @@ export function KbdSection() {
         <Menu>
           <MenuTrigger variant="soft">Edit</MenuTrigger>
           <MenuContent>
-            <MenuItem trail={<Kbd keys={['Ctrl', 'Z']} />}>Undo</MenuItem>
-            <MenuItem trail={<Kbd keys={['Ctrl', 'Y']} />}>Redo</MenuItem>
-            <MenuItem disabled trail={<Kbd keys={['Ctrl', 'X']} />}>
+            <MenuItem trail={<Kbd size="xs" keys={['Ctrl', 'Z']} />}>Undo</MenuItem>
+            <MenuItem trail={<Kbd size="xs" keys={['Ctrl', 'Y']} />}>Redo</MenuItem>
+            <MenuItem disabled trail={<Kbd size="xs" keys={['Ctrl', 'X']} />}>
               Cut
             </MenuItem>
           </MenuContent>
         </Menu>
+      </div>
+      <div className="flex flex-wrap items-center gap-inset">
+        <Button variant="soft">Search</Button>
+        <Kbd data-testid="kbd-inherit">K</Kbd>
       </div>
       <div className="flex flex-wrap items-end gap-inset">
         {THEME_CONFIG.axes.size.map((size) => (

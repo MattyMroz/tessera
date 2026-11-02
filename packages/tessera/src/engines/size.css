@@ -24,7 +24,6 @@
     --ts-size-leading: var(--ts-type-body-leading);
     --ts-size-icon: 16px;
     --ts-size-icon-stroke: 2.25;
-    --ts-size-gap: 5px;
   }
 
   [data-size='xs'] {
@@ -33,7 +32,6 @@
     --ts-size-leading: var(--ts-type-mini-leading);
     --ts-size-icon: 10px;
     --ts-size-icon-stroke: 2.4;
-    --ts-size-gap: 3px;
   }
 
   [data-size='sm'] {
@@ -42,7 +40,6 @@
     --ts-size-leading: var(--ts-type-small-leading);
     --ts-size-icon: 12px;
     --ts-size-icon-stroke: 2.25;
-    --ts-size-gap: 3px;
   }
 
   [data-size='md'] {
@@ -51,7 +48,6 @@
     --ts-size-leading: var(--ts-type-detail-leading);
     --ts-size-icon: 14px;
     --ts-size-icon-stroke: 2.25;
-    --ts-size-gap: 4px;
   }
 
   [data-size='xl'] {
@@ -60,19 +56,21 @@
     --ts-size-leading: var(--ts-type-title-leading);
     --ts-size-icon: 18px;
     --ts-size-icon-stroke: 2;
-    --ts-size-gap: 7px;
   }
 
   :root,
   [data-size] {
     --ts-size-step: var(--_ts-size-step);
     --ts-size-height: var(--ts-size-step);
+    --ts-size-gap: round(var(--ts-size-step) / 4 - 2px, 0.5px);
+    --ts-size-wrap: round(var(--ts-size-height) / 8, 0.5px);
     --ts-size-box: var(--ts-size-icon);
     --ts-size-track-block: calc(var(--ts-size-icon) + 4px);
     --ts-size-track-inline: round(var(--ts-size-track-block) * 1.75, 1px);
     --ts-size-thumb: calc(var(--ts-size-track-block) - 4px);
     --ts-size-rail: max(2px, round(var(--ts-size-height) / 7, 1px));
     --ts-size-cap-pad: calc((var(--ts-size-leading) - 1cap) / 2);
+    --ts-size-cap-inset: calc((var(--ts-size-step) - 1cap) / 2);
     --ts-size-icon-cap-pad: calc((var(--ts-size-icon) - 1cap) / 2);
   }
 

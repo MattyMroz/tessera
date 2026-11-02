@@ -16,7 +16,7 @@ export function CardSection() {
             title="Invite your team"
             description="Translators and editors join the project with their own roles."
             action={
-              <Badge variant="ghost" tone="success" dot>
+              <Badge variant="ghost" tone="success" size="sm" dot>
                 Active
               </Badge>
             }

@@ -13,7 +13,7 @@ type KbdBase = Unstyled<ComponentProps<'kbd'>, 'children'> & {
 export type KbdProps = KbdBase & ({ children: ReactNode; keys?: undefined } | { keys: readonly string[]; children?: undefined })
 
 function keyLook(size: Choices['size'] | undefined) {
-  return { 'data-recipe': 'control', 'data-variant': 'raised', 'data-size': size ?? 'xs', 'data-numeric': '' } as const
+  return { 'data-recipe': 'control', 'data-variant': 'raised', 'data-size': size, 'data-numeric': '' } as const
 }
 
 export function Kbd({ size, keys, children, ...props }: KbdProps) {

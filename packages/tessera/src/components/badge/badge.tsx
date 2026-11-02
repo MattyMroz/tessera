@@ -26,7 +26,7 @@ export function Badge({ variant, tone, size, numeric, dot, children, ...props }:
       data-recipe="control"
       data-variant={variant ?? 'soft'}
       data-tone={tone}
-      data-size={size ?? 'sm'}
+      data-size={size}
       data-numeric={numeric ? '' : undefined}
     >
       {dot && (

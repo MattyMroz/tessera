@@ -9,11 +9,10 @@
 
   [data-recipe='surface'] {
     --_bg: var(--ts-depth-base-bg);
-    --_border: var(--ts-depth-base-border);
     --_shadow: var(--ts-depth-base-shadow);
     box-sizing: border-box;
     padding: calc(var(--ts-shape-inset) - var(--ts-shape-stroke));
-    border: var(--ts-shape-stroke) solid var(--_border);
+    border: var(--ts-shape-stroke) solid transparent;
     border-radius: var(--ts-shape-surface);
     corner-shape: var(--ts-shape-corner);
     background: var(--_bg);
@@ -59,19 +58,16 @@
 
     &[data-level='sunken'] {
       --_bg: var(--ts-depth-sunken-bg);
-      --_border: var(--ts-depth-sunken-border);
       --_shadow: var(--ts-depth-sunken-shadow);
     }
 
     &[data-level='raised'] {
       --_bg: var(--ts-depth-raised-bg);
-      --_border: var(--ts-depth-raised-border);
       --_shadow: var(--ts-depth-raised-shadow);
     }
 
     &[data-level='overlay'] {
       --_bg: var(--ts-depth-overlay-bg);
-      --_border: var(--ts-depth-overlay-border);
       --_shadow: var(--ts-depth-overlay-shadow);
       position: relative;
       backdrop-filter: var(--ts-depth-backdrop);
@@ -126,7 +122,6 @@
 
     &[data-level='modal'] {
       --_bg: var(--ts-depth-modal-bg);
-      --_border: var(--ts-depth-modal-border);
       --_shadow: var(--ts-depth-modal-shadow);
       position: relative;
       z-index: var(--ts-depth-layer-popup);
@@ -183,9 +178,14 @@
 
     &[data-variant='tooltip'] {
       --_bg: var(--ts-color-tooltip);
-      --_border: transparent;
       max-inline-size: min(var(--ts-type-measure-narrow), var(--available-width));
+      padding-block: calc(var(--ts-size-cap-inset) - var(--ts-shape-stroke));
+      padding-inline: calc(var(--ts-shape-control-side) - var(--ts-shape-stroke));
+      border-radius: var(--ts-shape-control);
+      corner-shape: var(--ts-shape-control-corner);
       color: var(--ts-color-tooltip-label);
+      font-size: var(--ts-size-text);
+      line-height: var(--ts-size-leading);
       text-box: trim-both cap alphabetic;
     }
 
@@ -226,7 +226,6 @@
 
     &[data-variant='backdrop'] {
       --_bg: var(--ts-color-scrim);
-      --_border: transparent;
       --_shadow: none;
       position: fixed;
       inset: 0;
@@ -266,7 +265,6 @@
     }
 
     &[data-tone] {
-      --_border: transparent;
       background: color-mix(in oklab, var(--_tint) calc(var(--ts-state-tint-rest) * 100%), var(--_bg));
     }
 

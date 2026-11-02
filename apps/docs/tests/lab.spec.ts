@@ -63,8 +63,8 @@ const CONCENTRIC_LG_ROUND = {
   'control-group': 4.5,
   'row-group': 4.5,
   'surface-card': 18,
-  'control-card': 4,
-  'row-card': 4,
+  'control-card': 10,
+  'row-card': 10,
   'surface-depth-1': 14,
   'control-depth-1': 5.5,
   'row-depth-1': 5.5,
@@ -85,7 +85,7 @@ const PADDING_CASES: readonly (readonly [Choices['corners'], Choices['curve']])[
   ['full', 'squircle'],
 ]
 const STATE_STEPS = {
-  light: { rest: 0.04, hover: 0.07, press: 0.1 },
+  light: { rest: 0.04, hover: 0.08, press: 0.12 },
   dark: { rest: 0.08, hover: 0.12, press: 0.16 },
 } as const
 const STATE_PRECISION = 0.001

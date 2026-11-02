@@ -6,7 +6,9 @@ export function BadgeEdge() {
   return (
     <Edge data-edge-component="badge" title="Badge">
       <Badge numeric>1</Badge>
-      <Badge numeric>1284</Badge>
+      <Badge size="sm" numeric>
+        1284
+      </Badge>
       <Badge size="xs">A</Badge>
       <Badge tone="warning" dot>
         {LONG}

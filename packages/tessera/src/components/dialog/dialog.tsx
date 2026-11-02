@@ -3,7 +3,7 @@
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
 import X from 'lucide-react/icons/x'
 import { composeRefs } from '../../lib/compose-refs'
-import { POPUP_SLOTS, type PopupActionsProps, type PopupDismissProps } from '../../lib/popup-slots'
+import { POPUP_SLOTS, TITLE_LINE_SIZE, type PopupActionsProps, type PopupDismissProps } from '../../lib/popup-slots'
 import { SlotHost, usePart, useSlotOrder } from '../../lib/slot'
 import type { Unstyled } from '../../lib/unstyled'
 import { Button, type ButtonProps } from '../button/button'
@@ -43,7 +43,7 @@ export function DialogPopup({ ref, children, ...props }: Unstyled<BaseDialog.Pop
 export function DialogTitle({ children, ...props }: Unstyled<BaseDialog.Title.Props>) {
   usePart(HOST, 'DialogTitle')
   return (
-    <BaseDialog.Title {...props} data-recipe="text" data-variant="title" data-slot="title">
+    <BaseDialog.Title {...props} data-recipe="text" data-variant="title" data-slot="title" data-size={TITLE_LINE_SIZE}>
       <SlotHost value={null}>{children}</SlotHost>
     </BaseDialog.Title>
   )
@@ -73,5 +73,5 @@ export function DialogClose(props: ButtonProps) {
 
 export function DialogDismiss(props: DialogDismissProps) {
   usePart(HOST, 'DialogDismiss')
-  return <BaseDialog.Close render={<Button {...props} icon={<X />} data-slot="close" />} />
+  return <BaseDialog.Close render={<Button {...props} size={TITLE_LINE_SIZE} icon={<X />} data-slot="close" />} />
 }

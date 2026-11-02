@@ -3,8 +3,8 @@
   [data-mode] {
     --ts-state-ink: #000000;
     --ts-state-rest: 0.04;
-    --ts-state-hover: 0.07;
-    --ts-state-press: 0.1;
+    --ts-state-hover: 0.08;
+    --ts-state-press: 0.12;
     --ts-state-indicator: 0.1;
     --_ts-state-contrast-active: 0.1;
     --ts-state-invalid-color: var(--ts-color-danger);

@@ -4,7 +4,7 @@ import { Popover as BasePopover } from '@base-ui/react/popover'
 import X from 'lucide-react/icons/x'
 import { useState } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
-import { POPUP_SLOTS, type PopupActionsProps, type PopupDismissProps } from '../../lib/popup-slots'
+import { POPUP_SLOTS, TITLE_LINE_SIZE, type PopupActionsProps, type PopupDismissProps } from '../../lib/popup-slots'
 import { createScopeAnchor, ScopeContext } from '../../lib/scope'
 import { SlotHost, useHost, usePart, useSlotOrder } from '../../lib/slot'
 import type { Unstyled } from '../../lib/unstyled'
@@ -55,7 +55,7 @@ export function PopoverPopup({ ref, children, ...props }: Unstyled<BasePopover.P
 export function PopoverTitle({ children, ...props }: Unstyled<BasePopover.Title.Props>) {
   usePart(HOST, 'PopoverTitle')
   return (
-    <BasePopover.Title {...props} data-recipe="text" data-variant="title" data-slot="title">
+    <BasePopover.Title {...props} data-recipe="text" data-variant="title" data-slot="title" data-size={TITLE_LINE_SIZE}>
       <SlotHost value={null}>{children}</SlotHost>
     </BasePopover.Title>
   )
@@ -85,5 +85,5 @@ export function PopoverClose(props: ButtonProps) {
 
 export function PopoverDismiss(props: PopoverDismissProps) {
   usePart(HOST, 'PopoverDismiss')
-  return <BasePopover.Close render={<Button {...props} icon={<X />} data-slot="close" />} />
+  return <BasePopover.Close render={<Button {...props} size={TITLE_LINE_SIZE} icon={<X />} data-slot="close" />} />
 }

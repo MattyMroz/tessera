@@ -39,7 +39,7 @@ export function BadgeSection() {
         <Tooltip
           content={
             <>
-              Inbox <Badge numeric>2</Badge>
+              Inbox <Badge size="xs" numeric>2</Badge>
             </>
           }
         >
@@ -48,8 +48,8 @@ export function BadgeSection() {
         <Menu>
           <MenuTrigger variant="soft">Folders</MenuTrigger>
           <MenuContent>
-            <MenuItem trail={<Badge numeric>7</Badge>}>Drafts</MenuItem>
-            <MenuItem trail={<Badge numeric>24</Badge>}>Chapters</MenuItem>
+            <MenuItem trail={<Badge size="sm" numeric>7</Badge>}>Drafts</MenuItem>
+            <MenuItem trail={<Badge size="sm" numeric>24</Badge>}>Chapters</MenuItem>
           </MenuContent>
         </Menu>
       </div>

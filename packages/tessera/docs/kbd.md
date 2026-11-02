@@ -4,11 +4,11 @@ A keyboard key, or a combination of keys, as a static keycap of the `control` re
 
 ## Props
 
-| Prop       | Type                                   | Default | Notes                                                                                                                                                         |
-| ---------- | -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `children` | `ReactNode`                            | —       | one key; give either `children` or `keys`                                                                                                                     |
-| `keys`     | `readonly string[]`                    | —       | a combination: one keycap per key with `+` between them, as the `KbdCombo` of the desktop                                                                     |
-| `size`     | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | `'xs'`  | sets `data-size` on every keycap; the default does not follow the size of the parent, so a keycap in a row or a tooltip stays smaller than the text beside it |
+| Prop       | Type                                   | Default   | Notes                                                                                                                                                                                                                                      |
+| ---------- | -------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `children` | `ReactNode`                            | —         | one key; give either `children` or `keys`                                                                                                                                                                                                  |
+| `keys`     | `readonly string[]`                    | —         | a combination: one keycap per key with `+` between them, as the `KbdCombo` of the desktop                                                                                                                                                  |
+| `size`     | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | inherited | sets `data-size` on every keycap; without it the keycap takes the size around it (the nearest `data-size`), like a button; in running text, a menu row or a tooltip give a smaller step (`size="xs"`), or the keycap is as tall as the row |
 
 Every other `<kbd>` prop reaches the outer element. Kbd takes no `className` or `style`.
 

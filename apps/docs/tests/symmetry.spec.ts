@@ -13,6 +13,7 @@ const QUARTER = 4
 const HALF = 2
 const ICON_SIDE = 0.6
 const MIN_RADIUS = 4
+const LOOSE_INSET = 16
 const SIDE_STEP = 2
 const SIZES: readonly Choices['size'][] = ['xs', 'sm', 'md', 'lg', 'xl']
 const VARIANTS = ['solid', 'soft', 'outline', 'raised', 'ghost'] as const
@@ -79,8 +80,9 @@ function engineOf(target: Locator): Promise<Engine> {
       probe.remove()
       return width
     }
+    const wraps = element.getAttribute('data-content') === 'controls'
     return {
-      gap: length(`var(${NAMES[element.getAttribute('data-inset') ?? 'inset'] ?? '--ts-space-inset'})`),
+      gap: length(wraps ? 'var(--ts-size-wrap)' : `var(${NAMES[element.getAttribute('data-inset') ?? 'inset'] ?? '--ts-space-inset'})`),
       stroke: length('var(--ts-shape-stroke)'),
       surface: length('var(--ts-shape-surface)'),
       squircle: getComputedStyle(element).getPropertyValue('corner-top-left-shape').startsWith('superellipse(2'),
@@ -129,6 +131,18 @@ async function closed(page: Page, popup: Locator): Promise<void> {
   await expect(popup).toHaveCount(0)
 }
 
+function ownRadius(control: Locator): Promise<number> {
+  return control.evaluate((element) => {
+    const twin = element.cloneNode(false)
+    if (!(twin instanceof HTMLElement)) throw new Error('no twin')
+    twin.removeAttribute('data-slot')
+    document.body.append(twin)
+    const radius = Number.parseFloat(getComputedStyle(twin).borderTopRightRadius)
+    twin.remove()
+    return radius
+  })
+}
+
 async function expectCorner(container: Locator, corner: Locator, title: Locator, label: string): Promise<void> {
   const side = await surfaceSide(container)
   const host = await container.elementHandle()
@@ -149,7 +163,8 @@ async function expectCorner(container: Locator, corner: Locator, title: Locator,
   const words = await opticalGaps(title)
   const titleBox = await box(title)
   const capMiddle = titleBox.y + words.top + (titleBox.height - words.top - words.bottom) / HALF
-  const concentric = geometry.outer === 0 ? 0 : Math.min(Math.max(geometry.outer - geometry.top, MIN_RADIUS), geometry.height / HALF)
+  const tight = geometry.outer === 0 ? 0 : Math.min(Math.max(geometry.outer - geometry.top, MIN_RADIUS), geometry.height / HALF)
+  const concentric = geometry.top >= LOOSE_INSET ? await ownRadius(corner) : tight
   expect(Math.abs(geometry.top - geometry.end), `${label}: top ${geometry.top} end ${geometry.end}`).toBeLessThanOrEqual(TOLERANCE)
   expect(Math.abs(geometry.top - side), `${label}: offset ${geometry.top} side ${side}`).toBeLessThanOrEqual(TOLERANCE)
   expect(Math.abs(geometry.inner - concentric), `${label}: radius ${geometry.inner} concentric ${concentric}`).toBeLessThanOrEqual(TOLERANCE)
@@ -227,7 +242,7 @@ test.describe('optical symmetry', () => {
   })
 
   for (const choices of THEMES) {
-    test(`pads every surface on all four sides by its gap, plus a quarter of its radius around text and only the gap around rows (${nameOf(choices)})`, async ({ page }) => {
+    test(`pads every surface on all four sides by its gap, plus a quarter of its radius around text, only the wrap gap of the size around rows and like a control in a tooltip (${nameOf(choices)})`, async ({ page }) => {
       await visit(page, PAGE)
       await theme(page, choices)
       const label = nameOf(choices)
@@ -251,7 +266,9 @@ test.describe('optical symmetry', () => {
       await region(page, 'Tooltip').getByRole('button', { name: 'Save', exact: true }).hover()
       const tooltip = page.locator('[data-variant="tooltip"]')
       await expect(tooltip).toBeVisible()
-      await expectSurface(tooltip, `${label} tooltip`)
+      const tip = await opticalGaps(tooltip)
+      expectEven(tip, `${label} tooltip`)
+      expect(Math.abs(tip.left - controlSide(tip)), `${label} tooltip side ${tip.left}`).toBeLessThanOrEqual(TOLERANCE)
       await visit(page, OVERLAYS)
       await theme(page, choices)
       await expectSurface(region(page, 'Island'), `${label} island`)
@@ -321,7 +338,7 @@ test.describe('optical symmetry', () => {
   })
 
   for (const corners of CORNER_CLOSE) {
-    test(`puts the close button of a dialog and a popover and the action of a card header concentric in the corner with the title centred on it (${corners})`, async ({ page }) => {
+    test(`puts the close button of a dialog and a popover and the action of a card header in the corner, concentric when tight and with its own radius when roomy, with the title centred on it (${corners})`, async ({ page }) => {
       await visit(page, PAGE)
       await theme(page, { corners, density: 'compact', mode: 'light' })
       const dialog = await opened(page, page.getByRole('button', { name: 'Chapter info', exact: true }), page.getByRole('dialog'))
