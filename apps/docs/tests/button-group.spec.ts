@@ -85,6 +85,7 @@ test.describe('on the components page', () => {
       segments: [...element.children].map((child) => getComputedStyle(child).boxShadow),
     }))
     expect(looks).toEqual({ group: shadow, segments: ['none', 'none'] })
+    await filter.scrollIntoViewIfNeeded()
     const [first, second] = await Promise.all([box(filter.getByRole('button').first()), box(filter.getByRole('button').last())])
     expect(Math.abs(first.x + first.width - second.x)).toBeLessThanOrEqual(TOLERANCE)
     const clip = { x: second.x - JOINT, y: second.y + second.height / 2 - JOINT, width: JOINT * 2, height: JOINT * 2 }

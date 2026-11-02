@@ -67,6 +67,7 @@
   [data-size] {
     --ts-size-step: var(--_ts-size-step);
     --ts-size-height: var(--ts-size-step);
+    --ts-size-label-min: calc(var(--ts-size-height) * 2.5);
     --ts-size-box: var(--ts-size-icon);
     --ts-size-track-block: calc(var(--ts-size-icon) + 4px);
     --ts-size-track-inline: round(var(--ts-size-track-block) * 1.75, 1px);

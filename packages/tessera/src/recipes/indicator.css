@@ -45,6 +45,10 @@
       --_fill-opacity: var(--ts-state-indicator-track);
     }
 
+    [data-level='sunken']:has(> [data-recipe='control'][data-pressing]:not([aria-checked='true'], :disabled)) > &[data-variant='hover'] {
+      --_fill-opacity: calc(var(--ts-state-indicator-track) + var(--ts-state-press) - var(--ts-state-hover));
+    }
+
     & > [data-slot='squash'] {
       width: 100%;
       height: 100%;

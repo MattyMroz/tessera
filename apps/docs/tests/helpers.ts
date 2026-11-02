@@ -645,6 +645,29 @@ export function overflowProblems(frames: Locator): Promise<string[]> {
   })
 }
 
+export function letterBreaks(scopes: Locator): Promise<string[]> {
+  return scopes.evaluateAll((elements) => {
+    const MIN_CHARACTERS_PER_LINE = 2
+    const problems: string[] = []
+    for (const scope of elements) {
+      const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT)
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.textContent?.trim() ?? ''
+        const parent = node.parentElement
+        if (text.length < MIN_CHARACTERS_PER_LINE + 1 || !parent?.checkVisibility()) continue
+        const range = document.createRange()
+        range.selectNodeContents(node)
+        const lines = new Set([...range.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top))).size
+        if (lines > 1 && text.length / lines < MIN_CHARACTERS_PER_LINE) {
+          const slot = parent.getAttribute('data-slot')
+          problems.push(`${parent.localName}${slot ? `[${slot}]` : ''} "${text.slice(0, 16)}" breaks into ${lines} lines in ${parent.getBoundingClientRect().width.toFixed(1)} px`)
+        }
+      }
+    }
+    return problems
+  })
+}
+
 export async function windowProblems(popup: Locator, name: string): Promise<string[]> {
   const rect = await box(popup)
   const window = await popup.evaluate(() => ({ width: document.documentElement.clientWidth, height: document.documentElement.clientHeight }))
@@ -663,6 +686,7 @@ export type OpticalGaps = {
   readonly radius: number
   readonly squircle: boolean
   readonly textSize: number
+  readonly stroke: number
 }
 
 export function opticalGaps(target: Locator): Promise<OpticalGaps> {
@@ -764,6 +788,7 @@ export function opticalGaps(target: Locator): Promise<OpticalGaps> {
       radius: Math.min(Number.parseFloat(style.borderTopLeftRadius), outer.height / 2, outer.width / 2),
       squircle: style.getPropertyValue('corner-top-left-shape').startsWith('superellipse(2'),
       textSize: Number.parseFloat(style.getPropertyValue('--ts-size-text')) || Number.parseFloat(style.fontSize),
+      stroke: Number.parseFloat(style.borderLeftWidth),
     }
   })
 }

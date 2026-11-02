@@ -44,3 +44,7 @@ export function trackPress(element: Element): () => void {
     lift()
   }
 }
+
+export function pressable(node: Element | null): (() => void) | undefined {
+  return node ? trackPress(node) : undefined
+}

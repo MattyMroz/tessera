@@ -62,6 +62,10 @@ function controlSide(gaps: OpticalGaps): number {
   return Math.round((base + Math.min(round(gaps), gaps.height / HALF) / QUARTER) * SIDE_STEP) / SIDE_STEP
 }
 
+function inset(gaps: OpticalGaps, side: number): number {
+  return side + gaps.stroke
+}
+
 function engineOf(target: Locator): Promise<Engine> {
   return target.evaluate((element) => {
     const NAMES: Readonly<Record<string, string>> = {
@@ -172,6 +176,9 @@ test.describe('optical symmetry', () => {
   test('centres the label of every button variant and size and pads its sides by base plus a quarter of the radius', async ({ page }) => {
     await visit(page, PAGE)
     const buttons = region(page, 'Button').locator('> div').first().getByRole('button')
+    await buttons.evaluateAll((elements) => {
+      for (const element of elements) element.setAttribute('data-hug', '')
+    })
     for (const corners of CORNERS) {
       await theme(page, { corners, density: 'compact', mode: 'light' })
       for (const [index, variant] of VARIANTS.entries()) {
@@ -180,7 +187,7 @@ test.describe('optical symmetry', () => {
           const gaps = await opticalGaps(buttons.nth(index))
           const label = `${corners} ${variant} ${size}`
           expectEven(gaps, label)
-          expect(Math.abs(gaps.left - controlSide(gaps)), `${label}: side ${gaps.left}`).toBeLessThanOrEqual(TOLERANCE)
+          expect(Math.abs(gaps.left - inset(gaps, controlSide(gaps))), `${label}: side ${gaps.left}`).toBeLessThanOrEqual(TOLERANCE)
         }
       }
     }
@@ -192,14 +199,14 @@ test.describe('optical symmetry', () => {
       await theme(page, { corners, density: 'compact', mode: 'light' })
       const badge = await opticalGaps(region(page, 'Badge').locator('[data-recipe="control"]').first())
       expectEven(badge, `${corners} badge`)
-      expect(Math.abs(badge.left - controlSide(badge)), `${corners} badge side`).toBeLessThanOrEqual(TOLERANCE)
+      expect(Math.abs(badge.left - inset(badge, controlSide(badge))), `${corners} badge side`).toBeLessThanOrEqual(TOLERANCE)
       const key = await opticalGaps(region(page, 'Kbd').locator('kbd[data-recipe="control"]').first())
       expectEven(key, `${corners} key`)
       const menu = await opened(page, region(page, 'Menu').getByRole('button', { name: 'Project', exact: true }), page.getByRole('menu'))
       for (const row of [menu.getByRole('menuitem', { name: 'New chapter' }), menu.locator('[data-variant="group-label"]').first()]) {
         const gaps = await opticalGaps(row)
         expectEven(gaps, `${corners} menu row`)
-        expect(Math.abs(gaps.left - controlSide(gaps)), `${corners} menu row side`).toBeLessThanOrEqual(TOLERANCE)
+        expect(Math.abs(gaps.left - inset(gaps, controlSide(gaps))), `${corners} menu row side`).toBeLessThanOrEqual(TOLERANCE)
       }
       await closed(page, menu)
     }
@@ -214,11 +221,11 @@ test.describe('optical symmetry', () => {
     for (const size of SIZES) {
       const input = await opticalGaps(page.getByRole('textbox', { name: `Size ${size}`, exact: true }).locator('..'))
       expect(Math.abs(input.left - input.right), `input ${size} sides`).toBeLessThanOrEqual(TOLERANCE)
-      expect(Math.abs(input.left - controlSide(input)), `input ${size} side`).toBeLessThanOrEqual(TOLERANCE)
+      expect(Math.abs(input.left - inset(input, controlSide(input))), `input ${size} side`).toBeLessThanOrEqual(TOLERANCE)
       expect(Math.abs(input.top - input.bottom), `input ${size} text`).toBeLessThanOrEqual(FONT_ROUNDING)
       await sized(notes.locator('..'), size)
       const area = await opticalGaps(notes.locator('..'))
-      const side = controlSide(area)
+      const side = inset(area, controlSide(area))
       expect(Math.abs(area.left - area.right), `textarea ${size} sides`).toBeLessThanOrEqual(TOLERANCE)
       expect(Math.abs(area.left - side), `textarea ${size} side`).toBeLessThanOrEqual(TOLERANCE)
       expect(Math.abs(area.top - side), `textarea ${size} top ${area.top} side ${side}`).toBeLessThanOrEqual(TOLERANCE)
