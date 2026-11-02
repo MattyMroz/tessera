@@ -105,7 +105,7 @@ Otwarte pozycje z audytu `reviews/e2-foundation-gaps-2.md`; plan E3 rozstrzyga k
 
 ## Aktualny etap
 
-**Etap:** E3, po rundzie C (A–C, sloty, overflow, symetria gotowe); fundament poprawiany w trakcie rund, nie przed nimi.
+**Etap:** E3. Bieżąca jednostka: standard interakcji (wciśnięcie i hover dla wszystkich elementów), `plans/e3-motion.md`; runda D i pozostałe polecenia z logu 02.11 13:00 czekają na jego akceptację.
 
 **Dlaczego teraz:** właściciel 02.11: „nie da się zrobić tego bez większej ilości elementów” — części błędów fundamentu nie widać bez kolejnych komponentów obok siebie; czekanie na idealny fundament przed rundą D to pętla.
 
