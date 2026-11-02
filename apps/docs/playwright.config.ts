@@ -11,8 +11,9 @@ export default defineConfig({
   reporter: 'list',
   use: { baseURL: ORIGIN, headless: true },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: ['budgets.spec.ts', 'a11y.spec.ts'] },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: ['jump.spec.ts'] },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: ['budgets.spec.ts', 'a11y.spec.ts', 'jump.spec.ts'] },
+    { name: 'chromium-device-scale', use: { browserName: 'chromium', viewport: null }, testMatch: ['jump.spec.ts'] },
   ],
   webServer: { command: `bun tests/serve.ts ${PORT}`, url: ORIGIN, reuseExistingServer: !process.env.CI },
 })

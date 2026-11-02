@@ -34,6 +34,10 @@
     --ts-motion-duration-hover-exit: calc(
       var(--ts-motion-duration-instant) + var(--ts-in-motion-hover-fade) * var(--ts-motion-duration-overlay)
     );
+    --ts-motion-duration-press-in: var(--ts-motion-duration-instant);
+    --ts-motion-ease-press-in: var(--ts-motion-ease-out);
+    --ts-motion-ease-press-out: var(--ts-motion-ease-standard);
+    --ts-motion-press-hold: var(--ts-motion-duration-press-in);
   }
 
   :root,
@@ -41,7 +45,6 @@
   [data-motion='elastic'],
   [data-motion='firm'] {
     --ts-motion-duration-instant: 50ms;
-    --ts-motion-duration-fast: 100ms;
     --ts-motion-duration-slide: 150ms;
     --ts-motion-duration-emphasized: 200ms;
     --ts-motion-duration-overlay: 250ms;
@@ -50,7 +53,9 @@
     --ts-motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
     --ts-motion-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
     --ts-motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ts-motion-duration-press-out: 224ms;
     --ts-motion-press-scale: 0.97;
+    --ts-motion-press-rest: 0.99999;
     --ts-motion-spring-stiffness: 420;
     --ts-motion-spring-damping: 36;
     --ts-motion-elastic-overshoot: 0.1;
@@ -71,12 +76,13 @@
 
   [data-motion='off'] {
     --ts-motion-duration-instant: 0ms;
-    --ts-motion-duration-fast: 0ms;
     --ts-motion-duration-slide: 0ms;
     --ts-motion-duration-emphasized: 0ms;
     --ts-motion-duration-overlay: 0ms;
     --ts-motion-duration-elastic: 0ms;
+    --ts-motion-duration-press-out: 0ms;
     --ts-motion-press-scale: 1;
+    --ts-motion-press-rest: 1;
     --ts-motion-mode: off;
     --ts-motion-spin: none;
     --ts-motion-sweep: none;
@@ -87,12 +93,13 @@
     :root,
     [data-motion] {
       --ts-motion-duration-instant: 0ms;
-      --ts-motion-duration-fast: 0ms;
       --ts-motion-duration-slide: 0ms;
       --ts-motion-duration-emphasized: 0ms;
       --ts-motion-duration-overlay: 0ms;
       --ts-motion-duration-elastic: 0ms;
+      --ts-motion-duration-press-out: 0ms;
       --ts-motion-press-scale: 1;
+      --ts-motion-press-rest: 1;
       --ts-motion-mode: off;
       --ts-motion-spin: none;
       --ts-motion-sweep: none;

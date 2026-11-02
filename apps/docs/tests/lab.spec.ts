@@ -14,6 +14,7 @@ import {
   recordAnimations,
   recorded,
   row,
+  settle,
   srgbOf,
   startTrace,
   stateStep,
@@ -110,8 +111,9 @@ const TREE_INDENT: readonly (readonly [number, number])[] = [
   [12, 7],
 ]
 const MOTION_NAMES: readonly string[] = [
-  'duration-instant', 'duration-fast', 'duration-slide', 'duration-emphasized', 'duration-overlay', 'duration-elastic',
-  'ease-standard', 'ease-out', 'ease-emphasized', 'ease-spring', 'press-scale', 'spring-stiffness', 'spring-damping',
+  'duration-instant', 'duration-slide', 'duration-emphasized', 'duration-overlay', 'duration-elastic',
+  'ease-standard', 'ease-out', 'ease-emphasized', 'ease-spring', 'press-scale', 'press-rest', 'press-hold',
+  'duration-press-in', 'duration-press-out', 'ease-press-in', 'ease-press-out', 'spring-stiffness', 'spring-damping',
   'elastic-overshoot', 'mode', 'spin', 'sweep', 'pulse', 'loop',
 ]
 
@@ -611,6 +613,7 @@ for (const ratio of BUSY_RATIOS) {
       expect(await loopProperties(icon)).toEqual(['rotate'])
       await layers.peak(() => groups.getByRole('button', { name: 'Groups menu', exact: true }).click())
       await expect(page.getByRole('menu')).toBeVisible()
+      await settle(page)
       const spinning = await layers.now()
       await page.emulateMedia({ reducedMotion: 'reduce' })
       expect(await loopProperties(icon)).toEqual([])

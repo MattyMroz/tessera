@@ -8,7 +8,7 @@ import { componentAppearance } from './packages/tessera/test/guards/component-ap
 
 export default defineConfig([
   globalIgnores([
-    '**/dist', '**/.next', '**/out', '**/node_modules', '**/test-results', '**/playwright-report', '.worktrees', '.claude', '.agents',
+    '**/dist', '**/.next', '**/out', '**/node_modules', '**/test-results', '**/playwright-report', '.worktrees', '.claude', '.agents', 'tmp',
   ]),
   {
     files: ['**/*.{js,ts,tsx}'],

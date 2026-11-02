@@ -11,7 +11,7 @@ import { containerWidthProblems, ENGINES, instanceRegistryProblems, subtreeAxisP
 const packageRoot = resolve(import.meta.dirname, '../..')
 const src = resolve(packageRoot, 'src')
 const repo = resolve(packageRoot, '../..')
-const MEASURING_FILES = ['lib/indicator.ts', 'lib/motion.ts', 'lib/popup-flight.ts', 'lib/title-when-cut.ts']
+const MEASURING_FILES = ['lib/indicator.ts', 'lib/motion.ts', 'lib/popup-flight.ts', 'lib/press.ts', 'lib/title-when-cut.ts']
 const SINGLE_CHOICE = 'lib/single-choice.ts'
 const DOM_MEASUREMENT =
   /\b(?:getBoundingClientRect|offset(?:Left|Top|Width|Height)|ResizeObserver|getComputedStyle|scroll(?:Width|Height|Top|Left)|client(?:Width|Height))\b/
@@ -437,8 +437,8 @@ it('accepts writeInstance in the measuring files and in components', () => {
 it('finds writeInstance in a lib file outside the measuring files', () => {
   expect(instanceWriterProblems({
     'lib/scope.ts': "writeInstance(popup, { '--ts-i-inline-size': `${rect.width}px` })",
-    'lib/press.ts': "import { writeInstance } from './instance'\nwriteInstance(button, values)",
-  })).toEqual(['lib/scope.ts: writeInstance outside the measuring files', 'lib/press.ts: writeInstance outside the measuring files'])
+    'lib/collection.ts': "import { writeInstance } from './instance'\nwriteInstance(button, values)",
+  })).toEqual(['lib/scope.ts: writeInstance outside the measuring files', 'lib/collection.ts: writeInstance outside the measuring files'])
 })
 
 it('writes instance values from lib only in the measuring files', () => {

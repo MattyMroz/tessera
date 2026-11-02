@@ -4,7 +4,7 @@ export type MotionMode = Choices['motion']
 
 export type Motion = {
   readonly mode: MotionMode
-  readonly fast: number
+  readonly pressHold: number
   readonly slide: number
   readonly elastic: number
   readonly standard: string
@@ -31,7 +31,7 @@ export function parseMotion(read: (name: string) => string): Motion {
   }
   return {
     mode: THEME_CONFIG.axes.motion.find((option) => option === mode) ?? 'off',
-    fast: milliseconds(read('--ts-motion-duration-fast')),
+    pressHold: milliseconds(read('--ts-motion-press-hold')),
     slide: milliseconds(read('--ts-motion-duration-slide')),
     elastic: milliseconds(read('--ts-motion-duration-elastic')),
     standard: read('--ts-motion-ease-standard').trim(),

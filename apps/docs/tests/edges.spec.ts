@@ -41,6 +41,7 @@ const LOW_WINDOW = { width: 900, height: 360 } as const
 const TOUCH_TARGET = 24
 const INSIDE = 2
 const OUTSIDE = 1
+const REST_SNAP = 1
 const MIN_FOCUS_WIDTH = 2
 const HIT_SIZES = ['xs', 'md'] as const
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
@@ -530,7 +531,7 @@ test.describe('with a mouse', () => {
       const [first, second] = await Promise.all([0, 1].map((index) => box(page.getByTestId(`hit-bar-${size}`).getByRole('button').nth(index))))
       if (!first || !second) throw new Error('no bar')
       expect(await controlAt(page, first.x + first.width / 2, middle(first)), size).not.toBeNull()
-      expect(await controlAt(page, first.x - OUTSIDE, middle(first)), size).toBeNull()
+      expect(await controlAt(page, first.x - OUTSIDE - REST_SNAP, middle(first)), size).toBeNull()
       expect(await controlAt(page, (first.x + first.width + second.x) / 2, middle(first)), size).toBeNull()
 
       const range = page.getByRole('radiogroup', { name: `Hit range ${size}`, exact: true })

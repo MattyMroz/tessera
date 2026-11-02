@@ -372,6 +372,128 @@ async function countOf(page: Page, captured: readonly CapturedLayer[]): Promise<
   return { count: layers.length, bytes: layers.reduce((total, layer) => total + layer.bytes, 0), layers }
 }
 
+const BLOCKED = ":disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true']"
+const ANCHOR = "[aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]"
+const BUTTON_KIND = "[data-recipe='control']:is(button:not([role]), [role='button'], a[href]:not([role])):not([data-variant='field'])"
+const PILL_KIND = ":has(> [data-recipe='indicator']) > [data-recipe='control']:is([role='radio'], [role='tab']), [data-recipe='row'][role='menuitem']"
+
+export const INTERACTIVE_ELEMENTS =
+  "a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]:not([contenteditable='false']), [role='button'], [role='link'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio'], [role='option'], [role='slider'], [role='treeitem'], [role='textbox'], [role='combobox'], [role='spinbutton']"
+
+export const PRESS_GROUPS = {
+  scale: `${BUTTON_KIND}:not(${BLOCKED}, ${ANCHOR})`,
+  anchor: `${BUTTON_KIND}:is(${ANCHOR}):not(${BLOCKED})`,
+  pill: `:is(${PILL_KIND}):not(${BLOCKED})`,
+  field: "[data-variant='field'] > [data-slot='input']",
+  still: `:is(${BUTTON_KIND}, ${PILL_KIND}):is(${BLOCKED})`,
+  owner: "a[href][data-recipe='surface'], [role='switch'], [role='checkbox'], [role='slider'], [role='option'], [role='treeitem'], [role='menuitemcheckbox'], [role='menuitemradio']",
+  lab: "a[href]:not([data-recipe]), [data-testid='field-sizing']",
+} as const
+
+export type PressGroup = keyof typeof PRESS_GROUPS
+
+export type PressReport = { readonly counts: Readonly<Record<string, number>>; readonly problems: readonly string[] }
+
+export function pressReport(page: Page, only: readonly PressGroup[] = Object.keys(PRESS_GROUPS) as PressGroup[]): Promise<PressReport> {
+  return page.evaluate(
+    ({ interactive, groups, only }) => {
+      const probe = document.createElement('div')
+      document.body.append(probe)
+      const timing = (value: string): string => {
+        probe.style.transitionTimingFunction = value
+        return getComputedStyle(probe).transitionTimingFunction
+      }
+      const scaleOf = (value: string): string => {
+        probe.style.scale = value
+        return getComputedStyle(probe).scale
+      }
+      const seconds = (value: string): number => {
+        const text = value.trim()
+        return text.endsWith('ms') ? Number.parseFloat(text) / 1000 : Number.parseFloat(text)
+      }
+      const name = (element: Element): string =>
+        `${element.localName}${element.getAttribute('role') ? `[${element.getAttribute('role')}]` : ''} "${(element.getAttribute('aria-label') ?? element.textContent ?? '').trim().slice(0, 24)}"`
+      const engine = (element: Element) => {
+        const style = getComputedStyle(element)
+        const read = (output: string): string => style.getPropertyValue(`--ts-motion-${output}`).trim()
+        return {
+          rest: scaleOf(read('press-rest')),
+          pressed: scaleOf(read('press-scale')),
+          into: { duration: seconds(read('duration-press-in')), easing: timing(read('ease-press-in')) },
+          back: { duration: seconds(read('duration-press-out')), easing: timing(read('ease-press-out')) },
+        }
+      }
+      const look = (element: Element, pseudo?: string) => {
+        const style = getComputedStyle(element, pseudo)
+        return {
+          scale: style.scale,
+          transform: style.transform,
+          property: style.transitionProperty,
+          duration: seconds(style.transitionDuration.split(',')[0] ?? ''),
+          easing: style.transitionTimingFunction.split(/,(?![^(]*\))/)[0]?.trim() ?? '',
+          layer: style.willChange,
+        }
+      }
+      const parts = (element: Element): Element[] => [...element.querySelectorAll(":scope > [data-slot='icon'], :scope > [data-slot='label']")]
+      const finish = (): void => {
+        for (const animation of document.getAnimations()) if (animation instanceof CSSTransition) animation.finish()
+      }
+      const elements = [...document.querySelectorAll(interactive)]
+      const classified = elements.map((element) => ({ element, found: Object.entries(groups).filter(([, selector]) => element.matches(selector)).map(([group]) => group) }))
+      const problems: string[] = classified.filter(({ found }) => found.length !== 1).map(({ element, found }) => `${name(element)}: groups [${found.join(', ')}]`)
+      const counts: Record<string, number> = {}
+      for (const { found } of classified) if (found.length === 1 && found[0]) counts[found[0]] = (counts[found[0]] ?? 0) + 1
+      const checked = classified.flatMap(({ element, found }) => (found.length === 1 && only.some((group) => group === found[0]) ? [{ element, group: found[0] ?? '' }] : []))
+      const hosts = checked.map(({ element, group }) => ({ element, group, host: group === 'field' ? element.closest("[data-variant='field']") ?? element : element }))
+      const ancestors = (element: Element): Element[] => {
+        const found: Element[] = []
+        for (let node = element.parentElement; node; node = node.parentElement) found.push(node)
+        return found
+      }
+      const transformed = (element: Element): boolean => getComputedStyle(element).scale !== 'none' || getComputedStyle(element).transform !== 'none'
+      const sampled = new Set(hosts.filter(({ host }) => host.hasAttribute('data-pressing')).map(({ host }) => host))
+      const check = (all: boolean): void => {
+        for (const { element, group, host } of hosts) {
+          const pressed = all || sampled.has(host)
+          const values = engine(host)
+          const own = look(host)
+          const plate = look(host, '::before')
+          const label = `${pressed ? 'pressed' : 'rest'} ${group} ${name(element)}`
+          const target = pressed ? values.pressed : values.rest
+          const motion = pressed ? values.into : values.back
+          if (group === 'scale') {
+            if (own.scale !== target) problems.push(`${label}: scale ${own.scale}, engine ${target}`)
+            if (own.property !== 'scale' || own.duration !== motion.duration || own.easing !== motion.easing) {
+              problems.push(`${label}: transition ${own.property} ${own.duration}s ${own.easing}, engine scale ${motion.duration}s ${motion.easing}`)
+            }
+            if ((own.layer === 'scale') !== pressed) problems.push(`${label}: will-change ${own.layer}`)
+            if (plate.scale !== 'none') problems.push(`${label}: plate scale ${plate.scale}`)
+          } else if (group === 'anchor') {
+            for (const node of [host, ...ancestors(host)]) if (transformed(node)) problems.push(`${label}: ${node === host ? 'anchor' : `ancestor ${name(node)}`} transformed`)
+            for (const [part, seen] of [...parts(host).map((slot) => [slot.getAttribute('data-slot') ?? '', look(slot)] as const), ['plate', plate] as const]) {
+              if (seen.scale !== target) problems.push(`${label}: ${part} scale ${seen.scale}, engine ${target}`)
+              if (seen.property !== 'scale' || seen.duration !== motion.duration || seen.easing !== motion.easing) problems.push(`${label}: ${part} transition ${seen.property} ${seen.duration}s`)
+              if ((seen.layer === 'scale') !== pressed) problems.push(`${label}: ${part} will-change ${seen.layer}`)
+            }
+          } else if (group !== 'lab') {
+            const moved = [own, plate, ...parts(host).map((slot) => look(slot))].filter((seen) => seen.scale !== 'none' || seen.transform !== 'none')
+            if (moved.length > 0) problems.push(`${label}: scaled`)
+          }
+        }
+      }
+      check(false)
+      for (const { host } of hosts) host.setAttribute('data-pressing', '')
+      finish()
+      check(true)
+      for (const { host } of hosts) if (!sampled.has(host)) host.removeAttribute('data-pressing')
+      finish()
+      probe.remove()
+      return { counts, problems }
+    },
+    { interactive: INTERACTIVE_ELEMENTS, groups: PRESS_GROUPS, only },
+  )
+}
+
 export async function settle(page: Page): Promise<void> {
   await page.evaluate(() =>
     Promise.all(

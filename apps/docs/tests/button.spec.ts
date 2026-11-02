@@ -1,7 +1,7 @@
 import { THEME_CONFIG } from '@mattymroz/tessera/lib/theme'
 import { TONES } from '@mattymroz/tessera/lib/tone'
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { box, colorOf, raisedShadow, settle, srgbOf, TONE_ROLES, visit } from './helpers'
+import { box, colorOf, pressReport, raisedShadow, settle, srgbOf, TONE_ROLES, visit } from './helpers'
 
 const PAGE = '/components'
 const EDGES = '/screens/edges'
@@ -140,13 +140,13 @@ test('replaces the icon of a busy button with the turning spinner in its slot an
   expect(glyph.stroke).toBeCloseTo(glyph.engine, 3)
 })
 
-test('presses a button while the pointer is down', async ({ page }) => {
+test('presses the whole button while the pointer is down', async ({ page }) => {
   const button = solid(page)
   await button.hover()
   await page.mouse.down()
   await expect(button).toHaveAttribute('data-pressing', '')
-  await expect.poll(() => button.evaluate((element) => getComputedStyle(element, '::before').scale)).toBe(PRESSED_SCALE)
-  expect(await button.evaluate((element) => getComputedStyle(element).scale)).toBe('none')
+  await expect.poll(() => button.evaluate((element) => getComputedStyle(element).scale)).toBe(PRESSED_SCALE)
+  expect(await button.evaluate((element) => getComputedStyle(element, '::before').scale)).toBe('none')
   await page.mouse.up()
   await expect(button).not.toHaveAttribute('data-pressing')
 })
@@ -168,30 +168,13 @@ test('lifts the press of a menu trigger on release although the menu opened on p
   }
 })
 
-test('presses only the plate of a control, so no control, anchor or ancestor of an anchor is ever transformed', async ({ page }) => {
+test('presses the whole control of every button and only the parts and the plate of an anchor, so no anchor or ancestor of an anchor is ever transformed', async ({ page }) => {
   for (const path of [PAGE, EDGES, '/screens/overlays']) {
     await visit(page, path)
-    const found = await page.evaluate(() => {
-      const controls = [...document.querySelectorAll('[data-recipe="control"]')]
-      for (const control of controls) control.setAttribute('data-pressing', '')
-      const moved = [...document.querySelectorAll('*')].filter((element) => {
-        const style = getComputedStyle(element)
-        return style.scale !== 'none' || style.transform !== 'none'
-      })
-      const pressed = controls.filter((control) => getComputedStyle(control, '::before').scale !== 'none').length
-      const anchors = controls.filter((control) => control.matches('[aria-haspopup], [aria-expanded], [data-popup-open]')).length
-      for (const control of controls) control.removeAttribute('data-pressing')
-      return {
-        pressed,
-        anchors,
-        moved: moved
-          .filter((element) => element.matches('[data-recipe="control"]') || element.querySelector('[data-recipe="control"]') !== null)
-          .map((element) => element.outerHTML.slice(0, 80)),
-      }
-    })
-    expect(found.pressed, path).toBeGreaterThan(0)
-    expect(found.anchors, path).toBeGreaterThan(0)
-    expect(found.moved, path).toEqual([])
+    const report = await pressReport(page, ['scale', 'anchor'])
+    expect(report.counts.scale ?? 0, path).toBeGreaterThan(0)
+    expect(report.counts.anchor ?? 0, path).toBeGreaterThan(0)
+    expect(report.problems, path).toEqual([])
   }
 })
 
@@ -287,7 +270,7 @@ test('shows the cursor of the platform on controls and rows, the default one on 
   }
 })
 
-test('holds a short click pressed until the fast duration has passed', async ({ page }) => {
+test('holds a short click pressed until the press hold of the engine has passed', async ({ page }) => {
   const button = solid(page)
   const pressedAfterRelease = await button.evaluate((element) => {
     element.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true }))
@@ -336,8 +319,8 @@ test('dims an aria-disabled button but not a busy one, and neither presses nor s
     const button = blocked(page, name)
     await button.hover()
     await page.mouse.down()
-    await expect(button).toHaveAttribute('data-pressing', '')
-    expect(await button.evaluate((element) => getComputedStyle(element, '::before').scale), name).toBe('none')
+    await expect(button).not.toHaveAttribute('data-pressing')
+    expect(await button.evaluate((element) => [getComputedStyle(element).scale, getComputedStyle(element, '::before').scale]), name).toEqual(['none', 'none'])
     await page.mouse.up()
   }
 })

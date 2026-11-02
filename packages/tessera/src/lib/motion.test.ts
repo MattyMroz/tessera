@@ -18,7 +18,7 @@ describe('motion outputs', () => {
   it('parses the engine outputs in the form the minified build serves them', () => {
     const outputs: Record<string, string> = {
       '--ts-motion-mode': ' elastic',
-      '--ts-motion-duration-fast': '.1s',
+      '--ts-motion-press-hold': '.1s',
       '--ts-motion-duration-slide': '.15s',
       '--ts-motion-duration-elastic': '220ms',
       '--ts-motion-ease-standard': ' cubic-bezier(.2,0,0,1)',
@@ -41,7 +41,7 @@ describe('motion outputs', () => {
   describe('readMotion', () => {
     const page = {} as Element
     const still = {} as Element
-    const outputs = new Map<string, string>([['--ts-motion-mode', 'spring'], ['--ts-motion-duration-fast', '.1s']])
+    const outputs = new Map<string, string>([['--ts-motion-mode', 'spring'], ['--ts-motion-press-hold', '.1s']])
     const style = { getPropertyValue: (name: string) => outputs.get(name) ?? '' }
     const stillStyle = { getPropertyValue: (name: string) => (name === '--ts-motion-mode' ? 'off' : '') }
     let reads = 0
@@ -56,11 +56,11 @@ describe('motion outputs', () => {
 
     it('reads the style of the element once at every call, so a changed subtree changes the next motion', () => {
       reads = 0
-      expect(readMotion(page)).toMatchObject({ mode: 'spring', fast: 100 })
+      expect(readMotion(page)).toMatchObject({ mode: 'spring', pressHold: 100 })
       expect(reads).toBe(1)
       outputs.set('--ts-motion-mode', 'off')
-      outputs.set('--ts-motion-duration-fast', '0s')
-      expect(readMotion(page)).toMatchObject({ mode: 'off', fast: 0 })
+      outputs.set('--ts-motion-press-hold', '0s')
+      expect(readMotion(page)).toMatchObject({ mode: 'off', pressHold: 0 })
       expect(reads).toBe(2)
     })
 

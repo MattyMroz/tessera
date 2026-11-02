@@ -158,6 +158,10 @@
       overflow: clip;
     }
 
+    &[data-surface='joined']:not(:has(> :is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]))) {
+      scale: var(--ts-motion-press-rest);
+    }
+
     &[data-surface='joined']:has(> [data-variant='outline'])::after {
       content: '';
       position: absolute;

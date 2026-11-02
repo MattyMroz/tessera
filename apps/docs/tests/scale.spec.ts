@@ -6,6 +6,7 @@ const PAGE = '/components'
 const TOLERANCE = 0.5
 const HOVER_STEP = 0.028
 const PLATE_EDGE = 4
+const HEIGHT_DIGITS = 3
 const CARD_PROBE = 20
 const OVERLAY_LIFT = 0.04
 const TRANSPARENT = 'rgba(0, 0, 0, 0)'
@@ -44,11 +45,12 @@ async function axes(page: Page, values: Partial<Choices>): Promise<void> {
 }
 
 function style(target: Locator): Promise<Metrics> {
-  return target.evaluate((element) => {
+  return target.evaluate((element, digits) => {
     const computed = getComputedStyle(element)
     const rect = element.getBoundingClientRect()
+    const own = computed.scale === 'none' ? 1 : Number.parseFloat(computed.scale)
     return {
-      height: rect.height,
+      height: Number((rect.height / own).toFixed(digits)),
       font: Number.parseFloat(computed.fontSize),
       side: Number.parseFloat(computed.paddingLeft),
       top: Number.parseFloat(computed.paddingTop),
@@ -56,7 +58,7 @@ function style(target: Locator): Promise<Metrics> {
       radius: Number.parseFloat(computed.borderTopLeftRadius),
       gap: Number.parseFloat(computed.columnGap),
     }
-  })
+  }, HEIGHT_DIGITS)
 }
 
 async function opened(page: Page, trigger: Locator, popup: Locator, how: 'click' | 'hover' = 'click'): Promise<Locator> {

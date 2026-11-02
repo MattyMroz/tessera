@@ -53,11 +53,52 @@
       background: color-mix(in oklab, var(--_wash) calc(var(--_step) * 100%), var(--_base));
       box-shadow: var(--_shade);
       pointer-events: none;
-      transition: scale var(--ts-motion-duration-fast) var(--ts-motion-ease-out);
     }
 
     &:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input'])) {
       cursor: var(--ts-state-cursor);
+
+      @media (hover: hover) {
+        &:hover:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-pressed='true'], [aria-selected='true'], :has(> [data-slot='input']:is([readonly], :disabled))) {
+          --_wash: var(--_ink);
+          --_step: var(--_hover);
+        }
+      }
+
+      &[data-pressing]:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [aria-pressed='true'], [aria-selected='true'], :has(> [data-slot='input']:is([readonly], :disabled))) {
+        --_wash: var(--_ink);
+        --_step: var(--_press);
+      }
+    }
+
+    &:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field']) {
+      &:not([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]) {
+        scale: var(--ts-motion-press-rest);
+        transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out);
+
+        &[data-pressing] {
+          scale: var(--ts-motion-press-scale);
+          transition: scale var(--ts-motion-duration-press-in) var(--ts-motion-ease-press-in);
+          will-change: scale;
+        }
+      }
+
+      &:is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]) {
+        & > [data-slot='icon'],
+        & > [data-slot='label'],
+        &::before {
+          scale: var(--ts-motion-press-rest);
+          transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out);
+        }
+
+        &[data-pressing] > [data-slot='icon'],
+        &[data-pressing] > [data-slot='label'],
+        &[data-pressing]::before {
+          scale: var(--ts-motion-press-scale);
+          transition: scale var(--ts-motion-duration-press-in) var(--ts-motion-ease-press-in);
+          will-change: scale;
+        }
+      }
     }
 
     &:where(a[href]) {
@@ -66,11 +107,6 @@
 
     &:where(button, a[href]):not([role], [data-hug], [data-surface='track'] > *, [data-surface='joined'] > *):has(> [data-slot='label']) {
       min-width: var(--ts-size-label-min);
-    }
-
-    &:not(:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input']))) {
-      min-width: var(--ts-size-step);
-      height: var(--ts-size-step);
     }
 
     &:where(kbd) {
@@ -172,8 +208,18 @@
       padding-inline: 0;
     }
 
-    &:not(:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input']))):has(> [data-slot='icon']:only-child) {
-      width: var(--ts-size-step);
+    &:not(:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input']))) {
+      min-width: var(--ts-size-step);
+      height: var(--ts-size-step);
+
+      &:has(> [data-slot='icon']:only-child) {
+        width: var(--ts-size-step);
+      }
+
+      [data-variant='tooltip'] &:not([data-variant='raised']) {
+        --_label: currentColor;
+        --_ink: currentColor;
+      }
     }
 
     & > [data-slot='icon'][data-dot] > svg {
@@ -285,11 +331,6 @@
     }
   }
 
-  [data-variant='tooltip'] [data-recipe='control']:not(:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input']), [data-variant='raised'])) {
-    --_label: currentColor;
-    --_ink: currentColor;
-  }
-
   [role='alertdialog'] > [data-slot='actions'] > [data-recipe='control'] {
     flex: 1;
   }
@@ -303,22 +344,6 @@
     --_edge: transparent;
     --_shade: calc(-1 * var(--ts-shape-stroke)) 0 0 var(--_base);
     box-shadow: none;
-  }
-
-  @media (hover: hover) {
-    [data-recipe='control']:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input'])):hover:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-pressed='true'], [aria-selected='true'], :has(> [data-slot='input']:is([readonly], :disabled))) {
-      --_wash: var(--_ink);
-      --_step: var(--_hover);
-    }
-  }
-
-  [data-recipe='control']:where(button, a[href], input, select, textarea, [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex], :has(> [data-slot='input']))[data-pressing]:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [aria-pressed='true'], [aria-selected='true'], :has(> [data-slot='input']:is([readonly], :disabled))) {
-    --_wash: var(--_ink);
-    --_step: var(--_press);
-  }
-
-  [data-recipe='control']:where(button, a[href], input, select, textarea, [role='button'], [role='tab'], [role='menuitem'], [tabindex])[data-pressing]:not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [role='radio'], [data-variant='field'])::before {
-    scale: var(--ts-motion-press-scale);
   }
 
   @supports (overflow-clip-margin: border-box) {
