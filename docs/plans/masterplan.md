@@ -18,6 +18,7 @@ Tessera v3 w osobnym repo `PROJECTS/tessera`: dziewięć silników, sześć prze
 - Odporność na overflow: żaden komponent w żadnym stanie nie wychodzi poza kontener (poziomo i pionowo): długi ciąg bez spacji (URL, ścieżka), długie słowa, liczby, zagnieżdżenie, kontener węższy od minimum; każdy slot ma jawne zachowanie (wielokropek, zawijanie z łamaniem słów albo przewijanie) i test.
 - Wszystkie platformy, maksymalna optymalizacja; telefon (Android, iOS) nie może się zacinać nigdy — osobny profil pomiarów.
 - Podział ról: właściciel ocenia wygląd („ok / nie ok”), prowadzący odpowiada za matematykę systemu, powiązania i samodzielne szukanie braków; wybory wyglądu zapisane w `docs/decisions/e3-choices.md` do wspólnego przejrzenia.
+- Nie wymyślamy koła (właściciel 02.11): bierzemy rozwiązanie, które działa u uznanych bibliotek i produktów, robimy je na nasze podobieństwo i poprawiamy tylko to, co jest gorsze (wydajność, błędy, spójność). Przy każdym dylemacie najpierw research ze źródłami (kod, dokumentacja, issues przeglądarek), eksperyment tylko do sprawdzenia wybranej drogi u nas; własny kod tylko z zapisanym powodem, gdy gotowe łamie wymaganie.
 
 ## Źródła celu i ograniczeń
 
