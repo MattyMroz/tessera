@@ -49,6 +49,8 @@ R2 (łamanie po literze, wielokropek pól), R3/R10 (opakowania kontrolek z rozmi
 2. Po R1: wdrożenie wybranej drogi + R9 (warianty szwu, wybór prowadzącego z plansz).
 3. Plan rundy D z `e3-round-d-facts.md` (rozstrzygnąć 22 luki: m.in. szyna Slidera sm = md, obszar trafienia Checkboxa, Enter, `largeStep`, etykieta Slidera bez `internals`), wykonanie w osobnym worktree; refaktor jakości etapy 2–6 obok (osobny worktree).
 4. Przenieść 12 zasad właściciela do `AGENTS.md`.
+5. Przeprowadzka pamięci przed pierwszą sesją otwartą w `PROJECTS/tessera` (właściciel 02.11; nie wcześniej niż po bieżącym etapie): pamięć sesji żyje dziś w projekcie MangaShift (`~/.claude/projects/c--Users-MattyMroz-Desktop-PROJECTS-MangaShift/memory/`, 361 notatek, 69 o Tesserze), a sesja w folderze tessera dostanie pusty katalog. (a) Zasady będące prawdą o Tesserze → `tessera/AGENTS.md` i `docs/`; (b) notatki o współpracy z właścicielem → pamięć projektu tessera, każda zweryfikowana (nieaktualne usunąć); (c) w pamięci MangaShift zostaje jedna notatka-wskaźnik, pozostałe notatki o Tesserze usunięte; (d) pierwsza sesja w tessera: `load-session` z najnowszego logu.
+6. Wciśnięcie (R1): decyzja właściciela wstrzymana do wyników researchu prior art („nie wymyślamy koła”) i pomiarów (b)/(c)/(d) + audytu ułamkowych położeń kontrolek; strona porównawcza `http://localhost:4400/press-demo` (kopia w `scratchpad\live\out\press-demo.html`).
 
 ## Reguły, które muszą przetrwać
 
