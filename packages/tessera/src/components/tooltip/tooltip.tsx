@@ -6,9 +6,10 @@ import { composeRefs } from '../../lib/compose-refs'
 import { readMotion } from '../../lib/motion'
 import { createPopupFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
 import { createScopeAnchor, type ScopeAnchor } from '../../lib/scope'
-import { TOOLTIP_GROUP_GRACE } from '../../lib/tooltip-group'
+import { TOOLTIP_CLOSE_DELAY, TOOLTIP_GROUP_GRACE, TOOLTIP_OPEN_DELAY } from '../../lib/tooltip-group'
 
 const DEFAULT_SIDE: TooltipSide = 'top'
+const TRIGGER_TIMING = { delay: TOOLTIP_OPEN_DELAY, closeDelay: TOOLTIP_CLOSE_DELAY } as const
 
 type BarTip = { readonly trigger: string; readonly copyScope: ScopeAnchor['copyTo']; readonly content: ReactNode }
 
@@ -87,12 +88,20 @@ export function Tooltip({ content, side, children }: TooltipProps) {
   const trigger = useId()
   const [{ register, copyTo }] = useState(createScopeAnchor)
   if (bar) {
-    return <BaseTooltip.Trigger ref={register} handle={bar.handle} payload={{ trigger, copyScope: copyTo, content }} render={children} />
+    return (
+      <BaseTooltip.Trigger
+        ref={register}
+        handle={bar.handle}
+        payload={{ trigger, copyScope: copyTo, content }}
+        {...TRIGGER_TIMING}
+        render={children}
+      />
+    )
   }
 
   return (
     <BaseTooltip.Root>
-      <BaseTooltip.Trigger ref={register} render={children} />
+      <BaseTooltip.Trigger ref={register} {...TRIGGER_TIMING} render={children} />
       <TooltipPopup side={side ?? DEFAULT_SIDE} copyScope={copyTo}>
         {content}
       </TooltipPopup>

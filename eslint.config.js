@@ -41,4 +41,14 @@ export default defineConfig([
       ],
     },
   },
+  {
+    name: 'lab/tooltip-frame-probe',
+    files: ['apps/docs/tests/tooltip.spec.ts'],
+    rules: {
+      'tessera/compositor-motion': [
+        'error',
+        { animationFrameReason: 'the tooltip guards read the shown tooltip in every rendering frame' },
+      ],
+    },
+  },
 ])

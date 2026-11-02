@@ -126,7 +126,8 @@ function positioner(left?: number): FakePositioner {
 
 function setup(motion: Motion = SPRING) {
   const clock = { time: 0 }
-  const flight = createPopupFlight({ grace: GRACE, motion: () => motion, now: () => clock.time })
+  const page = { scroll: { x: 0, y: 0 } }
+  const flight = createPopupFlight({ grace: GRACE, motion: () => motion, now: () => clock.time, scroll: () => page.scroll })
   const open = (left: number, trigger?: string) => {
     const anchor = positioner(left)
     const popup = popupAt(left)
@@ -142,7 +143,7 @@ function setup(motion: Motion = SPRING) {
     anchor.close()
     flight.update(anchor, popup)
   }
-  return { clock, flight, open, move, close }
+  return { clock, page, flight, open, move, close }
 }
 
 describe('flightOrigin', () => {
@@ -228,6 +229,23 @@ describe('createPopupFlight', () => {
     view.popup.drift(-100)
     close(view.anchor, view.popup)
     expect(open(360).popup.animate).toHaveBeenCalledWith([{ transform: 'translate(-60px, 0px)' }, { transform: 'translate(0, 0)' }], expect.anything())
+  })
+
+  it('opens the next popup on its place when the page scrolled after the previous one closed', () => {
+    const { page, open, close } = setup()
+    const file = open(100)
+    close(file.anchor, file.popup)
+    page.scroll = { x: 50, y: 0 }
+    expect(open(50).popup.animate).not.toHaveBeenCalled()
+  })
+
+  it('flies a popup that moves to another trigger from where it is seen after the page scrolled', () => {
+    const { page, open, move } = setup()
+    const { anchor, popup } = open(100, 'undo')
+    page.scroll = { x: 50, y: 0 }
+    popup.moveTo(50)
+    move(anchor, popup, 150, 'redo')
+    expect(popup.animate).toHaveBeenCalledWith([{ transform: 'translate(-100px, 0px)' }, { transform: 'translate(0, 0)' }], expect.anything())
   })
 
   it('keeps a popup on its place while its own trigger scrolls or resizes', () => {
