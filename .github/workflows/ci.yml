@@ -34,6 +34,22 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      # prek builds every hook from the rev pinned in .pre-commit-config.yaml.
+      - name: Install prek
+        run: pip install --quiet prek==0.5.4
+
+      # The commit hooks again, because --no-verify and edits on GitHub skip them locally.
+      # Before the browser tests, so a typo fails in a minute, not after them.
+      # no-commit-to-branch guards local commits only; CI checks the result, not where it was made.
+      - name: Hooks
+        env:
+          SKIP: no-commit-to-branch
+        run: prek run --all-files
+
       # The browsers of the lab tests, with their system libraries; the version comes from the lockfile.
       - name: Install browsers
         working-directory: apps/docs
@@ -42,21 +58,6 @@ jobs:
       # Typecheck, build, lint, vitest, then the Playwright lab tests.
       - name: Check
         run: bun run check
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      # The hook package pinned in .pre-commit-config.yaml.
-      - name: Install prek and the agents hooks
-        run: pip install --quiet prek==0.5.4 "mattymroz-hooks @ git+https://github.com/MattyMroz/agents@hooks-v1.3.2"
-
-      # The commit hooks again, because --no-verify and edits on GitHub skip them locally.
-      # no-commit-to-branch guards local commits only; CI checks the result, not where it was made.
-      - name: Hooks
-        env:
-          SKIP: no-commit-to-branch
-        run: prek run --all-files
 
       # Main only: GitHub writes the squash commit from the PR title and
       # description, so no local commit-msg hook ever sees it, and branch

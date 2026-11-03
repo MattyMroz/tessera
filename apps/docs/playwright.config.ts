@@ -11,7 +11,7 @@ const PARALLEL = ['chromium', 'webkit']
 
 export default defineConfig({
   testDir: 'tests',
-  workers: process.env.CI ? undefined : ALL_BUT_ONE_CORE,
+  ...(process.env.CI ? {} : { workers: ALL_BUT_ONE_CORE }),
   retries: RETRY_UNDER_LOAD,
   fullyParallel: false,
   forbidOnly: true,
