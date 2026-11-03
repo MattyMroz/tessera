@@ -13,7 +13,7 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 ```
 
 - IMPORTANT: testy tylko `bunx vitest run`, NIGDY `bun run test`.
-- Playwright tylko headless, 10 workerów (połowa z 20 rdzeni; przy 16–19 komputer właściciela laguje) i jedno powtórzenie testu, który padł pod obciążeniem (`playwright.config.ts`); test, który pada dwa razy, to błąd. Gdy naraz idzie kilka ciężkich rzeczy, `--workers=6`.
+- Playwright tylko headless, 19 workerów (20 rdzeni logicznych bez jednego; decyzja właściciela 03.11) i jedno powtórzenie testu, który padł pod obciążeniem (`playwright.config.ts`); test, który pada dwa razy, to błąd. Pliki mierzące czas i klatki (`TIMED`: budżety, menu, skala, Switch, dialog potwierdzenia, oraz `jump.spec.ts`) biegną po reszcie w projektach `*-timed` z jednym workerem, bo pod obciążeniem padają także w powtórce. WebKit ma 6 workerów: na Windows liczy animacje na głównym wątku, więc przy 19 testy klatek (tooltip, popup, symetria) padają. Gdy naraz idzie kilka ciężkich rzeczy, `--workers=6`.
 - Hook pre-push uruchamia te same pięć kroków co `bun run check`, w tej samej kolejności: build przed lintem, bo wtyczka ESLint konsumenta jest czytana z `dist`. Instalacja po klonie: `git config --local core.autocrlf false`, `prek install`, a w `apps/docs` `bunx playwright install chromium webkit` (bez przeglądarek `check` pada na ostatnim kroku; CI instaluje je sam).
 
 ## Twarde reguły
