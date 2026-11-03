@@ -3,6 +3,7 @@ import { Badge } from '@mattymroz/tessera/components/badge/badge'
 import { Button } from '@mattymroz/tessera/components/button/button'
 import { ButtonGroup } from '@mattymroz/tessera/components/button/button-group'
 import { Card, CardActions, CardHeader } from '@mattymroz/tessera/components/card/card'
+import { Checkbox } from '@mattymroz/tessera/components/checkbox/checkbox'
 import { AlertDialog, AlertDialogTrigger } from '@mattymroz/tessera/components/dialog/alert-dialog'
 import {
   Dialog,
@@ -29,6 +30,8 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@mattymroz/tessera/components/popover/popover'
+import { Radio, RadioGroup } from '@mattymroz/tessera/components/radio/radio'
+import { Switch } from '@mattymroz/tessera/components/switch/switch'
 import { Heading } from '@mattymroz/tessera/components/text/heading'
 import { Text } from '@mattymroz/tessera/components/text/text'
 import { ToggleGroup, ToggleGroupItem } from '@mattymroz/tessera/components/toggle-group/toggle-group'
@@ -74,6 +77,24 @@ const COMPONENTS: readonly (readonly [string, Render])[] = [
         <ToggleGroupItem value="first">{text}</ToggleGroupItem>
         <ToggleGroupItem value="second">{text}</ToggleGroupItem>
       </ToggleGroup>
+    ),
+  ],
+  ['checkbox', (text) => <Checkbox defaultChecked>{text}</Checkbox>],
+  [
+    'switch',
+    (text) => (
+      <Field>
+        <FieldLabel>{text}</FieldLabel>
+        <Switch defaultChecked />
+      </Field>
+    ),
+  ],
+  [
+    'radio',
+    (text) => (
+      <RadioGroup aria-label="Long choice" defaultValue="first">
+        <Radio value="first">{text}</Radio>
+      </RadioGroup>
     ),
   ],
   [

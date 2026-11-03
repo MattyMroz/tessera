@@ -3,7 +3,7 @@ import { builderName, child, children, keyName, texts, unwrap, type Node } from 
 import { INSTANCE_KEYS } from '../../src/lib/instance.ts'
 
 const INSTANCE_NAMES: ReadonlySet<string> = new Set(Object.keys(INSTANCE_KEYS))
-const SVG_GEOMETRY: ReadonlySet<string> = new Set(['viewBox', 'd', 'points', 'cx', 'cy', 'r', 'x', 'y'])
+const SVG_GEOMETRY: ReadonlySet<string> = new Set(['viewBox', 'd', 'points', 'cx', 'cy', 'r', 'x', 'y', 'pathLength'])
 const SVG_PAINT: Readonly<Record<string, readonly string[]>> = { fill: ['none', 'currentColor'], stroke: ['currentColor'] }
 const SVG_ATTRIBUTES: ReadonlySet<string> = new Set([
   ...SVG_GEOMETRY, ...Object.keys(SVG_PAINT), 'strokeLinecap', 'strokeLinejoin', 'aria-hidden', 'focusable',

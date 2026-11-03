@@ -2,8 +2,9 @@ import { readMotion } from './motion'
 
 export const PRESSING = 'data-pressing'
 
-const PRESSABLE = "[data-recipe='control']:is(button, a[href], [role='button'], [tabindex]):not([role='radio'], [role='tab'], [role='menuitem'])"
+const PRESSABLE = "[data-recipe='control']:is(button, a[href], [role='button'], [tabindex]):not([role='radio']:not([data-slot='box']), [role='tab'], [role='menuitem'])"
 const UNPRESSABLE = ":disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field']"
+const CHOICE = "[data-slot='choice']"
 const LINK = 'a[href]'
 const PRIMARY_BUTTON = 0
 const SPACE = ' '
@@ -27,8 +28,13 @@ function within(edges: Edges, x: number, y: number): boolean {
 }
 
 function pressableAt(event: Event): Element | undefined {
-  const found = event.target instanceof Element ? event.target.closest(PRESSABLE) : null
+  const target = event.target instanceof Element ? event.target : null
+  const found = target?.closest(PRESSABLE) ?? target?.closest(CHOICE)?.querySelector(PRESSABLE) ?? null
   return found && !found.matches(UNPRESSABLE) ? found : undefined
+}
+
+function pressAreaOf(element: Element): Element {
+  return element.closest(CHOICE) ?? element
 }
 
 export function trackPresses(document: Document): () => void {
@@ -85,7 +91,7 @@ export function trackPresses(document: Document): () => void {
     const element = pressableAt(event)
     if (!element) return
     if (pointers.size === 0) watchPointers()
-    pointers.set(event.pointerId, { element, edges: element.getBoundingClientRect() })
+    pointers.set(event.pointerId, { element, edges: pressAreaOf(element).getBoundingClientRect() })
     press(element, event.timeStamp)
   }
   const keyDown = (event: KeyboardEvent): void => {

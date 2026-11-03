@@ -74,6 +74,11 @@ test('renders every component as its element and role', async ({ page }) => {
   only(await tags(region('Kbd'), 'kbd[data-recipe="control"]'), ['kbd'], 'Kbd')
   only(await tags(main, '[data-component="field"] input[data-slot="input"]'), ['input'], 'Input')
   only(await tags(main, 'textarea[data-slot="input"]'), ['textarea'], 'Textarea')
+  only(await roles(region('Checkbox'), '[data-slot="box"]'), ['checkbox'], 'Checkbox')
+  only(await tags(region('Checkbox'), '[data-component="checkbox"][data-slot="choice"]:has(> [data-variant="label"])'), ['label'], 'Checkbox label')
+  only(await roles(region('Switch'), '[data-slot="track"]'), ['switch'], 'Switch')
+  only(await roles(region('Radio'), '[data-component="radio"]:not([data-slot])'), ['radiogroup'], 'RadioGroup')
+  only(await roles(region('Radio'), '[data-slot="box"]'), ['radio'], 'Radio')
   for (const [trigger, role] of [
     ['Rename chapter', 'dialog'],
     ['Details', 'dialog'],

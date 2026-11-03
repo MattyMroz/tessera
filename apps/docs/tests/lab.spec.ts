@@ -98,14 +98,14 @@ const FIRST_FRAME = 'lab-first-frame'
 const CONTENT_LOADED = 'lab-content-loaded'
 const APPLICATION_SCRIPTS = '**/_next/static/**/*.js'
 const ROOT = 'html'
-const TRACK_PADDING = 2
-const TRACK_RATIO = 1.75
+const TRACK_OF_HEIGHT = 6 / 7
+const INSET_OF_TRACK = 1 / 8
 const MIN_RAIL = 2
 const BAR_VALUE = 0.4
 const LOOPS = ['spin', 'sweep', 'pulse'] as const
 const LOOP_PROPERTIES: Readonly<Record<(typeof LOOPS)[number], string>> = { spin: 'rotate', sweep: 'translate', pulse: 'opacity' }
 const EDGES = '/screens/edges'
-const RAIL_TRACKS = 3
+const RAIL_TRACKS = 2
 const COLOURED_TONES: readonly Tone[] = TONES.filter((tone) => tone !== 'neutral')
 const TREE_INDENT: readonly (readonly [number, number])[] = [
   [3, 2],
@@ -219,8 +219,10 @@ test('derives the box, the track, the thumb and the rail of every size from the 
   for (const { size, icon, engine, square, track, thumb, trackOn, thumbOn, rail } of sizes) {
     const inset = (engine.block - engine.thumb) / 2
     expect([square.width, square.height], `${size} box`).toEqual([icon, icon])
-    expect(engine.block, `${size} track block`).toBeCloseTo(icon + TRACK_PADDING * 2, 1)
-    expect(engine.inline, `${size} track inline`).toBeCloseTo(Math.round(engine.block * TRACK_RATIO), 1)
+    const height = CONTROL_HEIGHT[size as keyof typeof CONTROL_HEIGHT]
+    expect(engine.block, `${size} track block`).toBeCloseTo(Math.round(height * TRACK_OF_HEIGHT), 1)
+    expect(engine.thumb, `${size} thumb`).toBeCloseTo(engine.block - 2 * Math.round(engine.block * INSET_OF_TRACK), 1)
+    expect(engine.inline, `${size} track inline`).toBeCloseTo(engine.block + engine.thumb, 1)
     expect([track.width, track.height], `${size} track`).toEqual([engine.inline, engine.block])
     expect([thumb.width, thumb.height], `${size} thumb`).toEqual([engine.thumb, engine.thumb])
     expect(inset, `${size} thumb inset`).toBeGreaterThan(0)

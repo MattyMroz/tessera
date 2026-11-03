@@ -9,6 +9,7 @@ import {
   EDGE_WIDTHS,
   EDGE_ZOOMS,
   edgeContext,
+  FORM_PROXY,
   hover,
   hydrated,
   installCommitProbe,
@@ -131,7 +132,7 @@ function activePill(scope: Locator): Locator {
 
 function sectionOverflow(page: Page): Promise<string[]> {
   return page.locator(SECTION).evaluateAll(
-    (sections, { width, tolerance }) => {
+    (sections, { width, tolerance, formProxy }) => {
       const problems: string[] = []
       const label = (element: Element): string =>
         `${element.localName}${element.getAttribute('data-recipe') ? `[${element.getAttribute('data-recipe')}]` : ''} "${(element.textContent ?? '').slice(0, 16)}"`
@@ -146,7 +147,7 @@ function sectionOverflow(page: Page): Promise<string[]> {
         const frame = narrow.getBoundingClientRect()
         if (Math.abs(frame.width - width) > tolerance) problems.push(`${name}: container ${frame.width} px wide`)
         if (narrow.scrollWidth > narrow.clientWidth) problems.push(`${name}: scrolls ${narrow.scrollWidth} px in ${narrow.clientWidth} px`)
-        for (const element of narrow.querySelectorAll('*')) {
+        for (const element of narrow.querySelectorAll(`:not(${formProxy})`)) {
           const rect = element.getBoundingClientRect()
           if (rect.width === 0 && rect.height === 0) continue
           if (rect.left < frame.left - tolerance || rect.right > frame.right + tolerance) {
@@ -156,7 +157,7 @@ function sectionOverflow(page: Page): Promise<string[]> {
       }
       return problems
     },
-    { width: NARROW, tolerance: TOLERANCE },
+    { width: NARROW, tolerance: TOLERANCE, formProxy: FORM_PROXY },
   )
 }
 
@@ -366,7 +367,7 @@ for (const edge of OVERFLOW_EDGES) {
       expect(await overflowProblems(page.locator(OVERFLOW_FRAME))).toEqual([])
       expect(await overflowProblems(page.locator(`${SECTION} [data-testid="narrow"]`))).toEqual([])
       expect(await letterBreaks(page.locator(OVERFLOW_FRAME))).toEqual([])
-      const inputs = page.locator(`${OVERFLOW_FRAME} input`)
+      const inputs = page.locator(`${OVERFLOW_FRAME} input:not(${FORM_PROXY})`)
       expect(await inputs.count()).toBeGreaterThan(0)
       expect(await inputs.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).textOverflow))).toEqual(
         Array.from({ length: await inputs.count() }, () => 'ellipsis'),

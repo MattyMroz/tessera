@@ -21,3 +21,6 @@
 @import '../components/alert/alert.css';
 @import '../components/field/field.css';
 @import '../components/toggle-group/toggle-group.css';
+@import '../components/checkbox/checkbox.css';
+@import '../components/radio/radio.css';
+@import '../components/switch/switch.css';

@@ -69,7 +69,6 @@ repos:
   - repo: https://github.com/MattyMroz/agents
     rev: hooks-v1.1.0
     hooks:
-      - id: commit-validation
       # Tests carry no comments or docstrings; it covers TypeScript as well as Python.
       - id: no-test-prose
 

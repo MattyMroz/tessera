@@ -3,6 +3,7 @@ import { INPUT_CONFIG, navigates, trackInputModality, type KeyStroke } from './i
 
 class FakeElement extends EventTarget {
   readonly tag: string
+  readonly attributes = new Map<string, string>()
 
   constructor(tag: string) {
     super()
@@ -12,9 +13,18 @@ class FakeElement extends EventTarget {
   matches(selector: string): boolean {
     return selector.split(',').some((part) => part.trim() === this.tag)
   }
+
+  getAttribute(name: string): string | null {
+    return this.attributes.get(name) ?? null
+  }
+
+  setAttribute(name: string, value: string): void {
+    this.attributes.set(name, value)
+  }
 }
 
 class FakeDocument extends EventTarget {
+  activeElement: FakeElement | null = null
   readonly attributes = new Map<string, string>()
   readonly documentElement = {
     getAttribute: (name: string) => this.attributes.get(name) ?? null,
@@ -86,6 +96,32 @@ describe('trackInputModality', () => {
     expect(root.attributes.get(INPUT_CONFIG.attribute)).toBe('pointer')
     root.dispatchEvent(key('a', { target: new FakeElement('button') }))
     expect(root.attributes.get(INPUT_CONFIG.attribute)).toBe('keyboard')
+  })
+
+  it('marks only the focused control with the input that moved the focus, so the focus ring never restyles the page', () => {
+    const root = new FakeDocument()
+    trackInputModality(root, INPUT_CONFIG, navigates)
+    const control = new FakeElement(INPUT_CONFIG.focusTarget)
+    const field = new FakeElement('input')
+    const focusIn = new Event('focusin')
+    Object.defineProperty(focusIn, 'target', { value: control })
+    root.dispatchEvent(focusIn)
+    expect(control.attributes.has(INPUT_CONFIG.attribute)).toBe(false)
+
+    root.dispatchEvent(new Event('pointerdown'))
+    const again = new Event('focusin')
+    Object.defineProperty(again, 'target', { value: control })
+    root.dispatchEvent(again)
+    root.activeElement = control
+    expect(control.attributes.get(INPUT_CONFIG.attribute)).toBe('pointer')
+
+    root.dispatchEvent(key('Enter'))
+    expect(control.attributes.get(INPUT_CONFIG.attribute)).toBe('keyboard')
+
+    const fieldIn = new Event('focusin')
+    Object.defineProperty(fieldIn, 'target', { value: field })
+    root.dispatchEvent(fieldIn)
+    expect(field.attributes.has(INPUT_CONFIG.attribute)).toBe(false)
   })
 
   it('runs without the module scope, as the boot script runs it', () => {

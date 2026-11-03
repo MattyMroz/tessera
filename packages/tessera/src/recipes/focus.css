@@ -9,7 +9,7 @@
     --_focus-offset: var(--ts-focus-offset-inset);
   }
 
-  :root:not([data-input='pointer']) [data-focus]:focus-visible,
+  [data-focus]:focus-visible:not([data-input='pointer']),
   [data-focus]:has(> [data-slot='input']:focus-visible) {
     outline: var(--ts-focus-width) solid var(--ts-focus-color);
     outline-offset: var(--_focus-offset);

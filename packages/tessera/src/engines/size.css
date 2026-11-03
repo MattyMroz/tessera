@@ -66,9 +66,14 @@
     --ts-size-wrap: round(var(--ts-size-height) / 8, 0.5px);
     --ts-size-label-min: calc(var(--ts-size-height) * 2.5);
     --ts-size-box: var(--ts-size-icon);
-    --ts-size-track-block: calc(var(--ts-size-icon) + 4px);
-    --ts-size-track-inline: round(var(--ts-size-track-block) * 1.75, 1px);
-    --ts-size-thumb: calc(var(--ts-size-track-block) - 4px);
+    --ts-size-mark-stroke: 3;
+    --ts-size-label-gap: calc(var(--ts-size-box) / 2);
+    --ts-size-dot-scale: 0.44;
+    --ts-size-track-block: round(var(--ts-size-height) * 6 / 7, 1px);
+    --ts-size-thumb-inset: round(var(--ts-size-track-block) / 8, 1px);
+    --ts-size-thumb: calc(var(--ts-size-track-block) - var(--ts-size-thumb-inset) - var(--ts-size-thumb-inset));
+    --ts-size-track-inline: calc(var(--ts-size-track-block) + var(--ts-size-thumb));
+    --ts-size-thumb-stretch: round(var(--ts-size-thumb) / 4, 1px);
     --ts-size-rail: max(2px, round(var(--ts-size-height) / 7, 1px));
     --ts-size-cap-pad: calc((var(--ts-size-leading) - 1cap) / 2);
     --ts-size-cap-inset: calc((var(--ts-size-step) - 1cap) / 2);
@@ -79,6 +84,8 @@
     :root,
     [data-size] {
       --ts-size-height: max(var(--ts-size-step), 24px);
+      --ts-size-box: max(var(--ts-size-icon), 24px);
+      --ts-size-track-block: max(round(var(--ts-size-height) * 6 / 7, 1px), 24px);
     }
   }
 }

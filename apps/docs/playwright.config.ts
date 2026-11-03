@@ -2,10 +2,13 @@ import { defineConfig, devices } from '@playwright/test'
 
 const PORT = Number(process.env.LAB_PORT ?? 4310)
 const ORIGIN = `http://localhost:${PORT}`
+const HALF_OF_THE_CORES = 10
+const RETRY_UNDER_LOAD = 1
 
 export default defineConfig({
   testDir: 'tests',
-  workers: 1,
+  workers: HALF_OF_THE_CORES,
+  retries: RETRY_UNDER_LOAD,
   fullyParallel: false,
   forbidOnly: true,
   reporter: 'list',

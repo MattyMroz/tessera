@@ -392,13 +392,14 @@ async function countOf(page: Page, captured: readonly CapturedLayer[]): Promise<
 
 const BLOCKED = ":disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true']"
 const ANCHOR = "[aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]"
-const BUTTON_KIND = "[data-recipe='control']:is(button:not([role]), [role='button'], a[href]:not([role])):not([data-variant='field'])"
+const BUTTON_KIND = "[data-recipe='control']:is(button:not([role]), [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role])):not([data-variant='field'])"
 const PILL_KIND = ":has(> [data-recipe='indicator']) > [data-recipe='control']:is([role='radio'], [role='tab']), [data-recipe='row'][role='menuitem']"
 
-export const INTERACTIVE_ELEMENTS =
-  "a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]:not([contenteditable='false']), [role='button'], [role='link'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio'], [role='option'], [role='slider'], [role='treeitem'], [role='textbox'], [role='combobox'], [role='spinbutton']"
+export const FORM_PROXY = "input[aria-hidden='true'][tabindex='-1']"
 
-const FLAT = "[aria-haspopup='listbox'], [data-surface='joined'] > *"
+export const INTERACTIVE_ELEMENTS = `:is(a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]:not([contenteditable='false']), [role='button'], [role='link'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio'], [role='option'], [role='slider'], [role='treeitem'], [role='textbox'], [role='combobox'], [role='spinbutton']):not(${FORM_PROXY})`
+
+const FLAT = "[aria-haspopup='listbox'], [data-surface='joined'] > *, [data-slot='track']"
 
 export const PRESS_GROUPS = {
   scale: `${BUTTON_KIND}:not(${BLOCKED}, ${ANCHOR}, ${FLAT})`,
@@ -407,7 +408,7 @@ export const PRESS_GROUPS = {
   pill: `:is(${PILL_KIND}):not(${BLOCKED})`,
   field: "[data-variant='field'] > [data-slot='input']",
   still: `:is(${BUTTON_KIND}, ${PILL_KIND}):is(${BLOCKED})`,
-  owner: "a[href][data-recipe='surface'], [role='switch'], [role='checkbox'], [role='slider'], [role='option'], [role='treeitem'], [role='menuitemcheckbox'], [role='menuitemradio']",
+  owner: "a[href][data-recipe='surface'], [role='switch']:not([data-slot='track']), [role='slider'], [role='option'], [role='treeitem'], [role='menuitemcheckbox'], [role='menuitemradio']",
   lab: "a[href]:not([data-recipe]), [data-testid='field-sizing']",
 } as const
 
@@ -516,7 +517,7 @@ export function pressReport(page: Page, only: readonly PressGroup[] = Object.key
 }
 
 const HOVER_PLATES =
-  "[data-recipe='control']:is(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])"
+  "[data-recipe='control']:is(button:not([role]), [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])"
 const HOT_PLATES = ":hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true']"
 
 export type TimingReport = {
@@ -862,7 +863,7 @@ export async function box(locator: Locator): Promise<{ x: number; y: number; wid
 }
 
 export function overflowProblems(frames: Locator): Promise<string[]> {
-  return frames.evaluateAll((elements) => {
+  return frames.evaluateAll((elements, formProxy) => {
     const TOLERANCE = 0.5
     const ROUNDING = 1
     const CUTTING = new Set(['hidden', 'clip'])
@@ -891,7 +892,7 @@ export function overflowProblems(frames: Locator): Promise<string[]> {
       }
       const visit = (parent: Element, clipped: boolean): void => {
         for (const element of parent.children) {
-          if (!element.checkVisibility()) continue
+          if (!element.checkVisibility() || element.matches(formProxy)) continue
           const rect = element.getBoundingClientRect()
           const outside =
             rect.left < outer.left - TOLERANCE ||
@@ -912,7 +913,7 @@ export function overflowProblems(frames: Locator): Promise<string[]> {
       visit(frame, clips(frame))
     }
     return problems
-  })
+  }, FORM_PROXY)
 }
 
 export function letterBreaks(scopes: Locator): Promise<string[]> {

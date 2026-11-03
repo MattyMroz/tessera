@@ -10,6 +10,23 @@ import { MotionLab } from './motion-lab'
 
 const OPTIONS: Readonly<Record<Axis, readonly string[]>> = THEME_CONFIG.axes
 
+const ZOOMS = ['1', '2', '4'] as const
+
+function zoomKeepingCentre(value: string): void {
+  const main = document.getElementById('lab-main')
+  if (!main) return
+  const frame = main.getBoundingClientRect()
+  const anchor = document.elementFromPoint(frame.left + frame.width / 2, window.innerHeight / 2) ?? main
+  const before = anchor.getBoundingClientRect()
+  const zoom = Number(main.style.getPropertyValue('zoom') || 1)
+  main.dataset.width ??= String(frame.width / zoom)
+  main.style.setProperty('zoom', value)
+  main.style.setProperty('width', value === '1' ? '' : `${main.dataset.width}px`)
+  main.style.setProperty('flex-shrink', value === '1' ? '' : '0')
+  const after = anchor.getBoundingClientRect()
+  window.scrollBy(after.left - before.left, after.top - before.top)
+}
+
 function isAxis(name: string): name is Axis {
   return Object.hasOwn(OPTIONS, name)
 }
@@ -26,7 +43,18 @@ export function Panel() {
   const { choices, setChoice, reset } = useTheme(mangashift)
 
   return (
-    <aside aria-label="Theme" className="flex flex-col gap-group">
+    <aside aria-label="Theme" className="flex flex-col gap-group md:sticky md:top-card md:z-10 md:max-h-dvh md:overflow-y-auto">
+      <ToggleGroup
+        aria-label="zoom"
+        defaultValue="1"
+        onValueChange={zoomKeepingCentre}
+      >
+        {ZOOMS.map((zoom) => (
+          <ToggleGroupItem key={zoom} value={zoom}>
+            {`${zoom}×`}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
       <ToggleGroup
         aria-label="mode"
         value={choices.mode}

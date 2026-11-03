@@ -40,11 +40,80 @@
       }
     }
 
+    &[data-variant='thumb'] {
+      --_fill: var(--ts-depth-raised-bg);
+      --_fill-opacity: 1;
+      scale: var(--ts-motion-press-rest);
+
+      & > [data-slot='squash'] {
+        position: relative;
+        background: none;
+        filter: var(--ts-depth-raised-drop);
+      }
+
+      & > [data-slot='squash']::before,
+      & > [data-slot='squash']::after,
+      & > [data-slot='squash'] > [data-slot='bar'] {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        background: var(--_fill);
+        transition:
+          translate var(--ts-motion-duration-choice) var(--ts-motion-ease-elastic),
+          scale var(--ts-motion-duration-choice) var(--ts-motion-ease-elastic);
+      }
+
+      & > [data-slot='squash']::before,
+      & > [data-slot='squash']::after {
+        content: '';
+        left: 0;
+        width: 100%;
+        border-radius: 100%;
+        corner-shape: var(--ts-shape-round-corner);
+      }
+
+      & > [data-slot='squash'] > [data-slot='bar'] {
+        width: var(--ts-size-thumb-stretch);
+        scale: 0 1;
+      }
+
+      & > [data-slot='squash'] > [data-slot='bar']:first-child {
+        left: var(--ts-shape-thumb);
+        transform-origin: left;
+      }
+
+      & > [data-slot='squash'] > [data-slot='bar']:last-child {
+        right: var(--ts-shape-thumb);
+        transform-origin: right;
+      }
+    }
+
+    &[data-variant='thumb'][data-on] {
+      --_fill: var(--ts-color-on-tint);
+    }
+
+    [data-pressing] > &[data-variant='thumb']:not([data-on]) > [data-slot='squash']::after {
+      translate: var(--ts-size-thumb-stretch) 0;
+    }
+
+    [data-pressing] > &[data-variant='thumb']:not([data-on]) > [data-slot='squash'] > [data-slot='bar']:first-child {
+      scale: 1 1;
+    }
+
+    [data-pressing] > &[data-variant='thumb'][data-on] > [data-slot='squash']::before {
+      translate: calc(-1 * var(--ts-size-thumb-stretch)) 0;
+    }
+
+    [data-pressing] > &[data-variant='thumb'][data-on] > [data-slot='squash'] > [data-slot='bar']:last-child {
+      scale: 1 1;
+    }
+
     [data-level='sunken'] > &[data-variant='hover'] {
       --_fill-opacity: var(--ts-state-indicator-track);
     }
 
     & > [data-slot='squash'] {
+      display: block;
       width: 100%;
       height: 100%;
       border-radius: var(--ts-shape-control-radius);

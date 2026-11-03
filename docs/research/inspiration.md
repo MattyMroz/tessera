@@ -14,6 +14,56 @@ Filmy oglądane jako arkusze klatek (6x6, z czasem), bez dźwięku; czasy ruchu 
 
 Opisane: 470 pozycji · wysokie 55 · średnie 60 · niskie 132 · bez wartości 223.
 
+## Usuwanie konta
+
+### ★ !!! [@kshvbgde](https://x.com/kshvbgde/status/2117502283894362219?a=FeZQWaT82HQW2PpzClk&s=20) · właściciel 2026-11-03
+
+- **Co pokazuje:** przepływ usuwania konta (post z X, nieobejrzany; opis do uzupełnienia po pobraniu materiału).
+- **Dla Tessery:** !!! właściciel chce to zrobić: wzór ekranu i interakcji usuwania konta.
+
+## Komponenty złożone (cel graniczny)
+
+### ★ [@disarto_max](https://x.com/disarto_max) · cały profil · właściciel 2026-11-03
+
+- **Co pokazuje:** całościowe UI złożone z wielu komponentów (paski boczne, okna, listy, menu); komponenty końcowe zbudowane z mniejszych części.
+- **Dla Tessery:** wzorzec celu granicznego: komponenty złożone, które powstają dopiero z gotowych klocków (tessera = mozaika). Do przejrzenia cały profil.
+
+### ★ [@disarto_max · 2117664457862033627](https://x.com/disarto_max/status/2117664457862033627?a=abxWss9HZyzG9B4qyY0&s=20) · właściciel 2026-11-03
+
+- **Co pokazuje:** komponenty końcowe złożone z wielu komponentów (post nieobejrzany; opis do uzupełnienia po pobraniu).
+- **Dla Tessery:** kandydat na cel graniczny złożony z istniejących części.
+
+### ★ [@disarto_max · 2117352562710245759](https://x.com/disarto_max/status/2117352562710245759?a=F9o2SOPgInsCmgRk4Mw&s=20) · właściciel 2026-11-03
+
+- **Co pokazuje:** zestaw kilku (ok. 4) komponentów złożonych do zbudowania na początek (post nieobejrzany).
+- **Dla Tessery:** lista pierwszych celów granicznych.
+
+### ★ [@disarto_max · 2115117802239463648](https://x.com/disarto_max/status/2115117802239463648?a=63H0GLjQ1t7FRAFotec&s=20) · właściciel 2026-11-03
+
+- **Co pokazuje:** komponent złożony z wielu części (post nieobejrzany).
+- **Dla Tessery:** jak wyżej.
+
+### ★ [@disarto_max · 2112944618559910363](https://x.com/disarto_max/status/2112944618559910363?a=giFHeLhfIaayJGnMySg&s=20) · właściciel 2026-11-03
+
+- **Co pokazuje:** belka boczna aplikacji webowej (nawigacja, tooltipy).
+- **Dla Tessery:** przykładowy cel graniczny: pasek boczny z tooltipami; inne kandydaty: dialog z wariantami, menu kontekstowe pod prawym przyciskiem.
+
+## Tekst i laboratorium interakcji
+
+### ★ [aiforui.dev/lab](https://aiforui.dev/lab) · właściciel 2026-11-03
+
+- **Właściciel:** wzór tego, jak ma wyglądać tekst, w stylu terminalowego Markdownu w React.
+- **Co pokazuje strona (odczyt 03.11):** „Interaction Lab”, demo do klikania: sprężyna (SPRING), krzywe (EASE, KEYFRAMES), lupa (LOUPE), ścieżki SVG (PATH), reakcja–dyfuzja (GROWN TO SHAPE, CONTOURS), cząsteczki (ACCRETION, MERCURY), PALIMPSEST, TORCH, STIR, LEVEL. Osobnego demo tekstu czy Markdownu na tej podstronie odczyt nie znalazł; typografię i styl tekstu oglądać na żywo, możliwe, że w innej części aiforui.dev.
+- **Dla Tessery:** przepis `text` i ewentualny element do renderowania Markdownu z odpowiedzi AI; laboratorium interakcji jako wzór strony prób ruchu (sprężyna i krzywe silnika `motion`).
+
+## Przycisk wypukły (3D)
+
+### ★ [@byamine\_\_](https://x.com/byamine__/status/2117526128793714787?a=T4KZDDySW5cl6blMemU&s=20) · właściciel 2026-11-03
+
+- **Co pokazuje:** róg okna przeglądarki na różowym gradiencie: przycisk z chevronem jako wypukły kafelek w kolorze tła paska (jasna krawędź u góry, miękki cień wewnętrzny, squircle), wpasowany koncentrycznie we wcięcie ramki; obok strzałki nawigacji (wstecz aktywna, dalej przygaszona) i odświeżanie, pasek adresu jako jaśniejsza wypukła płytka. Powierzchnie półprzezroczyste, jedna rodzina kolorów z tłem.
+- **Dla Tessery:** przycisk akcji wypukły bez obrysu i bez osobnego koloru: głębia z samego światła (jasna górna krawędź + cień), ton z tła powierzchni (silnik `depth`, wariant `raised`). Koncentryczne wcięcie ramki wokół przycisku w rogu (silnik `shape`). Właściciel: „That's clean”, styl autora mu odpowiada, zwłaszcza gradienty.
+- **Autor:** [@byamine\_\_](https://x.com/byamine__): do przejrzenia całego profilu pod kątem gradientów i wypukłych powierzchni.
+
 ## Sliding
 
 ### ★ I:ms-2026-08-22-1540698907548455082-0-HQNtnAJaMAATPVf.png · obraz `ms-2026-08-22-1540698907548455082-0-HQNtnAJaMAATPVf.png`

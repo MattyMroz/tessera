@@ -3,7 +3,7 @@
     --_offset: var(--ts-focus-offset);
   }
 
-  :root:not([data-input='pointer']) [data-focus]:focus-visible {
+  [data-focus]:focus-visible:not([data-input='pointer']) {
     outline-offset: var(--_offset);
   }
 

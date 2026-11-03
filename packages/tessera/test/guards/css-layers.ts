@@ -77,7 +77,7 @@ const NUMBER = /(?<![\w.-])-?(?:\d+\.?\d*|\.\d+)[a-z%]*/g
 
 const EMPTY_STRING = /^(?:''|"")$/
 
-const COMPONENT_VARIABLE = /^--ts-(?:space-[a-z0-9-]+|size-gap)$/
+const COMPONENT_VARIABLE = /^--ts-(?:space-[a-z0-9-]+|size-(?:label-)?gap)$/
 
 const COMPONENT: Policy = {
   functions: new Set(),
@@ -127,9 +127,12 @@ const INSET_SHADOW = /(?<![\w-])inset(?![\w-])/i
 const ICON_GLYPH = "[data-recipe='control'] > [data-slot='icon'] > svg"
 const BUSY_GLYPH = "[data-recipe='control'] > [data-slot='busy'] > svg"
 const DOT_GLYPH = "[data-recipe='control'] > [data-slot='icon'][data-dot] > svg"
+const MARK_GLYPH = "[data-recipe='control'] > [data-slot='mark'] > svg"
+const MARK_CHECKED = "[data-recipe='control'][aria-checked='true'] > [data-slot='mark'] > svg:first-child"
+const MARK_MIXED = "[data-recipe='control'][aria-checked='mixed'] > [data-slot='mark'] > svg:last-child"
+const CHOICE_HOST = "[data-slot='choice']:has(> [data-recipe='control'])"
 const ROW_ICON_GLYPH = "[data-recipe='row'] [data-slot='icon'] > svg"
 const SURFACE_ICON_GLYPH = "[data-recipe='surface'] > [data-slot='icon'] > svg"
-const KEYBOARD_FOCUS = ":root:not([data-input='pointer']) [data-focus]:focus-visible"
 const INDICATOR_HOST = ":has(> [data-recipe='indicator'])"
 const INDICATOR_REPLACES_CONTROL_INK = "[data-recipe='indicator'] ~ [data-recipe='control']::before"
 const INDICATOR_CHOICE_LABEL = "[data-recipe='indicator'] ~ [data-recipe='control'][aria-checked='true']:not(:disabled, [data-disabled])"
@@ -138,8 +141,7 @@ const POSITIONER_LAYERS = [
   "[data-side]:has(> [data-recipe='surface'][data-variant='tooltip'])",
 ]
 const RECIPE_SELECTOR_EXCEPTIONS: Readonly<Record<string, readonly string[]>> = {
-  control: [ICON_GLYPH, BUSY_GLYPH, DOT_GLYPH],
-  focus: [KEYBOARD_FOCUS],
+  control: [ICON_GLYPH, BUSY_GLYPH, DOT_GLYPH, MARK_GLYPH, MARK_CHECKED, MARK_MIXED, CHOICE_HOST],
   indicator: [INDICATOR_HOST, INDICATOR_REPLACES_CONTROL_INK, INDICATOR_CHOICE_LABEL],
   row: [ROW_ICON_GLYPH],
   surface: [...POSITIONER_LAYERS, SURFACE_ICON_GLYPH],
@@ -162,14 +164,21 @@ const VENDOR_VARIABLES: Readonly<Record<string, string>> = {
 
 const HOVER_EXIT_FADE = 'background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover)'
 const HOVER_EXIT_REST = ":not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before"
-const HOVER_EXIT_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])${HOVER_EXIT_REST}`
-const HOVER_EXIT_ANCHOR_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger])${HOVER_EXIT_REST}`
+const HOVER_EXIT_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])${HOVER_EXIT_REST}`
+const HOVER_EXIT_ANCHOR_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger])${HOVER_EXIT_REST}`
 const HOVER_EXIT: Readonly<Record<string, string>> = {
   [HOVER_EXIT_PLATE]: `transition: ${HOVER_EXIT_FADE}`,
   [HOVER_EXIT_ANCHOR_PLATE]: `transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out), ${HOVER_EXIT_FADE}`,
 }
 
-const SOURCE_LISTS: Lists = { selectors: RECIPE_SELECTOR_EXCEPTIONS, values: { row: ARIA_LEVEL_INDENT, control: HOVER_EXIT }, vendor: VENDOR_VARIABLES }
+const MARK_DRAW: Readonly<Record<string, string>> = {
+  [MARK_GLYPH]: 'transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw)',
+}
+const SOURCE_LISTS: Lists = {
+  selectors: RECIPE_SELECTOR_EXCEPTIONS,
+  values: { row: ARIA_LEVEL_INDENT, control: { ...HOVER_EXIT, ...MARK_DRAW, [CHOICE_HOST]: 'contain: layout' } },
+  vendor: VENDOR_VARIABLES,
+}
 
 type Scope = {
   owner: 'recipe' | 'component'

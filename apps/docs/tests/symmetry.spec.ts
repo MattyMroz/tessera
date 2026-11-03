@@ -23,7 +23,7 @@ const CORNER_CLOSE: readonly Choices['corners'][] = ['md', 'full']
 const COMPOSED_SIZES: readonly Choices['size'][] = ['sm', 'lg']
 const TEXTAREA_LINES = 'First line\nSecond line\nThird line'
 const CAPSULES = [
-  "main [data-recipe='control']:not([data-surface='joined'] > *, [data-slot='action'] > *, [data-slot='close'], :has(> textarea))",
+  "main [data-recipe='control']:not([data-surface='joined'] > *, [data-slot='action'] > *, [data-slot='close'], :has(> textarea), [role='checkbox'][data-slot='box'])",
   "main [data-surface='track']",
   "main [data-surface='joined']",
   "main [data-recipe='indicator'] > [data-slot='squash']",
@@ -282,7 +282,7 @@ test.describe('optical symmetry', () => {
     })
   }
 
-  test('rounds every one-line control, pill and track into a capsule with full corners, also inside a surface', async ({ page }) => {
+  test('rounds every one-line control, pill and track into a capsule with full corners, also inside a surface, but a check box', async ({ page }) => {
     for (const path of [PAGE, OVERLAYS]) {
       await visit(page, path)
       await theme(page, { corners: 'full', density: 'compact', mode: 'light' })

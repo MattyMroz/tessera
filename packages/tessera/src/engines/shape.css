@@ -11,6 +11,7 @@
     --_ts-shape-square-ratio: calc(10 / 28);
     --ts-shape-corner: round;
     --ts-shape-control-corner: round;
+    --ts-shape-round-corner: round;
   }
 
   :root,
@@ -69,8 +70,8 @@
     );
     --ts-shape-control-side-icon: round(var(--ts-shape-control-side) * 0.6, 1px);
     --ts-shape-box: min(
-      min(var(--_ts-shape-ratio), var(--_ts-shape-square-ratio)) * var(--ts-in-shape-radius) * var(--ts-size-box) * (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-control-curve)),
-      var(--ts-size-box) * (0.5 - 0.05 * var(--_ts-shape-control-curve))
+      var(--_ts-shape-ratio) * var(--ts-in-shape-radius) * var(--ts-size-box) * (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-control-curve)),
+      var(--ts-size-box) * 0.35
     );
     --ts-shape-track: calc(var(--ts-size-track-block) / 2);
     --ts-shape-thumb: calc(var(--ts-size-thumb) / 2);

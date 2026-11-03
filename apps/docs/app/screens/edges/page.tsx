@@ -20,6 +20,7 @@ import { BadgeEdge } from './sections/badge'
 import { ButtonEdge } from './sections/button'
 import { ButtonGroupEdge } from './sections/button-group'
 import { CardEdge } from './sections/card'
+import { CheckboxEdge } from './sections/checkbox'
 import { DialogEdge } from './sections/dialog'
 import { FieldEdge } from './sections/field'
 import { HeadingEdge } from './sections/heading'
@@ -27,6 +28,8 @@ import { InputEdge } from './sections/input'
 import { KbdEdge } from './sections/kbd'
 import { MenuEdge } from './sections/menu'
 import { PopoverEdge } from './sections/popover'
+import { RadioEdge } from './sections/radio'
+import { SwitchEdge } from './sections/switch'
 import { TextEdge } from './sections/text'
 import { TextareaEdge } from './sections/textarea'
 import { ToggleGroupEdge } from './sections/toggle-group'
@@ -117,6 +120,9 @@ export default function Page() {
       <ButtonGroupEdge />
       <InputEdge />
       <ToggleGroupEdge />
+      <CheckboxEdge />
+      <SwitchEdge />
+      <RadioEdge />
       <MenuEdge />
       <TooltipEdge />
       <PopoverEdge />

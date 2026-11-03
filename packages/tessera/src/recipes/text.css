@@ -87,4 +87,8 @@
     min-block-size: var(--ts-size-height);
     padding-inline-end: calc(var(--ts-size-height) + var(--ts-space-group));
   }
+
+  [data-slot='choice']:has(> [data-recipe='control']:is(:disabled, [data-disabled], [aria-disabled='true'])) > [data-recipe='text'][data-variant='label'] {
+    opacity: var(--ts-state-disabled);
+  }
 }

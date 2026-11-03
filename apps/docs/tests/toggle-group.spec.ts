@@ -137,6 +137,24 @@ test('shows the focus ring on the option a typed letter moves to after a click',
   expect(await range.getByRole('radio', { name: 'Month' }).evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
 })
 
+test('slides the pill of the mode group of the theme panel, though the theme change holds the plates', async ({ page }) => {
+  const mode = page.getByRole('radiogroup', { name: 'mode', exact: true })
+  await mode.getByRole('radio', { name: 'light', exact: true }).click()
+  await page.waitForTimeout(500)
+  await mode.evaluate((element) => {
+    const animate = Element.prototype.animate
+    const durations: number[] = []
+    element.setAttribute('data-durations', '')
+    Element.prototype.animate = function (keyframes, options) {
+      if (element.contains(this)) durations.push(typeof options === 'number' ? options : Number(options?.duration))
+      element.setAttribute('data-durations', durations.join(' '))
+      return animate.call(this, keyframes, options)
+    }
+  })
+  await mode.getByRole('radio', { name: 'system', exact: true }).click()
+  await expect(mode).toHaveAttribute('data-durations', /[1-9]/)
+})
+
 test('reads the motion of a group again at every slide, so a subtree switched to motion off stops sliding', async ({ page }) => {
   const widths = group(page, 'Different widths')
   const active = activePill(widths)

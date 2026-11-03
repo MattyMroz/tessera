@@ -94,7 +94,7 @@ const thumb: CSSProperties = {
 const rail: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',
-  width: 'calc(var(--ts-size-track-inline) * 3)',
+  width: 'calc(var(--ts-size-track-inline) * 2)',
   height: 'var(--ts-size-rail)',
   borderRadius: 'var(--ts-size-rail)',
   background: 'var(--ts-color-quaternary-label)',

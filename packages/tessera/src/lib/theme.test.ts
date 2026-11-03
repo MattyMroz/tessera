@@ -179,7 +179,7 @@ function bootPage(theme: Theme, saved: Theme) {
     localStorage: memoryStorage({ [THEME_CONFIG.storageKey]: JSON.stringify({ version: 1, choices: saved }) }),
     matchMedia: (query: string) => (query === THEME_CONFIG.darkQuery ? media : undefined),
   })
-  const document = Object.assign(new EventTarget(), { documentElement: root })
+  const document = Object.assign(new EventTarget(), { documentElement: root, activeElement: null })
   let announced = 0
   page.addEventListener(THEME_CONFIG.changeEvent, () => {
     announced += 1
