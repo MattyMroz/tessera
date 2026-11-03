@@ -43,7 +43,7 @@ A part wrapped in an element of the consumer still renders: the check sees the h
 
 ## Behaviour
 
-- The only popup with an entry animation: `opacity` alone, without `scale`, over `--ts-motion-duration-overlay` with `--ts-motion-ease-emphasized`, driven by Base UI `data-starting-style` and `data-ending-style`; the backdrop fades with it. Reduced motion makes both instant.
+- The only popup with an entry animation: `opacity` alone, without `scale`, over `--ts-motion-duration-scene` (250 ms) with `--ts-motion-ease-emphasized`, driven by Base UI `data-starting-style` and `data-ending-style`; the backdrop fades with it. The system reduced motion keeps this fade (a cross-fade is not movement); the motion `off` makes both instant.
 - Focus moves to the first tabbable element inside and returns to the trigger on close; Escape and a click on the backdrop close the dialog; page scroll is locked.
 - Popups opened from the dialog (popover, menu) are first-level surfaces of their own and lie above it: popups and dialogs share `--ts-depth-layer-popup`, and Base UI puts the portal of a child popup after the dialog in the DOM.
 

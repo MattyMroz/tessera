@@ -227,7 +227,33 @@ it('takes every motion time in lib from the motion engine', () => {
   expect(lib.filter((file) => TIME_LITERAL.test(readFileSync(resolve(src, file), 'utf8')))).toEqual([])
 })
 
-it('names the sampling step of the spring as the one time constant in lib', () => {
+const MOTION_TIME_OUTPUT = /^--ts-motion-(?:duration-|ease-|choice-|press-hold)/
+const MOTION_DECLARATION = /(--ts-motion-[a-z-]+):\s*([^;]+);/g
+const CSS_TIME_LITERAL = /(?:transition|animation)[a-z-]*:[^;]*(?<![\w.-])\d*\.?\d+m?s\b/
+
+function stylesheets(directory: string): string[] {
+  return readdirSync(directory, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.css'))
+    .map((entry) => relative(directory, resolve(entry.parentPath, entry.name)).replaceAll('\\', '/'))
+}
+
+it('gives every time output of the motion engine a consumer and keeps every time of CSS in the engine', () => {
+  const engine = readFileSync(resolve(src, 'engines/motion.css'), 'utf8')
+  const declared = [...engine.matchAll(MOTION_DECLARATION)].map(([, name = '', value = '']) => ({ name, value }))
+  const outputs = [...new Set(declared.map(({ name }) => name))].filter((name) => MOTION_TIME_OUTPUT.test(name))
+  const outside = [...stylesheets(src).filter((file) => file !== 'engines/motion.css'), ...shippedSources(src)]
+    .map((file) => readFileSync(resolve(src, file), 'utf8'))
+    .join('\n')
+  const read = (name: string, text: string): boolean => new RegExp(`${name}(?![a-z-])`).test(text)
+  const used = (name: string, seen: ReadonlySet<string> = new Set()): boolean =>
+    read(name, outside) ||
+    declared.some((other) => !seen.has(other.name) && other.name !== name && read(name, other.value) && used(other.name, new Set([...seen, name])))
+  expect(outputs.filter((name) => !used(name))).toEqual([])
+  expect(outputs.length).toBeGreaterThan(0)
+  expect(stylesheets(src).filter((file) => file !== 'engines/motion.css' && CSS_TIME_LITERAL.test(readFileSync(resolve(src, file), 'utf8')))).toEqual([])
+})
+
+it('names the sampling step of the choice flight as the one time constant in lib', () => {
   expect(readFileSync(resolve(src, 'lib/flight.ts'), 'utf8')).toMatch(SAMPLE_STEP_CONSTANT)
 })
 
@@ -244,7 +270,7 @@ it.each([
 })
 
 it.each([
-  "popup.animate([{ transform: 'translate(0, 0)' }], { duration: slide, easing: standard })",
+  "popup.animate([{ transform: 'translate(0, 0)' }], { duration: follow, easing: ease })",
   'setTimeout(lift, delay)',
   '{ duration: flight.duration, easing: flight.easing }',
   'const SAMPLE_STEP = 1 / 60',
@@ -312,7 +338,7 @@ it('registers exactly the instance keys in the size engine', () => {
 })
 
 it('finds every value of a subtree axis that the engines rule only on :root', () => {
-  expect(subtreeAxisProblems(goodFixture, { size: ['xs'], motion: ['spring'] })).toEqual([])
+  expect(subtreeAxisProblems(goodFixture, { size: ['xs'], motion: ['on'] })).toEqual([])
   expect(subtreeAxisProblems(badFixture, { size: ['xs'], corners: ['square'] })).toEqual([
     'size=xs: no engine rule outside :root',
     'corners=square: no engine rule outside :root',

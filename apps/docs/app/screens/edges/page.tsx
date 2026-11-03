@@ -269,7 +269,7 @@ export default function Page() {
                 <Button variant="ghost">Second still</Button>
               </Tooltip>
             </div>
-            <div data-motion="spring" className="flex items-center">
+            <div data-motion="on" className="flex items-center">
               <Tooltip content="Moving tip">
                 <Button variant="ghost">Moving</Button>
               </Tooltip>

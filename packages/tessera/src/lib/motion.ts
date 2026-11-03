@@ -1,16 +1,9 @@
-import { THEME_CONFIG, type Choices } from './theme'
-
-export type MotionMode = Choices['motion']
-
 export type Motion = {
-  readonly mode: MotionMode
   readonly pressHold: number
-  readonly slide: number
-  readonly elastic: number
-  readonly standard: string
-  readonly stiffness: number
-  readonly damping: number
+  readonly follow: number
+  readonly choice: number
   readonly overshoot: number
+  readonly ease: string
 }
 
 export const MILLISECONDS_PER_SECOND = 1000
@@ -24,20 +17,13 @@ export function milliseconds(value: string): number {
 }
 
 export function parseMotion(read: (name: string) => string): Motion {
-  const mode = read('--ts-motion-mode').trim()
-  const number = (name: string): number => {
-    const value = Number.parseFloat(read(name))
-    return Number.isFinite(value) ? value : 0
-  }
+  const overshoot = Number.parseFloat(read('--ts-motion-choice-overshoot'))
   return {
-    mode: THEME_CONFIG.axes.motion.find((option) => option === mode) ?? 'off',
     pressHold: milliseconds(read('--ts-motion-press-hold')),
-    slide: milliseconds(read('--ts-motion-duration-slide')),
-    elastic: milliseconds(read('--ts-motion-duration-elastic')),
-    standard: read('--ts-motion-ease-standard').trim(),
-    stiffness: number('--ts-motion-spring-stiffness'),
-    damping: number('--ts-motion-spring-damping'),
-    overshoot: number('--ts-motion-elastic-overshoot'),
+    follow: milliseconds(read('--ts-motion-duration-follow')),
+    choice: milliseconds(read('--ts-motion-duration-choice')),
+    overshoot: Number.isFinite(overshoot) ? overshoot : 0,
+    ease: read('--ts-motion-ease-hover').trim(),
   }
 }
 

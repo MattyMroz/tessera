@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, type Mock } from 'vitest'
-import { SPRING } from '../../test/fixtures/motion'
+import { MOTION } from '../../test/fixtures/motion'
 import type { Rect } from './flight'
 import type { Motion } from './motion'
 import { createPopupFlight, flightOffset, flightOrigin, type FlightPopup, type FlightPositioner } from './popup-flight'
@@ -124,7 +124,7 @@ function positioner(left?: number): FakePositioner {
   }
 }
 
-function setup(motion: Motion = SPRING) {
+function setup(motion: Motion = MOTION) {
   const clock = { time: 0 }
   const page = { scroll: { x: 0, y: 0 } }
   const flight = createPopupFlight({ grace: GRACE, motion: () => motion, now: () => clock.time, scroll: () => page.scroll })
@@ -161,14 +161,14 @@ describe('createPopupFlight', () => {
     expect(open(100).popup.animate).not.toHaveBeenCalled()
   })
 
-  it('flies the next popup of a group on transform for the slide time of the engine, without a stretch', () => {
+  it('flies the next popup of a group on transform for the follow time of the engine', () => {
     const { clock, open, close } = setup()
     const file = open(100)
     close(file.anchor, file.popup)
     clock.time = 100
     expect(open(900).popup.animate).toHaveBeenCalledWith(
       [{ transform: 'translate(-800px, 0px)' }, { transform: 'translate(0, 0)' }],
-      { duration: 150, easing: SPRING.standard },
+      { duration: 100, easing: MOTION.ease },
     )
   })
 
@@ -304,7 +304,7 @@ describe('createPopupFlight', () => {
   })
 
   it('opens on its place with motion off', () => {
-    const { open } = setup({ ...SPRING, mode: 'off' })
+    const { open } = setup({ ...MOTION, follow: 0 })
     open(100)
     expect(open(160).popup.animate).not.toHaveBeenCalled()
   })

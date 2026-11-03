@@ -213,7 +213,7 @@
       overflow: auto;
       scrollbar-width: none;
       outline: none;
-      transition: opacity var(--ts-motion-duration-overlay) var(--ts-motion-ease-emphasized);
+      transition: opacity var(--ts-motion-duration-scene) var(--ts-motion-ease-emphasized);
 
       &:is([data-starting-style], [data-ending-style]) {
         opacity: 0;
@@ -237,7 +237,7 @@
       padding: 0;
       border-width: 0;
       border-radius: 0;
-      transition: opacity var(--ts-motion-duration-overlay) var(--ts-motion-ease-emphasized);
+      transition: opacity var(--ts-motion-duration-scene) var(--ts-motion-ease-emphasized);
 
       &:is([data-starting-style], [data-ending-style]) {
         opacity: 0;

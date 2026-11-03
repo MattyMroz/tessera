@@ -2,7 +2,7 @@ import { readMotion } from './motion'
 
 export const PRESSING = 'data-pressing'
 
-const PRESSABLE = "[data-recipe='control']:is(button, a[href], [role='button'], [role='radio'], [role='tab'], [role='menuitem'], [tabindex])"
+const PRESSABLE = "[data-recipe='control']:is(button, a[href], [role='button'], [tabindex]):not([role='radio'], [role='tab'], [role='menuitem'])"
 const UNPRESSABLE = ":disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field']"
 const LINK = 'a[href]'
 const PRIMARY_BUTTON = 0

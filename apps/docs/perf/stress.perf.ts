@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus } from 'node:os'
 import { resolve } from 'node:path'
+import { THEME_CONFIG } from '@mattymroz/tessera/lib/theme'
 import { expect, test, type Browser, type CDPSession, type Locator, type Page } from '@playwright/test'
 import { row, settle, STRESS, visit, watchLayers } from '../tests/helpers'
 
@@ -30,6 +31,7 @@ const MILLISECONDS = 1000
 const LAST = resolve(import.meta.dirname, 'last.json')
 const SAVE = process.env.PERF_SAVE === '1'
 const MOUNT_MARK = 'lab-mount'
+const HOLD_TIME = 50
 const INDICATOR_HOST = ':has(> [data-recipe="indicator"])'
 const SUBJECT_HOST = '[data-recipe]:has(> [data-recipe="indicator"])'
 
@@ -120,19 +122,28 @@ async function mount(page: Page): Promise<number> {
 
 function themeSwitches(page: Page): (() => Promise<unknown>)[] {
   return Array.from({ length: THEME_SWITCHES }, () => () =>
-    page.evaluate(() => {
-      const root = document.documentElement
-      root.dataset.mode = root.dataset.mode === 'dark' ? 'light' : 'dark'
-    }),
+    page.evaluate(
+      ([hold, frames]) => {
+        const root = document.documentElement
+        root.setAttribute(hold, '')
+        root.dataset.mode = root.dataset.mode === 'dark' ? 'light' : 'dark'
+        return new Promise<void>((done) =>
+          setTimeout(() => {
+            root.removeAttribute(hold)
+            done()
+          }, frames),
+        )
+      },
+      [THEME_CONFIG.holdAttribute, HOLD_TIME] as const,
+    ),
   )
 }
 
-async function centres(page: Page, name: string, targets: readonly string[]): Promise<{ x: number; y: number }[]> {
-  await region(page, name).evaluate((element) => element.scrollIntoView({ block: 'start' }))
+async function centres(page: Page, scope: Locator, role: 'button' | 'menuitem', targets: readonly string[]): Promise<{ x: number; y: number }[]> {
   const height = page.viewportSize()?.height ?? 0
   const found: { x: number; y: number }[] = []
   for (const target of targets) {
-    const box = await region(page, name).getByRole('button', { name: target, exact: true }).boundingBox()
+    const box = await scope.getByRole(role, { name: target, exact: true }).boundingBox()
     if (box && box.y >= 0 && box.y + box.height <= height) found.push({ x: box.x + box.width / 2, y: box.y + box.height / 2 })
   }
   expect(found).toHaveLength(targets.length)
@@ -144,7 +155,8 @@ function region(page: Page, name: string): Locator {
 }
 
 async function hoverAndPress(page: Page, cdp: CDPSession): Promise<{ hover: number; press: number }> {
-  const buttons = await centres(page, 'Buttons', Array.from({ length: SAMPLES }, (_, index) => `Button ${index + 1}`))
+  await region(page, 'Buttons').evaluate((element) => element.scrollIntoView({ block: 'start' }))
+  const buttons = await centres(page, region(page, 'Buttons'), 'button', Array.from({ length: SAMPLES }, (_, index) => `Button ${index + 1}`))
   const hover = await netBusy(page, cdp, buttons.map(({ x, y }) => () => page.mouse.move(x, y)))
   const press = async (): Promise<void> => {
     await page.mouse.down()
@@ -154,12 +166,19 @@ async function hoverAndPress(page: Page, cdp: CDPSession): Promise<{ hover: numb
 }
 
 async function rowRide(page: Page, cdp: CDPSession): Promise<{ hover: number; layers: number }> {
-  const rows = await centres(page, 'Rows', Array.from({ length: ROW_SAMPLES }, (_, index) => `Row ${index + 1}`))
+  await region(page, 'Rows').evaluate((element) => element.scrollIntoView({ block: 'start' }))
+  await region(page, 'Rows').getByRole('button', { name: 'Rows menu', exact: true }).click()
+  const menu = page.getByRole('menu')
+  await expect(menu).toBeVisible()
+  await settle(page)
+  const rows = await centres(page, menu, 'menuitem', Array.from({ length: ROW_SAMPLES }, (_, index) => `Row ${index + 1}`))
   const hover = await netBusy(page, cdp, rows.map(({ x, y }) => () => page.mouse.move(x, y)))
   const layers = await watchLayers(page)
   const peak = await layers.peak(async () => {
     for (const { x, y } of rows) await page.mouse.move(x, y)
   })
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
   return { hover, layers: peak.count }
 }
 

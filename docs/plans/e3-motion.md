@@ -1,6 +1,6 @@
 ---
 kind: plan
-status: draft
+status: wdrożony i przyjęty przez właściciela na żywo 2026-11-03
 baseline: feat/e2-foundation 0e05eba
 created: 2026-11-02
 ---

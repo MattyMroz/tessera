@@ -104,6 +104,14 @@
     animation: var(--ts-motion-spin) var(--ts-motion-loop) linear infinite;
   }
 
+  [data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field']):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before {
+    transition: background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
+  }
+
+  [data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before {
+    transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out), background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
+  }
+
   @supports (overflow-clip-margin: border-box) {
     [data-recipe='control'][aria-busy='true'] {
       overflow: clip;

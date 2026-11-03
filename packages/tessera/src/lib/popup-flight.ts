@@ -127,12 +127,12 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
 
   const fly = (popup: P, from: FlightOrigin | null, target: FlightOrigin): void => {
     if (!from) return
-    const { mode, slide, standard } = motion(popup)
-    if (mode === 'off' || slide <= 0) return
+    const { follow, ease } = motion(popup)
+    if (follow <= 0) return
     const offset = flightOffset(from, target.rect, target.side, popup.dataset.align)
     if (Math.abs(offset.x) < SETTLED && Math.abs(offset.y) < SETTLED) return
     const frames = [{ transform: `translate(${offset.x}px, ${offset.y}px)` }, { transform: 'translate(0, 0)' }]
-    running.set(popup, popup.animate(frames, { duration: slide, easing: standard }))
+    running.set(popup, popup.animate(frames, { duration: follow, easing: ease }))
   }
 
   const flying = (popup: P): boolean => running.get(popup)?.playState === 'running'

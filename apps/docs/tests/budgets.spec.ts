@@ -5,6 +5,7 @@ import {
   clearRecorded,
   clearRenders,
   failures,
+  HOVER_EXIT_PROPERTY,
   hover,
   installCommitProbe,
   motionWork,
@@ -21,6 +22,7 @@ import {
 const TYPICAL_CONTROL_NODES = 3
 const MIN_SCENE_CONTROLS = 1000
 const MAX_COMMITS = 1
+const MAX_FADE_PAINTS = 12
 const POPUP = '[role="menu"], [role="dialog"], [data-recipe="surface"]:is([data-level="overlay"], [data-level="modal"], [data-variant="backdrop"])'
 const THEME_CHANGES: readonly { readonly path: string; readonly accent: Choices['accent']; readonly corners: Choices['corners'] }[] = [
   { path: '/screens/overlays', accent: 'violet', corners: 'sm' },
@@ -119,6 +121,32 @@ test.describe('on the stress scene', () => {
       expect(work).toEqual([])
     })
   }
+
+  test('fades the colour of a control out on its plate alone: paints in the frames of the fade, no layout and no layer of its own', async () => {
+    const button = region(page, 'List').getByRole('button', { name: 'Item 1', exact: true })
+    const plate = (): Promise<string> => button.evaluate((element) => getComputedStyle(element, '::before').backgroundColor)
+    await page.mouse.move(0, 0)
+    await settle(page)
+    const rest = await plate()
+    await button.hover()
+    await expect.poll(plate).not.toBe(rest)
+    await settle(page)
+    await clearRecorded(page)
+    const { animations, work, events } = await motionWork(page, () => page.mouse.move(0, 0))
+    const fades = events.filter((event) => event.name === 'Animation' && event.ph === 'b' && event.args?.data?.displayName === HOVER_EXIT_PROPERTY)
+    const paints = events.filter((event) => event.name === 'Paint').map((event) => event.args?.data?.nodeName ?? '')
+    expect(animations).toBeGreaterThan(0)
+    expect(fades.length).toBeGreaterThan(0)
+    expect(paints.filter((node) => node !== '#document' && !node.startsWith('BUTTON'))).toEqual([])
+    expect(paints.filter((node) => node === '#document').length).toBeLessThanOrEqual(MAX_FADE_PAINTS)
+    expect(events.filter((event) => event.name === 'Layout')).toEqual([])
+    expect(work).toEqual([])
+    expect(failures(events)).toEqual([])
+    const recordedFade = (await recorded(page)).filter((animation) => animation.plate)
+    expect(recordedFade.length).toBeGreaterThan(0)
+    expect(offCompositor(recordedFade)).toEqual([])
+    expect(recordedFade.flatMap((animation) => animation.properties)).toEqual(recordedFade.map(() => HOVER_EXIT_PROPERTY))
+  })
 
   test('catches a layout started inside a moving subtree', async () => {
     await option(page, 'Raised group', '2').hover()

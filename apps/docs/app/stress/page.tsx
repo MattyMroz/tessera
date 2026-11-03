@@ -184,12 +184,23 @@ function Scene() {
         </div>
       </Region>
 
-      <Region title="Rows">
+      <Region title="Toolbar">
         <div className="flex flex-col items-start">
           {ROWS.map((index) => (
-            <Button key={index} variant="ghost">{`Row ${index}`}</Button>
+            <Button key={index} variant="ghost">{`Cell ${index}`}</Button>
           ))}
         </div>
+      </Region>
+
+      <Region title="Rows">
+        <Menu>
+          <MenuTrigger variant="outline">Rows menu</MenuTrigger>
+          <MenuContent>
+            {ROWS.map((index) => (
+              <MenuItem key={index}>{`Row ${index}`}</MenuItem>
+            ))}
+          </MenuContent>
+        </Menu>
       </Region>
     </TooltipProvider>
   )

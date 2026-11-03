@@ -888,7 +888,7 @@ test.describe('in the scope of a subtree', () => {
 
     await still.getByRole('button', { name: 'Moving', exact: true }).hover()
     await expect(tooltip).toHaveText('Moving tip')
-    await expect(tooltip).toHaveAttribute('data-motion', 'spring')
+    await expect(tooltip).toHaveAttribute('data-motion', 'on')
     await expect.poll(flights).toBe(1)
   })
 

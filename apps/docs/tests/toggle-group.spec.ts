@@ -280,11 +280,7 @@ test('slides the active pill of a toggle group only by transform onto the chosen
   }
 })
 
-test('squashes the pill at the wall of the track in elastic mode only by transform', async ({ page, browserName }) => {
-  await page.evaluate(() => {
-    document.documentElement.setAttribute('data-motion', 'elastic')
-    window.dispatchEvent(new Event('ts-theme-change'))
-  })
+test('squashes the choice pill at the wall of the track only by transform', async ({ page, browserName }) => {
   const widths = group(page, 'Different widths')
   const active = activePill(widths)
   const hover = widths.locator('[data-recipe="indicator"][data-variant="hover"]')
@@ -412,18 +408,12 @@ for (const mode of ['light', 'dark'] as const) {
   })
 }
 
-test('fades the hover pill out over the overlay time by default, cuts it with the hover fade input off and at once with motion off', async ({ page }) => {
+test('fades the hover pill out over the hover exit time and at once with motion off', async ({ page }) => {
   const range = group(page, 'Range (raised)')
   const exit = (): Promise<string> => hoverPill(range).evaluate((element) => getComputedStyle(element).transitionDuration)
-  const durations = await page.evaluate(() => {
-    const style = getComputedStyle(document.documentElement)
-    return { instant: style.getPropertyValue('--ts-motion-duration-instant'), overlay: style.getPropertyValue('--ts-motion-duration-overlay') }
-  })
-  const seconds = (time: number): string => `${time / MILLISECONDS}s`
-  expect(milliseconds(durations.overlay)).toBeGreaterThan(0)
-  expect(await exit()).toBe(seconds(milliseconds(durations.instant) + milliseconds(durations.overlay)))
-  await page.evaluate(() => document.documentElement.style.setProperty('--ts-in-motion-hover-fade', '0'))
-  expect(await exit()).toBe(seconds(milliseconds(durations.instant)))
+  const hoverOut = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ts-motion-duration-hover-out'))
+  expect(milliseconds(hoverOut)).toBeGreaterThan(0)
+  expect(await exit()).toBe(`${milliseconds(hoverOut) / MILLISECONDS}s`)
   await page.evaluate(() => document.documentElement.setAttribute('data-motion', 'off'))
   expect(await exit()).toBe('0s')
 })
@@ -431,10 +421,7 @@ test('fades the hover pill out over the overlay time by default, cuts it with th
 test('fades the hover pill out over the exit time when the option under the cursor is chosen, while the chosen pill slides there, and keeps it out', async ({ page }) => {
   const range = group(page, 'Range (raised)')
   const month = range.getByRole('radio', { name: 'Month', exact: true })
-  const exitTime = await page.evaluate(() => {
-    const style = getComputedStyle(document.documentElement)
-    return [style.getPropertyValue('--ts-motion-duration-instant'), style.getPropertyValue('--ts-motion-duration-overlay')]
-  })
+  const exitTime = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ts-motion-duration-hover-out'))
   await month.hover()
   await expect(hoverPill(range)).toHaveAttribute('data-visible', 'true')
   await page.waitForTimeout(SETTLE)
@@ -447,7 +434,7 @@ test('fades the hover pill out over the exit time when the option under the curs
     )
     return { fades, slides: chosen?.getAnimations().length ?? 0 }
   })
-  expect(motion.fades).toEqual([exitTime.reduce((total, time) => total + milliseconds(time), 0)])
+  expect(motion.fades).toEqual([milliseconds(exitTime)])
   expect(motion.fades[0]).toBeGreaterThan(0)
   expect(motion.slides).toBeGreaterThan(0)
   await expect(hoverPill(range)).toHaveAttribute('data-visible', 'false')
@@ -518,29 +505,24 @@ test('keeps every pill unpressed while the option under the active pill is press
   expect(parts).toEqual(parts.map(() => ({ scale: 'none', pressing: false })))
 })
 
-test('darkens the hover pill by one press step under a pressed option and scales neither the option nor a pill', async ({ page }) => {
+test('gives a pressed option no press step: the hover pill keeps its fill and neither the option nor a pill scales', async ({ page }) => {
   const range = group(page, 'Range (md)')
   const month = range.getByRole('radio', { name: 'Month', exact: true })
   await expect(month).toHaveAttribute('aria-checked', 'false')
   const fill = (): Promise<number> => hoverPill(range).locator('[data-slot="squash"]').evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))
-  const steps = await page.evaluate(() => {
-    const style = getComputedStyle(document.documentElement)
-    const read = (name: string): number => Number.parseFloat(style.getPropertyValue(name))
-    return { track: read('--ts-state-indicator-track'), lift: read('--ts-state-press') - read('--ts-state-hover') }
-  })
+  const track = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ts-state-indicator-track')))
   await month.hover()
   await expect(hoverPill(range)).toHaveAttribute('data-visible', 'true')
-  expect(await fill()).toBeCloseTo(steps.track, 3)
+  expect(await fill()).toBeCloseTo(track, 3)
   await page.mouse.down()
-  await expect(month).toHaveAttribute('data-pressing', '')
-  expect(steps.lift).toBeGreaterThan(0)
-  expect(await fill()).toBeCloseTo(steps.track + steps.lift, 3)
+  await page.waitForTimeout(SETTLE)
+  await expect(month).not.toHaveAttribute('data-pressing')
+  expect(await fill()).toBeCloseTo(track, 3)
   const scales = await range.locator('[role="radio"], [data-recipe="indicator"], [data-recipe="indicator"] *').evaluateAll((elements) => [
     ...new Set(elements.flatMap((element) => [getComputedStyle(element).scale, getComputedStyle(element, '::before').scale])),
   ])
   expect(scales).toEqual(['none'])
   await page.mouse.up()
-  await expect(month).not.toHaveAttribute('data-pressing')
   await expect(month).toHaveAttribute('aria-checked', 'true')
 })
 

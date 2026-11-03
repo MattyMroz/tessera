@@ -20,11 +20,10 @@ export function MotionSample({ children }: { children: ReactNode }) {
     const element = track.current
     if (!element) return
     const motion = getComputedStyle(document.documentElement)
-    const still = motion.getPropertyValue('--ts-motion-mode').trim() === 'off'
     const [from, to] = away.current ? [TRAVEL, HOME] : [HOME, TRAVEL]
     element.animate([{ transform: from }, { transform: to }], {
-      duration: still ? 0 : milliseconds(motion.getPropertyValue('--ts-motion-duration-emphasized')),
-      easing: motion.getPropertyValue('--ts-motion-ease-spring').trim(),
+      duration: milliseconds(motion.getPropertyValue('--ts-motion-duration-choice')),
+      easing: motion.getPropertyValue('--ts-motion-ease-emphasized').trim(),
       fill: 'forwards',
     })
     away.current = !away.current

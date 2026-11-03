@@ -1,3 +1,4 @@
+import { milliseconds } from '@mattymroz/tessera/lib/motion'
 import { THEME_CONFIG, type Choices } from '@mattymroz/tessera/lib/theme'
 import { TONES, type Tone } from '@mattymroz/tessera/lib/tone'
 import { expect, test, type Locator, type Page } from '@playwright/test'
@@ -26,11 +27,13 @@ import {
 
 const TOLERANCE = 0.5
 const FOUNDATION = '/foundation'
-const TUNED_STIFFNESS = '200'
-const TUNED_FIRM = '300'
+const COMPONENTS = '/components'
+const TUNED_FOLLOW = '300'
+const TUNED_HOVER_OUT = '200'
 const OVERLAYS = '/screens/overlays'
 const SETTLE = 600
 const LONG_LIVED_LAYERS = 12
+const SLOW_FOLLOW = '600ms'
 const LAYER_VIEWPORT = { width: 1280, height: 800 } as const
 const LAYER_RATIO = 1.5
 const BUSY_RATIOS: readonly number[] = [1, LAYER_RATIO]
@@ -111,10 +114,9 @@ const TREE_INDENT: readonly (readonly [number, number])[] = [
   [12, 7],
 ]
 const MOTION_NAMES: readonly string[] = [
-  'duration-instant', 'duration-slide', 'duration-emphasized', 'duration-overlay', 'duration-elastic',
-  'ease-standard', 'ease-out', 'ease-emphasized', 'ease-spring', 'press-scale', 'press-rest', 'press-hold',
-  'duration-press-in', 'duration-press-out', 'ease-press-in', 'ease-press-out', 'spring-stiffness', 'spring-damping',
-  'elastic-overshoot', 'mode', 'spin', 'sweep', 'pulse', 'loop',
+  'duration-hover-out', 'duration-follow', 'duration-choice', 'duration-scene', 'duration-press-in', 'duration-press-out',
+  'ease-hover', 'ease-standard', 'ease-out', 'ease-emphasized', 'ease-press-in', 'ease-press-out',
+  'choice-overshoot', 'press-scale', 'press-rest', 'press-hold', 'spin', 'sweep', 'pulse', 'loop',
 ]
 
 function radius(page: Page, testId: string): Promise<number> {
@@ -291,14 +293,16 @@ function loops(page: Page): Promise<{ name: string; output: string; properties: 
   }, LOOPS)
 }
 
-test('runs the loops only on compositor properties and stops them with the motion off and with reduced motion', async ({ page }) => {
+test('runs the loops only on compositor properties and keeps only the spinner turning with the motion off and with reduced motion', async ({ page }) => {
   await page.goto(FOUNDATION)
-  expect(await loops(page)).toEqual(LOOPS.map((name) => ({ name, output: `ts-${name}`, properties: [LOOP_PROPERTIES[name]] })))
+  const running = LOOPS.map((name) => ({ name, output: `ts-${name}`, properties: [LOOP_PROPERTIES[name]] }))
+  const stilled = LOOPS.map((name) => (name === 'spin' ? running[0] : { name, output: 'none', properties: [] }))
+  expect(await loops(page)).toEqual(running)
   await choose(page, 'motion', 'off')
-  expect(await loops(page)).toEqual(LOOPS.map((name) => ({ name, output: 'none', properties: [] })))
-  await choose(page, 'motion', 'spring')
+  expect(await loops(page)).toEqual(stilled)
+  await choose(page, 'motion', 'on')
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  expect(await loops(page)).toEqual(LOOPS.map((name) => ({ name, output: 'none', properties: [] })))
+  expect(await loops(page)).toEqual(stilled)
 })
 
 test('falls back to round corners at their plain radius without corner-shape support', async ({ page }) => {
@@ -463,7 +467,6 @@ test('moves only transform and opacity through the overlays screen', async ({ pa
   test.skip(browserName !== 'chromium', 'the trace comes from the Chrome DevTools protocol')
   await page.addInitScript(recordAnimations)
   await visit(page, OVERLAYS)
-  await choose(page, 'motion', 'elastic')
   const scope = island(page)
   const tooltip = page.locator('[data-variant="tooltip"]')
   await clearRecorded(page)
@@ -571,9 +574,14 @@ test.describe('at DPR 1.5', () => {
     await visit(page, OVERLAYS)
     const layers = await watchLayers(page)
     const views = island(page).getByRole('radiogroup', { name: 'View', exact: true }).getByRole('radio')
-    await views.first().hover()
+    await views.nth(1).hover()
     await layers.now()
-    const group = await layers.peak(() => views.last().hover())
+    await page.evaluate((time) => document.documentElement.style.setProperty('--ts-motion-duration-follow', time), SLOW_FOLLOW)
+    const chase = await layers.peak(() => views.last().hover())
+    await page.evaluate(() => document.documentElement.style.removeProperty('--ts-motion-duration-follow'))
+    expect(chase.layers.filter((layer) => layer.part === 'pill').length).toBeGreaterThan(0)
+    expect(chase.count).toBeLessThanOrEqual(LONG_LIVED_LAYERS)
+    const group = await layers.peak(() => views.last().click())
     expect(group.layers.filter((layer) => layer.part === 'pill').length).toBeGreaterThan(0)
     expect(group.count).toBeLessThanOrEqual(LONG_LIVED_LAYERS)
 
@@ -605,17 +613,17 @@ for (const ratio of BUSY_RATIOS) {
       const layers = await watchLayers(page)
 
       const rest = await layers.now()
-      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await icon.evaluate((element) => element.style.setProperty('animation', 'none'))
       expect(await loopProperties(icon)).toEqual([])
       expectOnlyTheLoopLayer(rest, await layers.now())
 
-      await page.emulateMedia({ reducedMotion: 'no-preference' })
+      await icon.evaluate((element) => element.style.removeProperty('animation'))
       expect(await loopProperties(icon)).toEqual(['rotate'])
       await layers.peak(() => groups.getByRole('button', { name: 'Groups menu', exact: true }).click())
       await expect(page.getByRole('menu')).toBeVisible()
       await settle(page)
       const spinning = await layers.now()
-      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await icon.evaluate((element) => element.style.setProperty('animation', 'none'))
       expect(await loopProperties(icon)).toEqual([])
       expectOnlyTheLoopLayer(spinning, await layers.now())
     })
@@ -791,16 +799,30 @@ function loopProperties(target: Locator): Promise<string[]> {
   })
 }
 
-test('turns the icon of a busy button by rotate only and stops it with the motion off and reduced motion', async ({ page }) => {
+test('turns the icon of a busy button by rotate only, also with the motion off and with reduced motion', async ({ page }) => {
   await page.goto(EDGES)
   const icon = busyIcon(page)
   expect(await loopProperties(icon)).toEqual(['rotate'])
   await choose(page, 'motion', 'off')
-  expect(await loopProperties(icon)).toEqual([])
-  await choose(page, 'motion', 'spring')
   expect(await loopProperties(icon)).toEqual(['rotate'])
+  await choose(page, 'motion', 'on')
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  expect(await loopProperties(icon)).toEqual([])
+  expect(await loopProperties(icon)).toEqual(['rotate'])
+})
+
+test('starts no colour animation on any plate when the mode changes, and fades a hover out again after it', async ({ page }) => {
+  await page.addInitScript(recordAnimations)
+  await visit(page, COMPONENTS)
+  await page.mouse.move(0, 0)
+  await clearRecorded(page)
+  await choose(page, 'mode', 'dark')
+  await choose(page, 'mode', 'light')
+  await choose(page, 'mode', 'dark')
+  expect((await recorded(page)).filter((animation) => animation.properties.includes('background-color'))).toEqual([])
+  const solid = region(page, 'Button').getByRole('button', { name: 'solid', exact: true })
+  await solid.hover()
+  await page.mouse.move(0, 0)
+  await expect.poll(async () => (await recorded(page)).filter((animation) => animation.plate).length).toBeGreaterThan(0)
 })
 
 test('indents a tree row by its aria-level and every level from the eighth by seven steps', async ({ page }) => {
@@ -829,17 +851,17 @@ test('takes the stroke width of an icon in a control and a row from the size eng
   }
 })
 
-test('gives an elastic subtree inside a subtree with the motion off the times and curves of elastic', async ({ page }) => {
-  await page.goto(FOUNDATION)
+test('gives a subtree with the motion on inside a subtree with the motion off the times and curves of the engine', async ({ page }) => {
+  await visit(page, FOUNDATION)
   const [nested, alone] = await page.evaluate((names) => {
     const read = (element: Element): string[] => names.map((name) => getComputedStyle(element).getPropertyValue(`--ts-motion-${name}`).trim())
     const off = document.createElement('div')
     off.dataset.motion = 'off'
     const inner = document.createElement('div')
-    inner.dataset.motion = 'elastic'
+    inner.dataset.motion = 'on'
     off.append(inner)
     const plain = document.createElement('div')
-    plain.dataset.motion = 'elastic'
+    plain.dataset.motion = 'on'
     document.body.append(off, plain)
     const values = [read(inner), read(plain)]
     off.remove()
@@ -847,8 +869,8 @@ test('gives an elastic subtree inside a subtree with the motion off the times an
     return values
   }, MOTION_NAMES)
   expect(nested).toEqual(alone)
-  expect(Number.parseFloat(nested?.[MOTION_NAMES.indexOf('duration-slide')] ?? '0')).toBeGreaterThan(0)
-  expect(nested?.[MOTION_NAMES.indexOf('mode')]).toBe('elastic')
+  expect(Number.parseFloat(nested?.[MOTION_NAMES.indexOf('duration-follow')] ?? '0')).toBeGreaterThan(0)
+  expect(Number.parseFloat(nested?.[MOTION_NAMES.indexOf('duration-hover-out')] ?? '0')).toBeGreaterThan(0)
 })
 
 function covers(target: Locator): Promise<boolean> {
@@ -893,25 +915,19 @@ test('stacks a menu and a popover opened from a dialog over it, a toast over the
   expect(above).toEqual({ dialogOnTop: true, found: ['toast', 'tooltip'] })
 })
 
-test('tunes the spring and the hover exit on <html> from the motion lab of the panel and resets them to the engine', async ({ page }) => {
+test('tunes the follow and the hover exit on <html> from the motion lab of the panel and resets them to the engine', async ({ page }) => {
   await visit(page, FOUNDATION)
   const read = (name: string): Promise<string> => page.evaluate((property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim(), name)
-  const engine = await read('--ts-motion-spring-stiffness')
+  const engine = await read('--ts-motion-duration-follow')
   await page.getByRole('button', { name: 'Motion lab', exact: true }).click()
   const lab = page.getByRole('dialog', { name: 'Motion lab' })
-  const stiffness = lab.getByRole('spinbutton', { name: 'Spring stiffness', exact: true })
-  await expect(stiffness).toHaveValue(engine)
-  await stiffness.fill(TUNED_STIFFNESS)
-  await lab.getByRole('spinbutton', { name: 'Firm duration (ms)', exact: true }).fill(TUNED_FIRM)
-  await expect(lab.getByRole('radio', { name: 'fade', exact: true })).toBeChecked()
-  expect(await read('--ts-in-motion-hover-fade')).toBe('1')
-  await lab.getByRole('radio', { name: 'cut', exact: true }).click()
-  expect(await read('--ts-motion-spring-stiffness')).toBe(TUNED_STIFFNESS)
-  expect(await read('--ts-motion-duration-slide')).toBe(`${TUNED_FIRM}ms`)
-  expect(await read('--ts-in-motion-hover-fade')).toBe('0')
+  const follow = lab.getByRole('spinbutton', { name: 'Follow (ms)', exact: true })
+  await expect(follow).toHaveValue(String(milliseconds(engine)))
+  await follow.fill(TUNED_FOLLOW)
+  await lab.getByRole('spinbutton', { name: 'Hover exit (ms)', exact: true }).fill(TUNED_HOVER_OUT)
+  expect(await read('--ts-motion-duration-follow')).toBe(`${TUNED_FOLLOW}ms`)
+  expect(await read('--ts-motion-duration-hover-out')).toBe(`${TUNED_HOVER_OUT}ms`)
   await lab.getByRole('button', { name: 'Reset motion', exact: true }).click()
-  expect(await read('--ts-motion-spring-stiffness')).toBe(engine)
-  expect(await read('--ts-in-motion-hover-fade')).toBe('1')
-  await expect(lab.getByRole('radio', { name: 'fade', exact: true })).toBeChecked()
+  expect(await read('--ts-motion-duration-follow')).toBe(engine)
   expect(await page.evaluate(() => [...document.documentElement.style].filter((property) => property.startsWith('--ts-')))).toEqual([])
 })

@@ -3,13 +3,12 @@
 import { useLayoutEffect, useRef, useState, type RefCallback } from 'react'
 import {
   course,
-  NO_SPEED,
   planFlight,
-  resume,
   SETTLED,
   visibleAt,
   type Box,
   type Flight,
+  type FlightKind,
   type Point,
   type Rect,
   type ScreenAxis,
@@ -63,6 +62,7 @@ type Running = { readonly flight: Flight; readonly size: Size; readonly walls: W
 
 const SOURCES: readonly IndicatorSource[] = ['hover', 'focus', 'active']
 const ROUNDING = 1
+const HIDDEN_OPACITY = 0.05
 
 export function pickTarget<T extends { readonly isConnected: boolean }>(targets: IndicatorTargets<T>, under: T | null = null): T | null {
   for (const source of SOURCES) {
@@ -139,6 +139,7 @@ function squeeze(axis: ScreenAxis, scale: number): string {
 
 function connectIndicator(settings: IndicatorSettings): IndicatorControl {
   const { container, ride, squash, axis } = settings
+  const kind: FlightKind = settings.hover ? 'follow' : 'choice'
   const items = enabled(settings.items)
   let hovered: HTMLElement | null = null
   let focused: HTMLElement | null = null
@@ -169,19 +170,25 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
     writeInstance(ride, { '--ts-i-inline-size': `${box.width}px`, '--ts-i-block-size': `${box.height}px` })
   }
 
-  const startFrom = (): { readonly position: Point; readonly velocity: Point } => {
+  const startFrom = (): Point => {
     const flight = running?.flight
     const elapsed = elapsedOf(running?.animations[0])
-    const carried = resume(flight, elapsed)
-    if (running && flight && carried) return { position: visibleAt(flight, running.size, axis, running.walls, elapsed), velocity: carried.velocity }
-    return { position: state.box ?? { x: 0, y: 0 }, velocity: NO_SPEED }
+    if (running && flight && elapsed < flight.duration) return visibleAt(flight, running.size, axis, running.walls, elapsed)
+    return state.box ?? { x: 0, y: 0 }
   }
 
+  const gone = (): boolean => Number.parseFloat(getComputedStyle(ride).opacity) < HIDDEN_OPACITY
+
   const fly = (box: Box): void => {
-    const { position, velocity } = startFrom()
+    const hidden = kind === 'follow' && gone()
+    const position = startFrom()
     stop()
     rest(box)
-    const flight = planFlight({ from: position, velocity, to: box, motion: readMotion(container) })
+    if (hidden) {
+      ride.removeAttribute('data-wall')
+      return
+    }
+    const flight = planFlight({ kind, from: position, to: box, motion: readMotion(container) })
     if (!flight) {
       ride.removeAttribute('data-wall')
       return

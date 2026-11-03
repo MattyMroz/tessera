@@ -11,7 +11,7 @@ const AXES = {
   curve: ['round', 'squircle'],
   density: ['compact', 'snug', 'default', 'relaxed', 'spacious'],
   size: ['xs', 'sm', 'md', 'lg', 'xl'],
-  motion: ['spring', 'elastic', 'firm', 'off'],
+  motion: ['on', 'off'],
   neon: ['off', 'mini', 'full'],
   material: ['solid', 'translucent'],
   platform: ['desktop', 'web'],
@@ -23,7 +23,7 @@ export type Axis = keyof typeof AXES
 const SUBTREE_AXES = ['size', 'density', 'corners', 'curve', 'motion'] as const satisfies readonly Axis[]
 export type Choices = { -readonly [A in Axis]: (typeof AXES)[A][number] }
 export type Theme = Partial<Choices>
-export type ThemeRoot = Pick<Element, 'setAttribute'> & { readonly style: Pick<CSSStyleDeclaration, 'colorScheme'> }
+export type ThemeRoot = Pick<Element, 'getAttribute' | 'setAttribute' | 'removeAttribute'> & { readonly style: Pick<CSSStyleDeclaration, 'colorScheme'> }
 export type StorageScope = { readonly localStorage: Pick<Storage, 'getItem' | 'setItem'> }
 
 const DEFAULT_CHOICES: Choices = {
@@ -34,7 +34,7 @@ const DEFAULT_CHOICES: Choices = {
   curve: 'squircle',
   density: 'compact',
   size: 'lg',
-  motion: 'spring',
+  motion: 'on',
   neon: 'off',
   material: 'solid',
   platform: 'desktop',
@@ -48,6 +48,7 @@ export const THEME_CONFIG = {
   storageKey: 'ts-appearance',
   storageVersion: 1,
   changeEvent: 'ts-theme-change',
+  holdAttribute: 'data-motion-hold',
   darkQuery: '(prefers-color-scheme: dark)',
 } as const
 
@@ -91,8 +92,15 @@ export function writeSaved(scope: StorageScope, saved: Theme): void {
 
 export function applyChoices(root: ThemeRoot, choices: Choices, prefersDark: boolean, config: ThemeConfig = THEME_CONFIG): void {
   const mode = choices.mode === 'system' ? (prefersDark ? 'dark' : 'light') : choices.mode
+  const generation = String(Number(root.getAttribute(config.holdAttribute)) + 1)
+  root.setAttribute(config.holdAttribute, generation)
   for (const [axis, value] of Object.entries(choices)) root.setAttribute(`data-${axis}`, axis === 'mode' ? mode : value)
   root.style.colorScheme = mode
+  window.requestAnimationFrame(() =>
+    window.requestAnimationFrame(() => {
+      if (root.getAttribute(config.holdAttribute) === generation) root.removeAttribute(config.holdAttribute)
+    }),
+  )
   window.dispatchEvent(new Event(config.changeEvent))
 }
 

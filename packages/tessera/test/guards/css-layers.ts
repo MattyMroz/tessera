@@ -160,7 +160,16 @@ const VENDOR_VARIABLES: Readonly<Record<string, string>> = {
   '--anchor-width': 'a popup with data-width="trigger" is at least as wide as its trigger',
 }
 
-const SOURCE_LISTS: Lists = { selectors: RECIPE_SELECTOR_EXCEPTIONS, values: { row: ARIA_LEVEL_INDENT }, vendor: VENDOR_VARIABLES }
+const HOVER_EXIT_FADE = 'background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover)'
+const HOVER_EXIT_REST = ":not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before"
+const HOVER_EXIT_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])${HOVER_EXIT_REST}`
+const HOVER_EXIT_ANCHOR_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger])${HOVER_EXIT_REST}`
+const HOVER_EXIT: Readonly<Record<string, string>> = {
+  [HOVER_EXIT_PLATE]: `transition: ${HOVER_EXIT_FADE}`,
+  [HOVER_EXIT_ANCHOR_PLATE]: `transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out), ${HOVER_EXIT_FADE}`,
+}
+
+const SOURCE_LISTS: Lists = { selectors: RECIPE_SELECTOR_EXCEPTIONS, values: { row: ARIA_LEVEL_INDENT, control: HOVER_EXIT }, vendor: VENDOR_VARIABLES }
 
 type Scope = {
   owner: 'recipe' | 'component'

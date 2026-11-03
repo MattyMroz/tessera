@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { box, PRESS_GROUPS, pressReport, visit, type PressGroup } from './helpers'
+import { box, choose, clearRecorded, hover, PRESS_GROUPS, pressReport, recordAnimations, recorded, row, timingReport, visit, type PressGroup } from './helpers'
 
 declare global {
   interface Window {
@@ -140,5 +140,232 @@ test.describe('the press mechanism', () => {
       await page.keyboard.press('Enter')
       expect(await marks(page)).toEqual([])
     }
+  })
+})
+
+const OVERLAYS = '/screens/overlays'
+const SETTLE = 600
+const ENGINE_TIMES = ['duration-hover-out', 'duration-follow', 'duration-choice', 'duration-scene', 'duration-press-in', 'duration-press-out'] as const
+const MOTION_MODES = [
+  { name: 'ordinary motion', times: [150, 100, 220, 250, 50, 224], prepare: async (): Promise<void> => undefined },
+  {
+    name: 'system reduced motion',
+    times: [150, 0, 0, 250, 0, 0],
+    prepare: (page: Page): Promise<void> => page.emulateMedia({ reducedMotion: 'reduce' }),
+  },
+  { name: 'motion off', times: [0, 0, 0, 0, 0, 0], prepare: (page: Page): Promise<void> => choose(page, 'motion', 'off') },
+] as const
+
+function region(page: Page, name: string): Locator {
+  return page.getByRole('region', { name, exact: true })
+}
+
+function popupTimings(page: Page, selector: string): Promise<{ property: string; duration: number; easing: string; engine: { scene: number; ease: string } }[]> {
+  return page.evaluate((query) => {
+    const probe = document.createElement('div')
+    document.body.append(probe)
+    const first = (list: string): string => list.split(/,(?![^(]*\))/)[0]?.trim() ?? ''
+    const milliseconds = (value: string): number => (value.endsWith('ms') ? Number.parseFloat(value) : Number.parseFloat(value) * 1000)
+    const found = [...document.querySelectorAll(query)].map((element) => {
+      const style = getComputedStyle(element)
+      probe.style.transitionTimingFunction = style.getPropertyValue('--ts-motion-ease-emphasized').trim()
+      return {
+        property: first(style.transitionProperty),
+        duration: milliseconds(first(style.transitionDuration)),
+        easing: first(style.transitionTimingFunction),
+        engine: { scene: milliseconds(style.getPropertyValue('--ts-motion-duration-scene').trim()), ease: getComputedStyle(probe).transitionTimingFunction },
+      }
+    })
+    probe.remove()
+    return found
+  }, selector)
+}
+
+for (const mode of MOTION_MODES) {
+  test.describe(`the time and the curve of every element with ${mode.name}`, () => {
+    test('equal the engine output of the category of each element on the lab pages', async ({ page }) => {
+      await visit(page, '/components')
+      await mode.prepare(page)
+      const found = await timingReport(page)
+      expect(Object.values(found.engine)).toEqual([...mode.times])
+      expect(Object.keys(found.engine)).toEqual([...ENGINE_TIMES])
+      expect(found.problems).toEqual([])
+      for (const category of ['plate exit', 'plate entry', 'plate flat', 'pill exit', 'pill entry', 'pill choice', 'spinner']) {
+        expect(found.counts[category] ?? 0, category).toBeGreaterThan(0)
+      }
+      await visit(page, '/foundation')
+      await mode.prepare(page)
+      const foundation = await timingReport(page)
+      expect(foundation.problems).toEqual([])
+      expect(foundation.counts.row ?? 0).toBeGreaterThan(0)
+      for (const path of LAB_PAGES) {
+        await visit(page, path)
+        await mode.prepare(page)
+        const report = await pressReport(page)
+        expect(report.problems, path).toEqual([])
+      }
+    })
+
+    test('equal the scene time for a dialog and its backdrop and none for a menu, a popover and a tooltip', async ({ page }) => {
+      await visit(page, OVERLAYS)
+      await mode.prepare(page)
+      await region(page, 'Card').getByRole('button', { name: 'Chapter settings' }).click()
+      const dialog = page.getByRole('dialog', { name: 'Chapter settings' })
+      await expect(dialog).toBeVisible()
+      await page.waitForTimeout(SETTLE)
+      const scene = await popupTimings(page, '[data-variant="dialog"], [data-variant="backdrop"]')
+      expect(scene.length).toBeGreaterThanOrEqual(2)
+      for (const seen of scene) {
+        expect(seen.duration).toBe(seen.engine.scene)
+        if (seen.duration > 0) expect([seen.property, seen.easing]).toEqual(['opacity', seen.engine.ease])
+      }
+      expect(scene[0]?.engine.scene).toBe(mode.times[3])
+
+      await dialog.getByRole('button', { name: 'Project', exact: true }).click()
+      await expect(page.getByRole('menu')).toBeVisible()
+      await page.waitForTimeout(SETTLE)
+      expect((await popupTimings(page, '[role="menu"]')).map((seen) => seen.duration)).toEqual([0])
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('menu')).toHaveCount(0)
+
+      await dialog.getByRole('button', { name: 'Style', exact: true }).click()
+      const popover = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Bubble style' }) })
+      await expect(popover).toBeVisible()
+      await page.waitForTimeout(SETTLE)
+      expect((await popupTimings(page, '[data-variant="popover"]')).map((seen) => seen.duration)).toEqual([0])
+      await page.keyboard.press('Escape')
+      await expect(popover).toHaveCount(0)
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+
+      await region(page, 'Island').getByRole('button', { name: 'Select', exact: true }).hover()
+      await expect(page.locator('[data-variant="tooltip"]')).toBeVisible()
+      await page.waitForTimeout(SETTLE)
+      expect((await popupTimings(page, '[data-variant="tooltip"]')).map((seen) => seen.duration)).toEqual([0])
+    })
+
+    test('fly the pills for the follow and the choice time and the tooltip for the follow time', async ({ page }) => {
+      await page.addInitScript(recordAnimations)
+      await visit(page, '/components')
+      await mode.prepare(page)
+      const range = page.getByRole('radiogroup', { name: 'Range (md)', exact: true })
+      await range.getByRole('radio', { name: 'Week' }).click()
+      await page.waitForTimeout(SETTLE)
+      await clearRecorded(page)
+      await range.getByRole('radio', { name: 'Day' }).hover()
+      await range.getByRole('radio', { name: 'Month' }).hover()
+      await range.getByRole('radio', { name: 'Month' }).click()
+      await page.waitForTimeout(SETTLE)
+      const pills = (await recorded(page)).filter((animation) => animation.recipe === 'indicator' && animation.duration !== null)
+      const [, follow = 0, choice = 0] = mode.times
+      if (follow === 0) {
+        expect(pills).toEqual([])
+      } else {
+        const hovers = pills.filter((animation) => animation.easing !== 'linear')
+        const choices = pills.filter((animation) => animation.easing === 'linear')
+        expect(hovers.length).toBeGreaterThan(0)
+        expect(choices.length).toBeGreaterThan(0)
+        expect(hovers.map((animation) => animation.duration)).toEqual(hovers.map(() => follow))
+        expect(new Set(hovers.map((animation) => animation.easing))).toEqual(new Set(['ease-out']))
+        expect(choices.map((animation) => animation.duration)).toEqual(choices.map(() => choice))
+      }
+
+      await visit(page, OVERLAYS)
+      await mode.prepare(page)
+      const island = region(page, 'Island')
+      await island.getByRole('button', { name: 'Select', exact: true }).hover()
+      await expect(page.locator('[data-variant="tooltip"]')).toHaveText('Select')
+      await page.waitForTimeout(SETTLE)
+      await clearRecorded(page)
+      await island.getByRole('button', { name: 'Pan', exact: true }).hover()
+      await expect(page.locator('[data-variant="tooltip"]')).toHaveText('Pan')
+      await page.waitForTimeout(SETTLE)
+      const tooltips = (await recorded(page)).filter((animation) => animation.variant === 'tooltip' && animation.duration !== null)
+      if (follow === 0) expect(tooltips).toEqual([])
+      else expect(tooltips.map((animation) => [animation.duration, animation.easing])).toEqual([[follow, 'ease-out']])
+    })
+  })
+}
+
+test.describe('the interaction of options, rows and a listbox trigger', () => {
+  test('keeps the chosen option without a hover and gives an option and a menu row no press step', async ({ page }) => {
+    await visit(page, '/components')
+    const range = page.getByRole('radiogroup', { name: 'Range (md)', exact: true })
+    const pill = range.locator('[data-recipe="indicator"][data-variant="hover"]')
+    const chosen = range.getByRole('radio', { checked: true })
+    const other = range.getByRole('radio', { checked: false }).first()
+    const plate = (target: Locator): Promise<string> => target.evaluate((element) => getComputedStyle(element, '::before').backgroundColor)
+    await chosen.hover()
+    await page.waitForTimeout(SETTLE)
+    await expect(pill).toHaveAttribute('data-visible', 'false')
+    expect(await plate(chosen)).toBe('rgba(0, 0, 0, 0)')
+    await other.hover()
+    await expect(pill).toHaveAttribute('data-visible', 'true')
+    const hovered = await pill.locator('[data-slot="squash"]').evaluate((element) => getComputedStyle(element).opacity)
+    await page.mouse.down()
+    await page.waitForTimeout(SETTLE)
+    await expect(other).not.toHaveAttribute('data-pressing')
+    expect(await plate(other)).toBe('rgba(0, 0, 0, 0)')
+    expect(await pill.locator('[data-slot="squash"]').evaluate((element) => getComputedStyle(element).opacity)).toBe(hovered)
+    await page.mouse.up()
+
+    await visit(page, OVERLAYS)
+    await region(page, 'Island').getByRole('button', { name: 'Project', exact: true }).click()
+    const menu = page.getByRole('menu')
+    const open = row(menu, 'Open')
+    await hover(page, open)
+    const fill = (): Promise<string> => menu.locator('[data-recipe="indicator"] [data-slot="squash"]').evaluate((element) => getComputedStyle(element).opacity)
+    const before = await fill()
+    await page.mouse.down()
+    await page.waitForTimeout(SETTLE)
+    await expect(open).not.toHaveAttribute('data-pressing')
+    expect(await fill()).toBe(before)
+    await page.mouse.up()
+  })
+
+  test('scales nothing of a listbox trigger, neither the box nor a slot nor the plate, and gives it only the colour step of a press', async ({ page }) => {
+    await visit(page, '/components')
+    await page.evaluate(() => {
+      const trigger = document.createElement('button')
+      trigger.type = 'button'
+      trigger.dataset.testid = 'listbox-trigger'
+      trigger.dataset.recipe = 'control'
+      trigger.dataset.variant = 'soft'
+      trigger.setAttribute('aria-haspopup', 'listbox')
+      trigger.innerHTML = '<span data-slot="label">Select</span>'
+      document.querySelector('main')?.prepend(trigger)
+    })
+    const trigger = page.getByTestId('listbox-trigger')
+    await trigger.scrollIntoViewIfNeeded()
+    const report = await pressReport(page, ['flat'])
+    expect(report.problems).toEqual([])
+    expect(report.counts.flat ?? 0).toBeGreaterThan(0)
+    const look = (): Promise<{ step: string; scales: string[]; layers: string[] }> =>
+      trigger.evaluate((element) => {
+        const parts = [element, element.querySelector('[data-slot="label"]')].filter((part) => part !== null)
+        const styles = [...parts.map((part) => getComputedStyle(part)), getComputedStyle(element, '::before')]
+        return {
+          step: getComputedStyle(element).getPropertyValue('--_step').trim(),
+          scales: styles.map((style) => style.scale),
+          layers: styles.map((style) => style.willChange),
+        }
+      })
+    const steps = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement)
+      return { hover: style.getPropertyValue('--ts-state-hover').trim(), press: style.getPropertyValue('--ts-state-press').trim() }
+    })
+    const rest = await look()
+    expect(rest.scales).toEqual(['none', 'none', 'none'])
+    const target = await box(trigger)
+    await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2)
+    expect((await look()).step).toBe(steps.hover)
+    await page.mouse.down()
+    await expect(trigger).toHaveAttribute('data-pressing', '')
+    await page.waitForTimeout(SETTLE)
+    const pressed = await look()
+    expect(pressed.step).toBe(steps.press)
+    expect(pressed.scales).toEqual(['none', 'none', 'none'])
+    expect(pressed.layers).toEqual(rest.layers)
+    await page.mouse.up()
   })
 })

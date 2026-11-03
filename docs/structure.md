@@ -69,7 +69,7 @@ tessera/
 │       │   │                      # alert/alert.css, field/field.css
 │       │   ├── lib/               # plik = moduł jednej odpowiedzialności: kaskada (theme.ts, use-theme.ts, theme-script.tsx),
 │       │   │                      # motion.ts (odczyt silnika ruchu: Motion, parseMotion, readMotion, milliseconds; plik pomiaru Q7),
-│       │   │                      # flight.ts (czysta fizyka i geometria lotu: sprężyna, krzywe, planFlight, course, ściany),
+│       │   │                      # flight.ts (czysta geometria lotu pigułki: krzywa bezier i elastic, planFlight dla pogoni `follow` i wyboru `choice`, course, visibleAt, ściany),
 │       │   │                      # indicator.ts (sterownik DOM pigułki i useIndicator: cel, pomiar, ściany; plik pomiaru Q7),
 │       │   │                      # popup-flight.ts (przelot okienek, plik pomiaru Q7), tooltip-group.ts (TOOLTIP_GROUP_GRACE),
 │       │   │                      # press.ts (jeden nasłuch wciśnięcia na dokument, watchPresses z licznikiem odwołań;
@@ -97,7 +97,7 @@ tessera/
 │           ├── package/           # kontrakt zbudowanej paczki (z importem ikon lucide ikona po ikonie)
 │           │                      # + budżety na dist: B6 (minify + gzip, rolldown/utils) i B8 z kluczami rejestru --ts-i-*
 │           │                      # (nie dist/: preset .gitignore ignoruje każdy dist/)
-│           ├── fixtures/          # wspólne dane testów TS (motion.ts: Motion trybu spring dla testów lotu i popupu)
+│           ├── fixtures/          # wspólne dane testów TS (motion.ts: Motion z czasami kategorii silnika dla testów lotu i popupu)
 │           └── guards/            # warstwy CSS (css-layers.ts z progami CONTAINER_WIDTHS + fixtures/good, fixtures/bad),
 │                                  # kontrakty źródeł (contracts.test.ts, component-source.ts) i lokalna reguła ESLint
 │                                  # źródeł komponentów (component-appearance.ts, ładowana ze źródła przez eslint.config.js)

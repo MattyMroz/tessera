@@ -17,14 +17,13 @@
     block-size: var(--ts-i-block-size);
     pointer-events: none;
     opacity: 0;
-    transition: opacity var(--ts-motion-duration-instant) var(--ts-motion-ease-out);
 
     &[data-visible='true'] {
       opacity: 1;
     }
 
     &[data-variant='hover']:not([data-visible='true']) {
-      transition-duration: var(--ts-motion-duration-hover-exit);
+      transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
     }
 
     &[data-variant='active'] {
@@ -43,10 +42,6 @@
 
     [data-level='sunken'] > &[data-variant='hover'] {
       --_fill-opacity: var(--ts-state-indicator-track);
-    }
-
-    [data-level='sunken']:has(> [data-recipe='control'][data-pressing]:not([aria-checked='true'], :disabled)) > &[data-variant='hover'] {
-      --_fill-opacity: calc(var(--ts-state-indicator-track) + var(--ts-state-press) - var(--ts-state-hover));
     }
 
     & > [data-slot='squash'] {

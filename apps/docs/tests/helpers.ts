@@ -9,13 +9,16 @@ export type TraceEvent = {
   readonly ts?: number
   readonly id?: string
   readonly id2?: { readonly local?: string }
-  readonly args?: { readonly data?: { readonly compositeFailed?: number; readonly unsupportedProperties?: readonly string[]; readonly nodeName?: string } }
+  readonly args?: { readonly data?: { readonly compositeFailed?: number; readonly unsupportedProperties?: readonly string[]; readonly nodeName?: string; readonly displayName?: string } }
 }
 
 export type RecordedAnimation = {
   readonly role: string | null
   readonly variant: string | null
   readonly recipe: string | null
+  readonly plate: boolean
+  readonly duration: number | null
+  readonly easing: string | null
   readonly properties: readonly string[]
 }
 
@@ -39,6 +42,7 @@ const TRACE_CATEGORIES = 'blink.animations,devtools.timeline,disabled-by-default
 const FRAME_START = 'BeginMainThreadFrame'
 const RENDER_WORK: ReadonlySet<string> = new Set(['Layout', 'Paint'])
 export const STRESS = '/stress'
+export const MOTION_HOLD = 'data-motion-hold'
 const ROW = '[role^="menuitem"]'
 const MOVE_STEPS = 4
 const INDICATOR = '[data-recipe="indicator"]'
@@ -70,6 +74,7 @@ export async function hydrated(page: Page): Promise<void> {
   const main = page.locator('main')
   const scope = (await main.locator(INDICATOR).count()) > 0 ? main : page.getByRole('complementary', { name: 'Theme' })
   await scope.locator(`${INDICATOR}[data-visible="true"]`).first().waitFor({ state: 'attached' })
+  await expect(page.locator('html')).not.toHaveAttribute(MOTION_HOLD)
 }
 
 export async function visit(page: Page, path: string): Promise<void> {
@@ -92,6 +97,7 @@ export async function choose<A extends Axis>(page: Page, axis: A, value: Choices
     await expect(page.getByRole('menu')).toHaveCount(0)
   }
   await expect(page.locator('html')).toHaveAttribute(`data-${axis}`, value)
+  await expect(page.locator('html')).not.toHaveAttribute(MOTION_HOLD)
 }
 
 export function colorOf(page: Page, value: string): Promise<string> {
@@ -211,19 +217,28 @@ export async function startTrace(page: Page): Promise<{ stop: () => Promise<Trac
 
 export type MotionWork = { readonly animations: number; readonly work: readonly string[]; readonly events: readonly TraceEvent[] }
 
-function motionFrames(events: readonly TraceEvent[]): { animations: number; frameOf: (ts: number) => number | undefined; inner: ReadonlySet<number> } {
+export type FadeSpan = { readonly begin: number; readonly end: number }
+
+function motionFrames(events: readonly TraceEvent[]): {
+  animations: number
+  frameOf: (ts: number) => number | undefined
+  inner: ReadonlySet<number>
+  fades: readonly FadeSpan[]
+} {
   const frames = events.flatMap((event) => (event.name === FRAME_START && event.ts !== undefined ? [event.ts] : [])).sort((a, b) => a - b)
   const frameOf = (ts: number): number | undefined => frames.findLast((frame) => frame <= ts) ?? frames[0]
-  const open = new Map<string, { begin: number; running?: number }>()
+  const open = new Map<string, { begin: number; running?: number; fade: boolean }>()
   const spans: { readonly begin: number; readonly running: number; readonly end: number }[] = []
+  const fades: FadeSpan[] = []
   for (const event of events.filter((found) => found.name === 'Animation').toSorted((a, b) => (a.ts ?? 0) - (b.ts ?? 0))) {
     if (event.ts === undefined) continue
     const key = event.id2?.local ?? event.id ?? ''
     const span = open.get(key)
-    if (event.ph === 'b') open.set(key, { begin: event.ts })
+    if (event.ph === 'b') open.set(key, { begin: event.ts, fade: event.args?.data?.displayName === HOVER_EXIT_PROPERTY })
     if (event.ph === 'n' && span && span.running === undefined && event.ts > span.begin) span.running = event.ts
     if (event.ph === 'e' && span) {
       spans.push({ begin: span.begin, running: span.running ?? span.begin, end: event.ts })
+      if (span.fade) fades.push({ begin: span.begin, end: event.ts })
       open.delete(key)
     }
   }
@@ -237,7 +252,7 @@ function motionFrames(events: readonly TraceEvent[]): { animations: number; fram
   })
   const edges = new Set(bounds.flat())
   const inner = new Set(frames.filter((frame) => !edges.has(frame) && bounds.some(([, first, , last]) => frame > first && frame < last)))
-  return { animations: spans.length + open.size, frameOf, inner }
+  return { animations: spans.length + open.size, frameOf, inner, fades }
 }
 
 export async function motionWork(page: Page, action: () => Promise<unknown>): Promise<MotionWork> {
@@ -246,9 +261,12 @@ export async function motionWork(page: Page, action: () => Promise<unknown>): Pr
   await action()
   await settle(page)
   const events = await trace.stop()
-  const { animations, frameOf, inner } = motionFrames(events)
+  const { animations, frameOf, inner, fades } = motionFrames(events)
+  const fading = (ts: number): boolean => fades.some((fade) => ts >= fade.begin && ts <= fade.end)
   const work = events.flatMap((event) => {
     const frame = event.ts === undefined ? undefined : frameOf(event.ts)
+    const plate = event.args?.data?.nodeName === '#document' || event.args?.data?.nodeName?.startsWith('BUTTON')
+    if (event.name === 'Paint' && event.ts !== undefined && plate && fading(event.ts)) return []
     return RENDER_WORK.has(event.name ?? '') && frame !== undefined && inner.has(frame) ? [`${event.name} ${event.args?.data?.nodeName ?? ''}`.trim()] : []
   })
   return { animations, work, events }
@@ -380,9 +398,12 @@ const PILL_KIND = ":has(> [data-recipe='indicator']) > [data-recipe='control']:i
 export const INTERACTIVE_ELEMENTS =
   "a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]:not([contenteditable='false']), [role='button'], [role='link'], [role='checkbox'], [role='radio'], [role='switch'], [role='tab'], [role='menuitem'], [role='menuitemcheckbox'], [role='menuitemradio'], [role='option'], [role='slider'], [role='treeitem'], [role='textbox'], [role='combobox'], [role='spinbutton']"
 
+const FLAT = "[aria-haspopup='listbox'], [data-surface='joined'] > *"
+
 export const PRESS_GROUPS = {
-  scale: `${BUTTON_KIND}:not(${BLOCKED}, ${ANCHOR})`,
-  anchor: `${BUTTON_KIND}:is(${ANCHOR}):not(${BLOCKED})`,
+  scale: `${BUTTON_KIND}:not(${BLOCKED}, ${ANCHOR}, ${FLAT})`,
+  anchor: `${BUTTON_KIND}:is(${ANCHOR}):not(${BLOCKED}, ${FLAT})`,
+  flat: `${BUTTON_KIND}:is(${FLAT}):not(${BLOCKED})`,
   pill: `:is(${PILL_KIND}):not(${BLOCKED})`,
   field: "[data-variant='field'] > [data-slot='input']",
   still: `:is(${BUTTON_KIND}, ${PILL_KIND}):is(${BLOCKED})`,
@@ -428,7 +449,7 @@ export function pressReport(page: Page, only: readonly PressGroup[] = Object.key
         return {
           scale: style.scale,
           transform: style.transform,
-          property: style.transitionProperty,
+          property: style.transitionProperty.split(',')[0]?.trim() ?? '',
           duration: seconds(style.transitionDuration.split(',')[0] ?? ''),
           easing: style.transitionTimingFunction.split(/,(?![^(]*\))/)[0]?.trim() ?? '',
           layer: style.willChange,
@@ -494,6 +515,122 @@ export function pressReport(page: Page, only: readonly PressGroup[] = Object.key
   )
 }
 
+const HOVER_PLATES =
+  "[data-recipe='control']:is(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])"
+const HOT_PLATES = ":hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true']"
+
+export type TimingReport = {
+  readonly engine: Readonly<Record<string, number>>
+  readonly counts: Readonly<Record<string, number>>
+  readonly problems: readonly string[]
+}
+
+export function timingReport(page: Page): Promise<TimingReport> {
+  return page.evaluate(
+    ({ plates, hot }) => {
+      const probe = document.createElement('div')
+      document.body.append(probe)
+      const root = getComputedStyle(document.documentElement)
+      const output = (element: Element, name: string): string => getComputedStyle(element).getPropertyValue(`--ts-motion-${name}`).trim()
+      const milliseconds = (value: string): number => (value.endsWith('ms') ? Number.parseFloat(value) : Number.parseFloat(value) * 1000)
+      const curve = (value: string): string => {
+        probe.style.transitionTimingFunction = value
+        return getComputedStyle(probe).transitionTimingFunction
+      }
+      const items = (list: string): string[] => list.split(/,(?![^(]*\))/).map((item) => item.trim())
+      const first = (list: string): string => items(list)[0] ?? ''
+      const seenAt = (element: Element, pseudo?: string) => {
+        const style = getComputedStyle(element, pseudo)
+        const [durations, easings] = [items(style.transitionDuration), items(style.transitionTimingFunction)]
+        return items(style.transitionProperty).map((property, index) => ({
+          property,
+          duration: milliseconds(durations[index % durations.length] ?? '0s'),
+          easing: easings[index % easings.length] ?? '',
+        }))
+      }
+      const of = (seen: ReturnType<typeof seenAt>, property: string) =>
+        seen.find((entry) => entry.property === property) ?? seen.find((entry) => entry.property === 'all') ?? { property, duration: 0, easing: '' }
+      const name = (element: Element): string => `${element.localName}${element.getAttribute('role') ? `[${element.getAttribute('role')}]` : ''} "${(element.getAttribute('aria-label') ?? element.textContent ?? '').trim().slice(0, 24)}"`
+      const problems: string[] = []
+      const counts: Record<string, number> = {}
+      const count = (category: string): void => {
+        counts[category] = (counts[category] ?? 0) + 1
+      }
+      const expectTiming = (label: string, element: Element, all: ReturnType<typeof seenAt>, property: string, time: string, ease: string): void => {
+        const seen = of(all, property)
+        const duration = milliseconds(output(element, time))
+        if (seen.duration !== duration) problems.push(`${label}: ${seen.duration} ms, engine ${time} ${duration} ms`)
+        if (duration > 0 && seen.easing !== curve(output(element, ease))) problems.push(`${label}: curve ${seen.easing}, engine ${ease} ${curve(output(element, ease))}`)
+      }
+      const expectStill = (label: string, all: ReturnType<typeof seenAt>, property?: string): void => {
+        const moving = property === undefined ? all.filter((entry) => entry.duration !== 0) : [of(all, property)].filter((entry) => entry.duration !== 0)
+        if (moving.length > 0) problems.push(`${label}: ${moving.map((entry) => `${entry.property} ${entry.duration} ms`).join(', ')}, expected none`)
+      }
+
+      const controls = [...document.querySelectorAll("[data-recipe='control']")]
+      const hovered = new Set(document.querySelectorAll(plates))
+      for (const element of controls) {
+        const label = name(element)
+        if (hovered.has(element)) {
+          if (!element.matches(hot)) {
+            count('plate exit')
+            expectTiming(`plate exit ${label}`, element, seenAt(element, '::before'), 'background-color', 'duration-hover-out', 'ease-hover')
+          }
+          const held = element.hasAttribute('data-pressing')
+          element.setAttribute('data-pressing', '')
+          count('plate entry')
+          expectStill(`plate entry ${label}`, seenAt(element, '::before'), 'background-color')
+          if (!held) element.removeAttribute('data-pressing')
+        } else {
+          count('plate flat')
+          expectStill(`plate flat ${label}`, seenAt(element, '::before'))
+        }
+      }
+      for (const element of document.querySelectorAll("[data-recipe='row']")) {
+        count('row')
+        expectStill(`row ${name(element)}`, seenAt(element))
+        expectStill(`row plate ${name(element)}`, seenAt(element, '::before'))
+      }
+      for (const pill of document.querySelectorAll("[data-recipe='indicator']")) {
+        const variant = pill.getAttribute('data-variant') ?? ''
+        const visible = pill.getAttribute('data-visible')
+        if (variant === 'hover') {
+          pill.setAttribute('data-visible', 'false')
+          count('pill exit')
+          expectTiming('hover pill exit', pill, seenAt(pill), 'opacity', 'duration-hover-out', 'ease-hover')
+          pill.setAttribute('data-visible', 'true')
+          count('pill entry')
+          expectStill('hover pill entry', seenAt(pill), 'opacity')
+        } else {
+          for (const state of ['false', 'true']) {
+            pill.setAttribute('data-visible', state)
+            count('pill choice')
+            expectStill(`${variant} pill ${state}`, seenAt(pill))
+          }
+        }
+        if (visible === null) pill.removeAttribute('data-visible')
+        else pill.setAttribute('data-visible', visible)
+      }
+      for (const icon of document.querySelectorAll("[data-recipe='control'][aria-busy='true'] > [data-slot='icon']:first-child")) {
+        count('spinner')
+        const style = getComputedStyle(icon)
+        if (style.animationName !== output(icon, 'spin')) problems.push(`spinner ${name(icon)}: ${style.animationName}, engine ${output(icon, 'spin')}`)
+        if (milliseconds(first(style.animationDuration)) !== milliseconds(output(icon, 'loop'))) problems.push(`spinner ${name(icon)}: duration ${style.animationDuration}`)
+        if (!icon.getAnimations().some((animation) => animation.playState === 'running')) problems.push(`spinner ${name(icon)}: not running`)
+      }
+      probe.remove()
+      const engine = Object.fromEntries(
+        ['duration-hover-out', 'duration-follow', 'duration-choice', 'duration-scene', 'duration-press-in', 'duration-press-out'].map((time) => [
+          time,
+          milliseconds(root.getPropertyValue(`--ts-motion-${time}`).trim()),
+        ]),
+      )
+      return { engine, counts, problems }
+    },
+    { plates: HOVER_PLATES, hot: HOT_PLATES },
+  )
+}
+
 export async function settle(page: Page): Promise<void> {
   await page.evaluate(() =>
     Promise.all(
@@ -546,21 +683,28 @@ export function recordAnimations(): void {
   const timing = new Set(['offset', 'easing', 'composite'])
   const animate = Element.prototype.animate
   window.recordedAnimations = []
-  const record = (element: Element, properties: readonly string[]): void => {
+  const record = (element: Element, properties: readonly string[], plate: boolean, duration: number | null, easing: string | null): void => {
     window.recordedAnimations?.push({
       role: element.getAttribute('role'),
       variant: element.getAttribute('data-variant'),
       recipe: element.closest('[data-recipe="indicator"]') ? 'indicator' : null,
+      plate,
+      duration,
+      easing,
       properties,
     })
   }
   Element.prototype.animate = function (keyframes, options) {
     const frames: readonly object[] = Array.isArray(keyframes) ? keyframes : keyframes ? [keyframes] : []
-    record(this, [...new Set(frames.flatMap((frame) => Object.keys(frame).filter((key) => !timing.has(key))))])
+    const duration = typeof options === 'number' ? options : typeof options?.duration === 'number' ? options.duration : null
+    const easing = typeof options === 'object' && options !== null ? (options.easing ?? null) : null
+    record(this, [...new Set(frames.flatMap((frame) => Object.keys(frame).filter((key) => !timing.has(key))))], false, duration, easing)
     return animate.call(this, keyframes, options)
   }
   document.addEventListener('transitionrun', (event) => {
-    if (event.target instanceof Element) record(event.target, [event.propertyName])
+    if (event.target instanceof Element) {
+      record(event.target, [event.propertyName], event.pseudoElement === '::before' && event.target.getAttribute('data-recipe') === 'control', null, null)
+    }
   })
 }
 
@@ -642,8 +786,12 @@ export async function clearRecorded(page: Page): Promise<void> {
   })
 }
 
+export const HOVER_EXIT_PROPERTY = 'background-color'
+
 export function offCompositor(animations: readonly RecordedAnimation[]): string[] {
-  return animations.flatMap((animation) => animation.properties.filter((name) => !COMPOSITOR_PROPERTIES.includes(name)))
+  return animations.flatMap((animation) =>
+    animation.properties.filter((name) => !COMPOSITOR_PROPERTIES.includes(name) && !(animation.plate && name === HOVER_EXIT_PROPERTY)),
+  )
 }
 
 export function row(menu: Locator, name: string): Locator {

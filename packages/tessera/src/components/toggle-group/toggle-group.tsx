@@ -13,7 +13,6 @@ import {
 import { moveInCollection, NO_TYPEAHEAD, type CollectionItem, type Typeahead } from '../../lib/collection'
 import { composeRefs } from '../../lib/compose-refs'
 import { useIndicator, type IndicatorParts } from '../../lib/indicator'
-import { watchPresses } from '../../lib/press'
 import { createSingleChoice, type ChoiceOption, type SingleChoice } from '../../lib/single-choice'
 import { useHost } from '../../lib/slot'
 import type { Choices } from '../../lib/theme'
@@ -166,7 +165,7 @@ export function ToggleGroupItem({ value, icon, children, disabled, 'aria-label':
 
   return (
     <button
-      ref={composeRefs(button, watchPresses)}
+      ref={button}
       type="button"
       role="radio"
       aria-checked={state === 'chosen'}

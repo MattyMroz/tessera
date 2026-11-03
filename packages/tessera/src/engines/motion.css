@@ -21,87 +21,63 @@
 }
 
 @layer theme {
-  :root {
-    --ts-in-motion-hover-fade: 1;
-  }
-
   :root,
-  [data-motion] {
+  [data-motion='on'],
+  [data-motion='off'] {
     --ts-motion-spin: ts-spin;
     --ts-motion-sweep: ts-sweep;
     --ts-motion-pulse: ts-pulse;
     --ts-motion-loop: 1.2s;
-    --ts-motion-duration-hover-exit: calc(
-      var(--ts-motion-duration-instant) + var(--ts-in-motion-hover-fade) * var(--ts-motion-duration-overlay)
-    );
-    --ts-motion-duration-press-in: var(--ts-motion-duration-instant);
-    --ts-motion-ease-press-in: var(--ts-motion-ease-out);
-    --ts-motion-ease-press-out: var(--ts-motion-ease-standard);
-    --ts-motion-press-hold: var(--ts-motion-duration-press-in);
-  }
-
-  :root,
-  [data-motion='spring'],
-  [data-motion='elastic'],
-  [data-motion='firm'] {
-    --ts-motion-duration-instant: 50ms;
-    --ts-motion-duration-slide: 150ms;
-    --ts-motion-duration-emphasized: 200ms;
-    --ts-motion-duration-overlay: 250ms;
-    --ts-motion-duration-elastic: 220ms;
+    --ts-motion-duration-hover-out: 150ms;
+    --ts-motion-duration-follow: 100ms;
+    --ts-motion-duration-choice: 220ms;
+    --ts-motion-duration-scene: 250ms;
+    --ts-motion-duration-press-in: 50ms;
+    --ts-motion-duration-press-out: 224ms;
+    --ts-motion-ease-hover: ease-out;
     --ts-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --ts-motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
     --ts-motion-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
-    --ts-motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --ts-motion-duration-press-out: 224ms;
+    --ts-motion-ease-press-in: var(--ts-motion-ease-out);
+    --ts-motion-ease-press-out: var(--ts-motion-ease-standard);
+    --ts-motion-choice-overshoot: 0.1;
     --ts-motion-press-scale: 0.97;
     --ts-motion-press-rest: 0.99999;
-    --ts-motion-spring-stiffness: 420;
-    --ts-motion-spring-damping: 36;
-    --ts-motion-elastic-overshoot: 0.1;
-  }
-
-  :root,
-  [data-motion='spring'] {
-    --ts-motion-mode: spring;
-  }
-
-  [data-motion='elastic'] {
-    --ts-motion-mode: elastic;
-  }
-
-  [data-motion='firm'] {
-    --ts-motion-mode: firm;
+    --ts-motion-press-hold: var(--ts-motion-duration-press-in);
   }
 
   [data-motion='off'] {
-    --ts-motion-duration-instant: 0ms;
-    --ts-motion-duration-slide: 0ms;
-    --ts-motion-duration-emphasized: 0ms;
-    --ts-motion-duration-overlay: 0ms;
-    --ts-motion-duration-elastic: 0ms;
+    --ts-motion-duration-hover-out: 0ms;
+    --ts-motion-duration-follow: 0ms;
+    --ts-motion-duration-choice: 0ms;
+    --ts-motion-duration-scene: 0ms;
+    --ts-motion-duration-press-in: 0ms;
     --ts-motion-duration-press-out: 0ms;
     --ts-motion-press-scale: 1;
     --ts-motion-press-rest: 1;
-    --ts-motion-mode: off;
-    --ts-motion-spin: none;
     --ts-motion-sweep: none;
     --ts-motion-pulse: none;
+  }
+
+  [data-motion-hold],
+  [data-motion-hold] [data-motion] {
+    --ts-motion-duration-hover-out: 0ms;
+    --ts-motion-duration-follow: 0ms;
+    --ts-motion-duration-choice: 0ms;
+    --ts-motion-duration-scene: 0ms;
+    --ts-motion-duration-press-in: 0ms;
+    --ts-motion-duration-press-out: 0ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
     :root,
     [data-motion] {
-      --ts-motion-duration-instant: 0ms;
-      --ts-motion-duration-slide: 0ms;
-      --ts-motion-duration-emphasized: 0ms;
-      --ts-motion-duration-overlay: 0ms;
-      --ts-motion-duration-elastic: 0ms;
+      --ts-motion-duration-follow: 0ms;
+      --ts-motion-duration-choice: 0ms;
+      --ts-motion-duration-press-in: 0ms;
       --ts-motion-duration-press-out: 0ms;
       --ts-motion-press-scale: 1;
       --ts-motion-press-rest: 1;
-      --ts-motion-mode: off;
-      --ts-motion-spin: none;
       --ts-motion-sweep: none;
       --ts-motion-pulse: none;
     }

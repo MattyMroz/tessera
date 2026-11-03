@@ -71,7 +71,11 @@
       }
     }
 
-    &:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field']) {
+    &:where(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field']):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before {
+      transition: background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
+    }
+
+    &:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *) {
       &:not([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]) {
         scale: var(--ts-motion-press-rest);
         transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out);
@@ -89,6 +93,10 @@
         &::before {
           scale: var(--ts-motion-press-rest);
           transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out);
+        }
+
+        &:not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before {
+          transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out), background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
         }
 
         &[data-pressing] > [data-slot='icon'],

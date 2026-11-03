@@ -28,9 +28,8 @@
 
 @layer theme {
   :root,
-  [data-motion='spring'] {
+  [data-motion='on'] {
     --ts-motion-duration-fast: 100ms;
-    --ts-motion-mode: spring;
     --ts-motion-spin: ts-spin;
     --ts-motion-loop: 1s;
     --ts-motion-pulse-low: 0.4;
@@ -38,7 +37,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     :root {
-      --ts-motion-mode: off;
       --ts-motion-spin: none;
     }
   }

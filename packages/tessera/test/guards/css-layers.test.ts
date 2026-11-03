@@ -159,6 +159,14 @@ it('rejects literals other than 0, 1, -1 and 100%, non-compositor motion, vendor
     ["[data-recipe='control'] > [data-slot='icon'] > svg", 'unused selector exception'],
     ["[data-recipe='control'] > [data-slot='busy'] > svg", 'unused selector exception'],
     ["[data-recipe='control'] > [data-slot='icon'][data-dot] > svg", 'unused selector exception'],
+    [
+      "[data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field']):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before",
+      'unused value exception',
+    ],
+    [
+      "[data-recipe='control']:where(button:not([role]), [role='button'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before",
+      'unused value exception',
+    ],
     ['(overflow-clip-margin: border-box)', 'unused supports condition'],
   ])
 })

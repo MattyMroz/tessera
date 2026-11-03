@@ -16,10 +16,9 @@ const TYPE_FAMILIES = ['sans', 'mono', 'heading'] as const
 const TYPE_STEPS = ['mini', 'small', 'detail', 'body', 'title', 'screen-title', 'display'] as const
 const TYPE_WEIGHTS = ['regular', 'medium', 'semibold'] as const
 const MOTION_OUTPUTS = [
-  'duration-instant', 'duration-slide', 'duration-emphasized', 'duration-overlay', 'duration-elastic',
-  'ease-standard', 'ease-out', 'ease-emphasized', 'ease-spring', 'press-scale', 'press-rest', 'press-hold',
-  'duration-press-in', 'duration-press-out', 'ease-press-in', 'ease-press-out', 'spring-stiffness', 'spring-damping',
-  'elastic-overshoot', 'mode', 'spin', 'sweep', 'pulse', 'loop',
+  'duration-hover-out', 'duration-follow', 'duration-choice', 'duration-scene', 'duration-press-in', 'duration-press-out',
+  'ease-hover', 'ease-standard', 'ease-out', 'ease-emphasized', 'ease-press-in', 'ease-press-out',
+  'choice-overshoot', 'press-scale', 'press-rest', 'press-hold', 'spin', 'sweep', 'pulse', 'loop',
 ].map((name) => `--ts-motion-${name}`)
 const SPACES = ['inset', 'group', 'card', 'card-small', 'indent'] as const
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const

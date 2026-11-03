@@ -105,7 +105,7 @@ Otwarte pozycje z audytu `reviews/e2-foundation-gaps-2.md`; plan E3 rozstrzyga k
 
 ## Aktualny etap
 
-**Etap:** E3. Bieżąca jednostka: standard interakcji (wciśnięcie i hover dla wszystkich elementów), `plans/e3-motion.md`; runda D i pozostałe polecenia z logu 02.11 13:00 czekają na jego akceptację.
+**Etap:** E3. Bieżąca jednostka: runda D (Checkbox, Switch, Slider), faza 5 `plans/e3-first-round.md`, fakty w `research/e3-round-d-facts.md`. Standard interakcji (`plans/e3-motion.md`, technika TE) i skala czasów ruchu (`plans/e3-motion-timing.md`) przyjęte przez właściciela na żywo 03.11; wygląd komponentów (np. tooltip ze strzałką, dokończenie przycisków, kolory) wraca przy przeglądzie komponent po komponencie.
 
 **Dlaczego teraz:** właściciel 02.11: „nie da się zrobić tego bez większej ilości elementów” — części błędów fundamentu nie widać bez kolejnych komponentów obok siebie; czekanie na idealny fundament przed rundą D to pętla.
 

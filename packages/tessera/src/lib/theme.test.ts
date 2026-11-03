@@ -1,7 +1,26 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { THEME_CONFIG, applyChoices, readSaved, resolveChoices, themeScript, writeSaved, type Theme } from './theme'
 
-type FakeRoot = { attributes: Map<string, string>; style: { colorScheme: string }; setAttribute: (name: string, value: string) => void }
+type FakeRoot = {
+  attributes: Map<string, string>
+  style: { colorScheme: string }
+  getAttribute: (name: string) => string | null
+  setAttribute: (name: string, value: string) => void
+  removeAttribute: (name: string) => void
+}
+
+let queue: (() => void)[] = []
+
+function requestAnimationFrame(callback: () => void): number {
+  queue.push(callback)
+  return queue.length
+}
+
+function nextFrame(): void {
+  const due = queue
+  queue = []
+  for (const callback of due) callback()
+}
 
 function memoryStorage(entries: Record<string, string> = {}): Pick<Storage, 'getItem' | 'setItem'> {
   const items = new Map(Object.entries(entries))
@@ -25,7 +44,13 @@ const blockedScope = {
 
 function fakeRoot(): FakeRoot {
   const attributes = new Map<string, string>()
-  return { attributes, style: { colorScheme: '' }, setAttribute: (name, value) => attributes.set(name, value) }
+  return {
+    attributes,
+    style: { colorScheme: '' },
+    getAttribute: (name) => attributes.get(name) ?? null,
+    setAttribute: (name, value) => attributes.set(name, value),
+    removeAttribute: (name) => attributes.delete(name),
+  }
 }
 
 let changes = 0
@@ -35,7 +60,8 @@ const countChange = () => {
 
 beforeEach(() => {
   changes = 0
-  const target = new EventTarget()
+  queue = []
+  const target = Object.assign(new EventTarget(), { requestAnimationFrame })
   target.addEventListener(THEME_CONFIG.changeEvent, countChange)
   vi.stubGlobal('window', target)
 })
@@ -45,8 +71,8 @@ afterEach(() => {
 })
 
 it('layers defaults, then the theme, then the saved choices', () => {
-  const choices = resolveChoices({ accent: 'red', motion: 'firm' }, { accent: 'blue' })
-  expect(choices).toEqual({ ...THEME_CONFIG.defaults, accent: 'blue', motion: 'firm' })
+  const choices = resolveChoices({ accent: 'red', motion: 'off' }, { accent: 'blue' })
+  expect(choices).toEqual({ ...THEME_CONFIG.defaults, accent: 'blue', motion: 'off' })
 })
 
 it('keeps every valid saved value and drops invalid values and unknown axes one by one', () => {
@@ -91,6 +117,8 @@ it('ignores a write to unavailable storage', () => {
 it('applies every axis as a data attribute and announces the change', () => {
   const root = fakeRoot()
   applyChoices(root, resolveChoices({}, { mode: 'light', accent: 'violet' }), true)
+  nextFrame()
+  nextFrame()
   expect(Object.fromEntries(root.attributes)).toEqual({
     'data-mode': 'light',
     'data-accent': 'violet',
@@ -99,7 +127,7 @@ it('applies every axis as a data attribute and announces the change', () => {
     'data-curve': 'squircle',
     'data-density': 'compact',
     'data-size': 'lg',
-    'data-motion': 'spring',
+    'data-motion': 'on',
     'data-neon': 'off',
     'data-material': 'solid',
     'data-platform': 'desktop',
@@ -107,6 +135,31 @@ it('applies every axis as a data attribute and announces the change', () => {
   })
   expect(root.style.colorScheme).toBe('light')
   expect(changes).toBe(1)
+})
+
+it('holds every motion time at zero from the change of the axes until the second frame after it', () => {
+  const root = fakeRoot()
+  const hold = THEME_CONFIG.holdAttribute
+  applyChoices(root, resolveChoices({}, { mode: 'light' }), true)
+  expect(root.attributes.has(hold)).toBe(true)
+  nextFrame()
+  expect(root.attributes.has(hold)).toBe(true)
+  nextFrame()
+  expect(root.attributes.has(hold)).toBe(false)
+  applyChoices(root, resolveChoices({}, { mode: 'dark' }), true)
+  expect(root.attributes.has(hold)).toBe(true)
+})
+
+it('lets only the frames of the last change release the hold', () => {
+  const root = fakeRoot()
+  const hold = THEME_CONFIG.holdAttribute
+  applyChoices(root, resolveChoices({}, { mode: 'light' }), true)
+  nextFrame()
+  applyChoices(root, resolveChoices({}, { mode: 'dark' }), true)
+  nextFrame()
+  expect(root.attributes.has(hold)).toBe(true)
+  nextFrame()
+  expect(root.attributes.has(hold)).toBe(false)
 })
 
 it('resolves the system mode from the color scheme preference', () => {
@@ -119,10 +172,10 @@ it('resolves the system mode from the color scheme preference', () => {
 })
 
 function bootPage(theme: Theme, saved: Theme) {
-  const base = fakeRoot()
-  const root = Object.assign(base, { getAttribute: (name: string) => base.attributes.get(name) ?? null })
+  const root = fakeRoot()
   const media = Object.assign(new EventTarget(), { matches: true })
   const page = Object.assign(new EventTarget(), {
+    requestAnimationFrame,
     localStorage: memoryStorage({ [THEME_CONFIG.storageKey]: JSON.stringify({ version: 1, choices: saved }) }),
     matchMedia: (query: string) => (query === THEME_CONFIG.darkQuery ? media : undefined),
   })
@@ -141,12 +194,13 @@ function switchScheme(media: EventTarget & { matches: boolean }, dark: boolean):
 }
 
 it('runs the boot script to the same attributes as applyChoices', () => {
-  const theme: Theme = { accent: 'rose', motion: 'firm' }
+  const theme: Theme = { accent: 'rose', motion: 'off' }
   const saved: Theme = { corners: 'md', mode: 'system' }
   const { root, announced } = bootPage(theme, saved)
   const expected = fakeRoot()
   applyChoices(expected, resolveChoices(theme, saved), true)
   expect(root.attributes).toEqual(expected.attributes)
+  expect(root.attributes.has(THEME_CONFIG.holdAttribute)).toBe(true)
   expect(root.style.colorScheme).toBe('dark')
   expect(announced()).toBe(1)
 })
