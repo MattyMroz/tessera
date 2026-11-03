@@ -40,11 +40,6 @@ repos:
       # Work happens on branches in .worktrees/; main only receives merges.
       - id: no-commit-to-branch
 
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
-    hooks:
-      - id: text-unicode-replacement-char
-
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:
@@ -67,8 +62,10 @@ repos:
           - revert
 
   - repo: https://github.com/MattyMroz/agents
-    rev: hooks-v1.1.0
+    rev: hooks-v1.3.2
     hooks:
+      # U+FFFD is what a botched encoding leaves behind.
+      - id: no-replacement-char
       # Tests carry no comments or docstrings; it covers TypeScript as well as Python.
       - id: no-test-prose
 
@@ -96,16 +93,13 @@ repos:
     hooks:
       - id: mdformat
         args: [--number]
-        # It puts a blank line between "Validation:" and its list, which the
-        # commit-validation check on PR descriptions rejects.
-        exclude: ^\.github/pull_request_template\.md$
         additional_dependencies:
           - mdformat-gfm==0.4.1
           - mdformat-tables==1.0.0
           - mdformat-frontmatter==2.0.8
 
 # ── FRONTEND (bun) ───────────────────────────────────────────────────────────
-# Slow gates run on push, not on every commit.
+# Fast gates run on push; the browser tests of the lab run in CI only.
 
   - repo: local
     hooks:
@@ -130,13 +124,7 @@ repos:
         stages: [pre-push]
       - id: vitest
         name: vitest
-        entry: bunx vitest run --maxWorkers=6
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
-      - id: test-browser
-        name: playwright
-        entry: bun run --filter @mattymroz/tessera-docs test:browser
+        entry: bunx vitest run
         language: system
         pass_filenames: false
         stages: [pre-push]

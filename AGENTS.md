@@ -14,7 +14,7 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 
 - IMPORTANT: testy tylko `bunx vitest run`, NIGDY `bun run test`.
 - Playwright tylko headless, 19 workerów (20 rdzeni logicznych bez jednego; decyzja właściciela 03.11) i jedno powtórzenie testu, który padł pod obciążeniem (`playwright.config.ts`); test, który pada dwa razy, to błąd. Pliki mierzące czas i klatki (`TIMED`: budżety, menu, skala, Switch, dialog potwierdzenia, oraz `jump.spec.ts`) biegną po reszcie w projektach `*-timed` z jednym workerem, bo pod obciążeniem padają także w powtórce. WebKit ma 6 workerów: na Windows liczy animacje na głównym wątku, więc przy 19 testy klatek (tooltip, popup, symetria) padają. Gdy naraz idzie kilka ciężkich rzeczy, `--workers=6`.
-- Hook pre-push uruchamia te same pięć kroków co `bun run check`, w tej samej kolejności: build przed lintem, bo wtyczka ESLint konsumenta jest czytana z `dist`. Instalacja po klonie: `git config --local core.autocrlf false`, `prek install`, a w `apps/docs` `bunx playwright install chromium webkit` (bez przeglądarek `check` pada na ostatnim kroku; CI instaluje je sam).
+- Hook pre-push uruchamia cztery pierwsze kroki `bun run check` (typecheck, build, lint, vitest), w tej samej kolejności: build przed lintem, bo wtyczka ESLint konsumenta jest czytana z `dist`. Testy przeglądarkowe laboratorium biegną w CI (repo publiczne, minuty GitHuba za darmo; decyzja właściciela 03.11); merge do `main` tylko przy zielonym CI. Instalacja po klonie: `git config --local core.autocrlf false`, `prek install`, a w `apps/docs` `bunx playwright install chromium webkit` (bez przeglądarek `check` pada na ostatnim kroku; CI instaluje je sam).
 
 ## Twarde reguły
 
@@ -24,7 +24,7 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 - Materiały źródłowe: `tmp/index.md`.
 - IMPORTANT: commit i push tylko na wyraźne słowo właściciela. Subagenci nie wykonują żadnych komend git.
 - `main` dostaje tylko squash merge PR (hook `no-commit-to-branch`). Praca na branchach w worktree `.worktrees/<nazwa>`. Tytuł PR = nagłówek commita, opis PR = streszczenie (ustawienie repo: domyślna wiadomość squash = tytuł i opis PR).
-- Commit: `type(scope): description`, scope obowiązkowy z zamkniętej listy `--scopes` w `.pre-commit-config.yaml`; pod nagłówkiem streszczenie. Kontrole nie biegną przy commicie: pełna bramka idzie raz, w hooku pre-push (decyzja właściciela 03.11: commit szybki, push nie wypuszcza kodu, który nie działa). Zero śladów AI w commitach i PR.
+- Commit: `type(scope): description`, scope obowiązkowy z zamkniętej listy `--scopes` w `.pre-commit-config.yaml`; pod nagłówkiem streszczenie. Kontrole nie biegną przy commicie: szybkie idą w hooku pre-push, przeglądarkowe w CI (decyzja właściciela 03.11). Zero śladów AI w commitach i PR.
 - Kod etapu nie powstaje bez kontraktu w `docs/plans/` zaakceptowanego przez właściciela.
 - Status przed oceną właściciela na żywo, w kompozycji, to najwyżej „gotowe do oceny”.
 - Zero legacy: bez warstw zgodności z v1/v2, aliasów starych nazw i słowa `legacy` w kodzie. Kod przenoszony z v2 przepisuj na model v3.
