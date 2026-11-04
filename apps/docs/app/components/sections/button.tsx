@@ -10,6 +10,7 @@ import Plus from 'lucide-react/icons/plus'
 import Upload from 'lucide-react/icons/upload'
 import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
+import { Group } from './group'
 
 const VARIANTS: readonly ButtonVariant[] = ['solid', 'soft', 'outline', 'raised', 'ghost']
 
@@ -59,96 +60,114 @@ export function ButtonSection() {
   return (
     <section aria-labelledby="button-title" className="flex flex-col gap-group">
       <h2 id="button-title">Button</h2>
-      <div className="flex flex-wrap items-center gap-inset">
-        {VARIANTS.map((variant) => (
-          <Button key={variant} variant={variant}>
-            {variant}
-          </Button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-inset">
-        {VARIANTS.map((variant) => (
-          <Button key={variant} variant={variant} icon={<Plus />} iconEnd={<ChevronDown />}>
-            New
-          </Button>
-        ))}
-        {VARIANTS.map((variant) => (
-          <Button key={`${variant}-icon`} variant={variant} aria-label={`Add (${variant})`} icon={<Plus />} />
-        ))}
-      </div>
-      {VARIANTS.map((variant) => (
-        <div key={variant} className="flex flex-wrap items-center gap-inset">
-          {TONES.map((tone) => (
-            <Button key={tone} variant={variant} tone={tone}>
-              {tone}
+      <Group title="Variants">
+        <div className="flex flex-wrap items-center gap-inset">
+          {VARIANTS.map((variant) => (
+            <Button key={variant} variant={variant}>
+              {variant}
             </Button>
           ))}
         </div>
-      ))}
-      <div className="flex flex-wrap items-center gap-inset">
-        <Button variant="solid" busy icon={<Plus />}>
-          Saving
-        </Button>
-        <Button variant="outline" busy aria-label="Saving" icon={<Plus />} />
-        <Button variant="outline" busy icon={<Plus />} iconEnd={<ChevronDown />}>
-          Exporting
-        </Button>
-        <Button variant="soft" busy>
-          Loading
-        </Button>
-        <Button variant="soft" aria-pressed="true">
-          Pressed
-        </Button>
-        <Button variant="solid" tone="neutral">
-          Inverse
-        </Button>
-      </div>
-      <BlockedActivation />
-      <nav aria-label="Button links" className="flex flex-wrap items-center gap-inset">
-        <Button href="#button-title" variant="solid" iconEnd={<ArrowRight />}>
-          Get started
-        </Button>
-        <Button href="/screens/edges" link={Link} variant="ghost" iconEnd={<ArrowRight />}>
-          Edges screen
-        </Button>
-        <Button href="#button-title" aria-label="Back to the button title" icon={<ArrowRight />} />
-      </nav>
-      <div className="flex flex-wrap items-end gap-inset">
-        {THEME_CONFIG.axes.size.map((size) => (
-          <Button key={size} variant="soft" size={size} icon={<Plus />}>
-            {size}
-          </Button>
-        ))}
-      </div>
-      <div role="group" aria-label="Least width" className="flex flex-wrap items-end gap-inset">
-        {THEME_CONFIG.axes.size.map((size) => (
-          <Button key={size} variant="outline" size={size}>
-            OK
-          </Button>
-        ))}
-      </div>
-      <div role="group" aria-label="Hug" className="flex flex-wrap items-end gap-inset">
-        {THEME_CONFIG.axes.size.map((size) => (
-          <Button key={size} variant="outline" size={size} hug>
-            OK
-          </Button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-inset">
+      </Group>
+      <Group title="Tones">
         {VARIANTS.map((variant) => (
-          <Button key={variant} variant={variant} disabled>
-            Disabled
-          </Button>
+          <div key={variant} className="flex flex-wrap items-center gap-inset">
+            {TONES.map((tone) => (
+              <Button key={tone} variant={variant} tone={tone}>
+                {tone}
+              </Button>
+            ))}
+          </div>
         ))}
-      </div>
-      <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-inset">
-        {VARIANTS.map((variant) => (
-          <Button key={variant} variant={variant}>
-            In a card
+      </Group>
+      <Group title="Icons">
+        <div className="flex flex-wrap items-center gap-inset">
+          {VARIANTS.map((variant) => (
+            <Button key={variant} variant={variant} icon={<Plus />} iconEnd={<ChevronDown />}>
+              New
+            </Button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-inset">
+          {VARIANTS.map((variant) => (
+            <Button key={`${variant}-icon`} variant={variant} aria-label={`Add (${variant})`} icon={<Plus />} />
+          ))}
+        </div>
+      </Group>
+      <Group title="Sizes">
+        <div className="flex flex-wrap items-end gap-inset">
+          {THEME_CONFIG.axes.size.map((size) => (
+            <Button key={size} variant="soft" size={size} icon={<Plus />}>
+              {size}
+            </Button>
+          ))}
+        </div>
+        <div role="group" aria-label="Least width" className="flex flex-wrap items-end gap-inset">
+          {THEME_CONFIG.axes.size.map((size) => (
+            <Button key={size} variant="outline" size={size}>
+              OK
+            </Button>
+          ))}
+        </div>
+        <div role="group" aria-label="Hug" className="flex flex-wrap items-end gap-inset">
+          {THEME_CONFIG.axes.size.map((size) => (
+            <Button key={size} variant="outline" size={size} hug>
+              OK
+            </Button>
+          ))}
+        </div>
+      </Group>
+      <Group title="States">
+        <div className="flex flex-wrap items-center gap-inset">
+          <Button variant="solid" busy icon={<Plus />}>
+            Saving
           </Button>
-        ))}
-        <Button aria-label="Add in a card" icon={<Plus />} />
-      </div>
+          <Button variant="outline" busy aria-label="Saving" icon={<Plus />} />
+          <Button variant="outline" busy icon={<Plus />} iconEnd={<ChevronDown />}>
+            Exporting
+          </Button>
+          <Button variant="soft" busy>
+            Loading
+          </Button>
+          <Button variant="soft" aria-pressed="true">
+            Pressed
+          </Button>
+          <Button variant="solid" tone="neutral">
+            Inverse
+          </Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-inset">
+          {VARIANTS.map((variant) => (
+            <Button key={variant} variant={variant} disabled>
+              Disabled
+            </Button>
+          ))}
+        </div>
+      </Group>
+      <Group title="Blocked activation">
+        <BlockedActivation />
+      </Group>
+      <Group title="Links">
+        <nav aria-label="Button links" className="flex flex-wrap items-center gap-inset">
+          <Button href="#button-title" variant="solid" iconEnd={<ArrowRight />}>
+            Get started
+          </Button>
+          <Button href="/screens/edges" link={Link} variant="ghost" iconEnd={<ArrowRight />}>
+            Edges screen
+          </Button>
+          <Button href="#button-title" aria-label="Back to the button title" icon={<ArrowRight />} />
+        </nav>
+      </Group>
+      <Group title="In a card">
+        <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-inset">
+          {VARIANTS.map((variant) => (
+            <Button key={variant} variant={variant}>
+              In a card
+            </Button>
+          ))}
+          <Button aria-label="Add in a card" icon={<Plus />} />
+        </div>
+      </Group>
     </section>
   )
 }

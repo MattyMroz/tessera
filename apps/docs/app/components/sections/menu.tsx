@@ -12,6 +12,7 @@ import {
   MenuTrigger,
 } from '@mattymroz/tessera/components/menu/menu'
 import Trash2 from 'lucide-react/icons/trash-2'
+import { Group } from './group'
 
 function ProjectMenu({ label }: { label: string }) {
   return (
@@ -69,12 +70,16 @@ export function MenuSection() {
   return (
     <section aria-labelledby="menu-title" className="flex flex-col gap-group">
       <h2 id="menu-title">Menu</h2>
-      <div className="flex flex-wrap items-center gap-inset">
-        <ProjectMenu label="Project" />
-      </div>
-      <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-inset">
-        <ProjectMenu label="From a card" />
-      </div>
+      <Group title="Groups, checks and submenus">
+        <div className="flex flex-wrap items-center gap-inset">
+          <ProjectMenu label="Project" />
+        </div>
+      </Group>
+      <Group title="In a card">
+        <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-inset">
+          <ProjectMenu label="From a card" />
+        </div>
+      </Group>
     </section>
   )
 }

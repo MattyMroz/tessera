@@ -5,6 +5,7 @@ import List from 'lucide-react/icons/list'
 import TextAlignCenter from 'lucide-react/icons/text-align-center'
 import TextAlignEnd from 'lucide-react/icons/text-align-end'
 import TextAlignStart from 'lucide-react/icons/text-align-start'
+import { Group } from './group'
 
 const VARIANTS: readonly ToggleGroupVariant[] = ['raised', 'active']
 const RANGES = ['Day', 'Week', 'Month'] as const
@@ -22,109 +23,145 @@ export function ToggleGroupSection() {
   return (
     <section aria-labelledby="toggle-group-title" className="flex flex-col gap-group">
       <h2 id="toggle-group-title">Toggle group</h2>
-      <div className="flex flex-wrap items-center gap-group">
-        {VARIANTS.map((variant) => (
-          <ToggleGroup key={variant} aria-label={`Range (${variant})`} variant={variant} defaultValue="Day">
-            {RANGES.map((range) => (
-              <ToggleGroupItem key={range} value={range}>
-                {range}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-end gap-group">
-        {THEME_CONFIG.axes.size.map((size) => (
-          <ToggleGroup key={size} aria-label={`Range (${size})`} size={size} defaultValue="Week">
-            {RANGES.map((range) => (
-              <ToggleGroupItem key={range} value={range}>
-                {range}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-group">
-        {COUNTS.map((labels) => (
-          <ToggleGroup key={labels.length} aria-label={`${labels.length} options`} defaultValue={labels[0]}>
-            {labels.map((label) => (
+      <Group title="Variants">
+        <div className="flex flex-wrap items-center gap-group">
+          {VARIANTS.map((variant) => (
+            <ToggleGroup key={variant} aria-label={`Range (${variant})`} variant={variant} defaultValue="Day">
+              {RANGES.map((range) => (
+                <ToggleGroupItem key={range} value={range}>
+                  {range}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          ))}
+        </div>
+      </Group>
+      <Group title="Sizes">
+        <div className="flex flex-wrap items-end gap-group">
+          {THEME_CONFIG.axes.size.map((size) => (
+            <ToggleGroup key={size} aria-label={`Range (${size})`} size={size} defaultValue="Week">
+              {RANGES.map((range) => (
+                <ToggleGroupItem key={range} value={range}>
+                  {range}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          ))}
+        </div>
+      </Group>
+      <Group title="Number of options">
+        <div className="flex flex-wrap items-center gap-group">
+          {COUNTS.map((labels) => (
+            <ToggleGroup key={labels.length} aria-label={`${labels.length} options`} defaultValue={labels[0]}>
+              {labels.map((label) => (
+                <ToggleGroupItem key={label} value={label}>
+                  {label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          ))}
+        </div>
+      </Group>
+      <Group title="Options of different widths">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="Different widths" defaultValue="Medium">
+            {WIDTHS.map((label) => (
               <ToggleGroupItem key={label} value={label}>
                 {label}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-group">
-        <ToggleGroup aria-label="Different widths" defaultValue="Medium">
-          {WIDTHS.map((label) => (
-            <ToggleGroupItem key={label} value={label}>
-              {label}
+        </div>
+      </Group>
+      <Group title="One character">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="One character" defaultValue="1">
+            {LETTERS.map((letter) => (
+              <ToggleGroupItem key={letter} value={letter}>
+                {letter}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+      </Group>
+      <Group title="Icons with labels">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="View" defaultValue="list">
+            <ToggleGroupItem value="list" icon={<List />}>
+              List
             </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        <ToggleGroup aria-label="View" defaultValue="list">
-          <ToggleGroupItem value="list" icon={<List />}>
-            List
-          </ToggleGroupItem>
-          <ToggleGroupItem value="grid" icon={<LayoutGrid />}>
-            Grid
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <ToggleGroup aria-label="Alignment" defaultValue="left">
-          <ToggleGroupItem value="left" aria-label="Left" icon={<TextAlignStart />} />
-          <ToggleGroupItem value="centre" aria-label="Centre" icon={<TextAlignCenter />} />
-          <ToggleGroupItem value="right" aria-label="Right" icon={<TextAlignEnd />} />
-        </ToggleGroup>
-        <ToggleGroup aria-label="With a disabled option" defaultValue="Day">
-          <ToggleGroupItem value="Day">Day</ToggleGroupItem>
-          <ToggleGroupItem value="Week" disabled>
-            Week
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Month">Month</ToggleGroupItem>
-        </ToggleGroup>
-        <ToggleGroup aria-label="Chosen option disabled" defaultValue="Day">
-          <ToggleGroupItem value="Day" disabled>
-            Day
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Week">Week</ToggleGroupItem>
-          <ToggleGroupItem value="Month">Month</ToggleGroupItem>
-        </ToggleGroup>
-        <ToggleGroup aria-label="Nothing chosen yet">
-          {RANGES.map((range) => (
-            <ToggleGroupItem key={range} value={range}>
-              {range}
+            <ToggleGroupItem value="grid" icon={<LayoutGrid />}>
+              Grid
             </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        <ToggleGroup aria-label="One character" defaultValue="1">
-          {LETTERS.map((letter) => (
-            <ToggleGroupItem key={letter} value={letter}>
-              {letter}
+          </ToggleGroup>
+        </div>
+      </Group>
+      <Group title="Icons only">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="Alignment" defaultValue="left">
+            <ToggleGroupItem value="left" aria-label="Left" icon={<TextAlignStart />} />
+            <ToggleGroupItem value="centre" aria-label="Centre" icon={<TextAlignCenter />} />
+            <ToggleGroupItem value="right" aria-label="Right" icon={<TextAlignEnd />} />
+          </ToggleGroup>
+        </div>
+      </Group>
+      <Group title="A disabled option">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="With a disabled option" defaultValue="Day">
+            <ToggleGroupItem value="Day">Day</ToggleGroupItem>
+            <ToggleGroupItem value="Week" disabled>
+              Week
             </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      </div>
-      <div className="w-48">
-        <ToggleGroup aria-label="In a narrow container" defaultValue="Original">
-          {VIEWS.map((view) => (
-            <ToggleGroupItem key={view} value={view}>
-              {view}
+            <ToggleGroupItem value="Month">Month</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </Group>
+      <Group title="The chosen option disabled">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="Chosen option disabled" defaultValue="Day">
+            <ToggleGroupItem value="Day" disabled>
+              Day
             </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      </div>
-      <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-group">
-        {VARIANTS.map((variant) => (
-          <ToggleGroup key={variant} aria-label={`Range in a card (${variant})`} variant={variant} defaultValue="Month">
+            <ToggleGroupItem value="Week">Week</ToggleGroupItem>
+            <ToggleGroupItem value="Month">Month</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </Group>
+      <Group title="Nothing chosen yet">
+        <div className="flex flex-wrap items-center gap-group">
+          <ToggleGroup aria-label="Nothing chosen yet">
             {RANGES.map((range) => (
               <ToggleGroupItem key={range} value={range}>
                 {range}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        ))}
-      </div>
+        </div>
+      </Group>
+      <Group title="In a narrow container">
+        <div className="w-48">
+          <ToggleGroup aria-label="In a narrow container" defaultValue="Original">
+            {VIEWS.map((view) => (
+              <ToggleGroupItem key={view} value={view}>
+                {view}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+      </Group>
+      <Group title="In a card">
+        <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-group">
+          {VARIANTS.map((variant) => (
+            <ToggleGroup key={variant} aria-label={`Range in a card (${variant})`} variant={variant} defaultValue="Month">
+              {RANGES.map((range) => (
+                <ToggleGroupItem key={range} value={range}>
+                  {range}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          ))}
+        </div>
+      </Group>
     </section>
   )
 }

@@ -89,13 +89,9 @@ export async function mountStress(page: Page): Promise<void> {
 }
 
 export async function choose<A extends Axis>(page: Page, axis: A, value: Choices[A]): Promise<void> {
-  if (axis === 'mode') {
-    await page.getByRole('radiogroup', { name: 'mode', exact: true }).getByRole('radio', { name: value, exact: true }).click()
-  } else {
-    await page.getByRole('button', { name: new RegExp(`^${axis} `) }).click()
-    await page.getByRole('menuitemcheckbox', { name: value, exact: true }).click()
-    await expect(page.getByRole('menu')).toHaveCount(0)
-  }
+  await page.getByRole('button', { name: new RegExp(`^${axis} `) }).click()
+  await page.getByRole('menuitemcheckbox', { name: value, exact: true }).click()
+  await expect(page.getByRole('menu')).toHaveCount(0)
   await expect(page.locator('html')).toHaveAttribute(`data-${axis}`, value)
   await expect(page.locator('html')).not.toHaveAttribute(MOTION_HOLD)
 }

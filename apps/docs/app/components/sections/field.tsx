@@ -5,6 +5,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@mattymroz/tess
 import { Input } from '@mattymroz/tessera/components/input/input'
 import { ToggleGroup, ToggleGroupItem } from '@mattymroz/tessera/components/toggle-group/toggle-group'
 import Link from 'lucide-react/icons/link'
+import { Group } from './group'
 
 const QUALITIES = ['Fast', 'Balanced', 'Best'] as const
 
@@ -12,6 +13,7 @@ export function FieldSection() {
   return (
     <section aria-labelledby="field-title" className="flex flex-col gap-group">
       <h2 id="field-title">Field</h2>
+      <Group title="Fields sharing the columns of a card: required, invalid, disabled, a group of choices">
       <Card data-testid="field-card" container>
         <Field>
           <FieldLabel>Backend URL</FieldLabel>
@@ -41,6 +43,8 @@ export function FieldSection() {
           </ToggleGroup>
         </Field>
       </Card>
+      </Group>
+      <Group title="In a narrow card">
       <div className="w-80 max-w-full">
         <Card data-testid="field-column" container>
           <Field>
@@ -51,6 +55,7 @@ export function FieldSection() {
           </Field>
         </Card>
       </div>
+      </Group>
     </section>
   )
 }

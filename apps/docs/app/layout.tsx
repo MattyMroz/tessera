@@ -5,6 +5,7 @@ import { mangashift } from '@mattymroz/tessera/themes/mangashift'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { LAB_ELEMENTS } from './elements'
 import { Panel } from './panel'
 
 export const metadata: Metadata = {
@@ -17,14 +18,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <ThemeScript theme={mangashift} />
       </head>
-      <body data-recipe="surface" data-variant="page">
+      <body data-recipe="surface" data-variant="page" className="min-h-dvh">
         <div className="flex flex-col gap-card p-card md:flex-row md:items-start">
-          <nav aria-label="Pages" className="flex flex-row flex-wrap gap-inset md:sticky md:top-card md:z-10 md:flex-col">
-            <Link href="/">Index</Link>
-            <Link href="/foundation">Foundation</Link>
-            <Link href="/components">Components</Link>
-            <Link href="/screens/overlays">Overlays</Link>
-            <Link href="/screens/edges">Edges</Link>
+          <nav aria-label="Elements" className="flex flex-row flex-wrap gap-inset md:sticky md:top-card md:z-10 md:w-36 md:flex-none md:flex-col">
+            {LAB_ELEMENTS.map(({ id, name }) => (
+              <Link key={id} href={`/#${id}`}>
+                {name}
+              </Link>
+            ))}
           </nav>
           <main id="lab-main" className="flex min-w-0 flex-col gap-card md:flex-1">
             {children}

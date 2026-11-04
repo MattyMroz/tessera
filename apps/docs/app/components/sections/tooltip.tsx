@@ -6,6 +6,7 @@ import MessageSquare from 'lucide-react/icons/message-square'
 import MousePointer2 from 'lucide-react/icons/mouse-pointer-2'
 import Move from 'lucide-react/icons/move'
 import Volume2 from 'lucide-react/icons/volume-2'
+import { Group } from './group'
 
 const TOOLS = [
   { label: 'Select', Icon: MousePointer2 },
@@ -22,43 +23,55 @@ export function TooltipSection() {
   return (
     <section aria-labelledby="tooltip-title" className="flex flex-col gap-group">
       <h2 id="tooltip-title">Tooltip</h2>
-      <div className="flex flex-wrap items-center gap-group">
-        <Tooltip content="Saves the chapter">
-          <Button variant="soft">Save</Button>
-        </Tooltip>
-        <Tooltip
-          content={
-            <>
-              <Text variant="label">Print</Text> <Text variant="kbd">Ctrl+P</Text>
-            </>
-          }
-        >
-          <Button variant="soft">Print</Button>
-        </Tooltip>
-      </div>
-      <div className="flex flex-wrap items-center gap-inset">
-        {GROUP.map((label) => (
-          <Tooltip key={label} content={label}>
-            <Button>{label.split(' ')[0]}</Button>
+      <Group title="Text">
+        <div className="flex flex-wrap items-center gap-group">
+          <Tooltip content="Saves the chapter">
+            <Button variant="soft">Save</Button>
           </Tooltip>
-        ))}
-      </div>
-      <div className="flex flex-col items-start gap-inset">
-        {COLUMN.map((label) => (
-          <Tooltip key={label} content={`Show ${label.toLowerCase()}`} side="right">
-            <Button>{label}</Button>
+        </div>
+      </Group>
+      <Group title="With a key">
+        <div className="flex flex-wrap items-center gap-group">
+          <Tooltip
+            content={
+              <>
+                <Text variant="label">Print</Text> <Text variant="kbd">Ctrl+P</Text>
+              </>
+            }
+          >
+            <Button variant="soft">Print</Button>
           </Tooltip>
-        ))}
-      </div>
-      <div data-recipe="surface" data-level="base" data-surface="" data-inset="inset" className="flex items-center gap-inset self-start">
-        <TooltipBar side="bottom">
-          {TOOLS.map((tool) => (
-            <Tooltip key={tool.label} content={tool.label}>
-              <Button aria-label={tool.label} icon={<tool.Icon />} />
+        </div>
+      </Group>
+      <Group title="Next to each other">
+        <div className="flex flex-wrap items-center gap-inset">
+          {GROUP.map((label) => (
+            <Tooltip key={label} content={label}>
+              <Button>{label.split(' ')[0]}</Button>
             </Tooltip>
           ))}
-        </TooltipBar>
-      </div>
+        </div>
+      </Group>
+      <Group title="On the right">
+        <div className="flex flex-col items-start gap-inset">
+          {COLUMN.map((label) => (
+            <Tooltip key={label} content={`Show ${label.toLowerCase()}`} side="right">
+              <Button>{label}</Button>
+            </Tooltip>
+          ))}
+        </div>
+      </Group>
+      <Group title="In a bar">
+        <div data-recipe="surface" data-level="base" data-surface="" data-inset="inset" className="flex items-center gap-inset self-start">
+          <TooltipBar side="bottom">
+            {TOOLS.map((tool) => (
+              <Tooltip key={tool.label} content={tool.label}>
+                <Button aria-label={tool.label} icon={<tool.Icon />} />
+              </Tooltip>
+            ))}
+          </TooltipBar>
+        </div>
+      </Group>
     </section>
   )
 }

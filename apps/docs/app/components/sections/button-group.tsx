@@ -10,6 +10,7 @@ import Redo from 'lucide-react/icons/redo-2'
 import Undo from 'lucide-react/icons/undo-2'
 import X from 'lucide-react/icons/x'
 import { useRef } from 'react'
+import { Group } from './group'
 
 function History({ label }: { label: string }) {
   return (
@@ -50,35 +51,47 @@ export function ButtonGroupSection() {
   return (
     <section aria-labelledby="button-group-title" className="flex flex-col gap-group">
       <h2 id="button-group-title">Button group</h2>
-      <div className="flex flex-wrap items-center gap-inset">
-        <History label="History" />
-        <SplitExport />
-        <Filter />
-        <ButtonGroup variant="joined" aria-label="Pages">
-          <Button variant="soft">First</Button>
-          <Button variant="soft">Previous</Button>
-          <Button variant="soft">Next</Button>
-        </ButtonGroup>
-      </div>
-      <div className="flex flex-wrap items-end gap-inset">
-        {THEME_CONFIG.axes.size.map((size) => (
-          <ButtonGroup key={size} variant="joined" size={size} aria-label={`Joined ${size}`}>
-            <Button variant="outline">{size}</Button>
-            <Button variant="outline" aria-label={`More ${size}`} icon={<ChevronDown />} />
+      <Group title="Track">
+        <div className="flex flex-wrap items-center gap-inset">
+          <History label="History" />
+        </div>
+      </Group>
+      <Group title="Joined">
+        <div className="flex flex-wrap items-center gap-inset">
+          <ButtonGroup variant="joined" aria-label="Pages">
+            <Button variant="soft">First</Button>
+            <Button variant="soft">Previous</Button>
+            <Button variant="soft">Next</Button>
           </ButtonGroup>
-        ))}
-      </div>
-      <div className="flex flex-col items-start gap-inset">
-        <Button variant="outline">Lone outline</Button>
-        <ButtonGroup variant="joined" aria-label="Joined outline">
-          <Button variant="outline">Joined outline</Button>
-          <Button variant="outline" aria-label="More outline" icon={<ChevronDown />} />
-        </ButtonGroup>
-      </div>
-      <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-inset">
-        <History label="History in a card" />
-        <Filter />
-      </div>
+          <Filter />
+          <SplitExport />
+        </div>
+      </Group>
+      <Group title="Sizes">
+        <div className="flex flex-wrap items-end gap-inset">
+          {THEME_CONFIG.axes.size.map((size) => (
+            <ButtonGroup key={size} variant="joined" size={size} aria-label={`Joined ${size}`}>
+              <Button variant="outline">{size}</Button>
+              <Button variant="outline" aria-label={`More ${size}`} icon={<ChevronDown />} />
+            </ButtonGroup>
+          ))}
+        </div>
+      </Group>
+      <Group title="Lone and joined">
+        <div className="flex flex-col items-start gap-inset">
+          <Button variant="outline">Lone outline</Button>
+          <ButtonGroup variant="joined" aria-label="Joined outline">
+            <Button variant="outline">Joined outline</Button>
+            <Button variant="outline" aria-label="More outline" icon={<ChevronDown />} />
+          </ButtonGroup>
+        </div>
+      </Group>
+      <Group title="In a card">
+        <div data-recipe="surface" data-level="raised" data-surface="" data-inset="card" className="flex flex-wrap items-center gap-inset">
+          <History label="History in a card" />
+          <Filter />
+        </div>
+      </Group>
     </section>
   )
 }
