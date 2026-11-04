@@ -1,10 +1,10 @@
 """Reject lines that carry a well-known API token shape.
 
-Each pattern starts at a word boundary, so task- or risk- never open an sk-
-key, and an sk- key holds a digit, so CSS names like sk-toggleable__label-arrow
-pass. Lines are matched as bytes, so the file encoding does not matter. The
-report names the token kind and line, never the value. Private keys are left
-to detect-private-key. Paths come from argv.
+Each pattern starts at a word boundary, so a word that merely ends in sk never
+opens a key, and an OpenAI-style key must hold a digit, so long kebab-case CSS
+class names pass. Lines are matched as bytes, so the file encoding does not
+matter. The report names the token kind and line, never the value. Private
+keys are left to detect-private-key. Paths come from argv.
 """
 
 import re
