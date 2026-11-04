@@ -32,9 +32,10 @@ export type IndicatorOptions = {
   readonly items: string
   readonly hover?: boolean
   readonly focus?: boolean
+  readonly follow?: boolean
 }
 
-export type IndicatorSelect = (active: HTMLElement | null, under: HTMLElement | null) => void
+export type IndicatorSelect = (active: HTMLElement | null, under: HTMLElement | null, off?: boolean) => void
 
 export type IndicatorParts = {
   readonly container: RefCallback<HTMLElement>
@@ -51,10 +52,11 @@ type IndicatorSettings = {
   readonly items: string
   readonly hover: boolean
   readonly focus: boolean
+  readonly follow: boolean
 }
 
 type IndicatorControl = {
-  select(active: HTMLElement | null, under: HTMLElement | null): void
+  select(active: HTMLElement | null, under: HTMLElement | null, off: boolean): void
   disconnect(): void
 }
 
@@ -139,12 +141,13 @@ function squeeze(axis: ScreenAxis, scale: number): string {
 
 function connectIndicator(settings: IndicatorSettings): IndicatorControl {
   const { container, ride, squash, axis } = settings
-  const kind: FlightKind = settings.hover ? 'follow' : 'choice'
+  const kind: FlightKind = settings.hover || settings.follow ? 'follow' : 'choice'
   const items = enabled(settings.items)
   let hovered: HTMLElement | null = null
   let focused: HTMLElement | null = null
   let active: HTMLElement | null = null
   let under: HTMLElement | null = null
+  let off = false
   let state: IndicatorState<HTMLElement> = { target: null, box: null, visible: false }
   let running: Running | undefined
   const resizes = new ResizeObserver(() => update())
@@ -209,7 +212,8 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
   }
 
   const update = (): void => {
-    const target = pickTarget({ hover: hovered, focus: focused, active }, under)
+    ride.toggleAttribute('data-off', off)
+    const target = off ? null : pickTarget({ hover: hovered, focus: focused, active }, under)
     const box = target ? measureIn(target, container) : null
     const placement = place(state, target, box)
     if (placement === 'stay') return
@@ -223,6 +227,9 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
       stop()
       rest(box)
     }
+    const tone = target.getAttribute('data-tone')
+    if (tone === null) ride.removeAttribute('data-tone')
+    else ride.setAttribute('data-tone', tone)
     ride.setAttribute('data-visible', 'true')
     state = { target, box, visible: true }
   }
@@ -273,9 +280,10 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
   window.addEventListener(THEME_CONFIG.changeEvent, update)
 
   return {
-    select(nextActive, nextUnder) {
+    select(nextActive, nextUnder, nextOff) {
       active = nextActive
       under = nextUnder
+      off = nextOff
       update()
     },
     disconnect() {
@@ -296,26 +304,27 @@ export function useIndicator(options: IndicatorOptions): IndicatorParts {
   const { axis, items } = options
   const hover = options.hover ?? false
   const focus = options.focus ?? false
+  const follow = options.follow ?? false
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const [ride, setRide] = useState<HTMLElement | null>(null)
   const [squash, setSquash] = useState<HTMLElement | null>(null)
   const control = useRef<IndicatorControl | null>(null)
-  const targets = useRef<{ active: HTMLElement | null; under: HTMLElement | null }>({ active: null, under: null })
+  const targets = useRef<{ active: HTMLElement | null; under: HTMLElement | null; off: boolean }>({ active: null, under: null, off: false })
 
   useLayoutEffect(() => {
     if (!container || !ride || !squash) return
-    const indicator = connectIndicator({ container, ride, squash, axis, items, hover, focus })
-    indicator.select(targets.current.active, targets.current.under)
+    const indicator = connectIndicator({ container, ride, squash, axis, items, hover, focus, follow })
+    indicator.select(targets.current.active, targets.current.under, targets.current.off)
     control.current = indicator
     return () => {
       indicator.disconnect()
       control.current = null
     }
-  }, [container, ride, squash, axis, items, hover, focus])
+  }, [container, ride, squash, axis, items, hover, focus, follow])
 
-  const select: IndicatorSelect = (active, under) => {
-    targets.current = { active, under }
-    control.current?.select(active, under)
+  const select: IndicatorSelect = (active, under, off = false) => {
+    targets.current = { active, under, off }
+    control.current?.select(active, under, off)
   }
 
   return { container: setContainer, ride: setRide, squash: setSquash, select }

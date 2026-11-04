@@ -47,6 +47,7 @@
     --ts-motion-choice-overshoot: 0.1;
     --ts-motion-press-scale: 0.97;
     --ts-motion-press-rest: 0.99999;
+    --ts-motion-press-stretch: 1;
     --ts-motion-press-hold: var(--ts-motion-duration-press-in);
     --ts-motion-flip: 0.5turn;
   }
@@ -62,6 +63,7 @@
     --ts-motion-duration-draw-out: 0ms;
     --ts-motion-press-scale: 1;
     --ts-motion-press-rest: 1;
+    --ts-motion-press-stretch: 0;
     --ts-motion-sweep: none;
     --ts-motion-pulse: none;
   }
@@ -87,6 +89,7 @@
       --ts-motion-duration-draw-out: 0ms;
       --ts-motion-press-scale: 1;
       --ts-motion-press-rest: 1;
+      --ts-motion-press-stretch: 0;
       --ts-motion-sweep: none;
       --ts-motion-pulse: none;
     }

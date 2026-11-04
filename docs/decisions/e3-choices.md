@@ -86,8 +86,41 @@ Właściciel przekazał prowadzącemu wybory („przy wyborze wybieraj te najlep
 | Silnik układu (splitter, panele min/max/zwijanie, zakładki dokumentów, zapamiętany układ, ruch między komponentami) | w E3 jako runda „U” po rundzie G, przed ekranem Panel roboczy                                                                                       | zostawić w E4 (Panel roboczy statyczny) | elastyczność układu wymaga komponentów grupujących na krawędziach; najważniejszy ekran aplikacji gotowy w E3; błędy overflow i responsywności w panelach o zmiennej szerokości wychodzą wcześnie | prowadzący z upoważnienia („poprawnie po kolei, jak najlepszy wynik”), 2026-11-01 |
 | Fundament między rundą C a D                                                                                        | audyt symetrii i odstępów + „×” w rogu → sloty (kompozycja bez stylów, blokada złego miejsca) → odporność na overflow → profil telefonu w pomiarach | od razu runda D                         | braki naprawiane w silniku obejmują wszystkie komponenty; kolejne rundy powstają już na poprawionym fundamencie                                                                                  | prowadzący, 2026-11-01                                                            |
 
+## Ruch wyłączony a wciśnięcie (04.11)
+
+- Wybór: `motion: off` i `prefers-reduced-motion` wyłączają także rozciągnięcie kciuka Switcha przy wciśnięciu; nowe wyjście silnika `motion` `--ts-motion-press-stretch` (1 / 0), przez które przepis `indicator` mnoży `--ts-size-thumb-stretch` i skalę belek. Wspólne dla każdego elementu, który rozciąga się przy wciśnięciu.
+- Opcje: zostawić rozciągnięcie w jednej klatce (było: kciuk odkształcał się mimo wyłączonego ruchu).
+- Dlaczego: właściciel, „wyłączenie motion powinno być też wyłączenie kliknięcia z kushi na switchu”; tak samo jak `--ts-motion-press-scale` = 1 przy wyłączonym ruchu.
+- Kto, data: właściciel, 2026-11-04. Dowód: `switch.spec.ts` „keeps the thumb its own shape on a press with the motion off”; pomiar belek 0 px przy `off`, 5 px przy `on`.
+
+## Menubar: pigułki i kolor wierszy (04.11)
+
+- Wybór: w `accent` jedna pigułka na triggerze otwartego menu (hover chowa się na nim, jak MangaShift `showPointer`); pigułka wierszy menu paska `accent` w kolorze pigułki `active`; pigułka wiersza z tonem w kolorze tonu przez cały czas gaśnięcia (sterownik zapisuje `data-tone` celu na pigułce, reguły `:has(… [data-highlighted] …)` usunięte); triggery paska się nie kurczą.
+
+- Opcje: zostawić dwie pigułki; kolor tonu z `:has` na podświetlonym wierszu (szary przy zejściu kursora).
+
+- Dlaczego: uwagi właściciela 04.11 („nie może być nakład tych dwóch”, „nie ma sytuacji, w której jest to szare”, „ten sam kolorek powinien być też na dole”).
+
+- Kto, data: właściciel (uwagi), prowadzący z upoważnienia („rób jak uważasz”), 2026-11-04. Dowód: `apps/docs/tests/menubar.spec.ts`.
+
+- Ruch pigułki `active` paska `accent`: czas i krzywa `follow` jak pigułka hover (opcja `follow` sterownika), bez odbicia `choice`; schowana pigułka pojawia się na triggerze bez przelotu. Odrzucone: `choice` (pigułka akcentu „telepie się”, szara nie: brak spójności). Właściciel, 2026-11-04. Dowód: `menubar.spec.ts` „moves the accent pill … without an overshoot” (przed zmianą 220 ms elastycznie, po 100 ms `ease-out`).
+
+- Wciśnięcie triggera paska: na razie bez (właściciel, 2026-11-04). Sprawdzone warianty: B pigułka wciska się z triggerem, C pigułka i etykieta jak baton (kotwica stoi). Wraca przy ogólnych zasadach wciśnięcia kotwic. Do tego czasu `interaction.spec.ts` nie widzi grupy wciśnięcia triggerów paska.
+
+- Pasek z akcentem przy otwartym menu: tylko pigułka `active`; szara wyłączona od razu, bez gaśnięcia (`off` w `select`, `data-off`). Odrzucone: szara chowana pod otwartym triggerem z gaśnięciem `hover-out` (cień i zamiana miejsc przy szybkim ruchu, bo w pasku wybór zmienia samo najechanie). Właściciel („rób to”), 2026-11-05. Dowód: `menubar.spec.ts` „shows no grey pill in any frame while the pointer sweeps…” (przed: krycie 1, po: 0 w każdej próbce).
+
+- Animacja „…”: „…” wjeżdża z miejsca pierwszego chowanego menu i się pojawia, wracające menu wyjeżdża z „…”, przesunięte dojeżdżają; `transform` i `opacity`, czas `follow`; tylko części i płytka `::before` triggera, nigdy kotwica. Właściciel („rób to”), 2026-11-05. Dowód: `menubar.spec.ts` „slides "…" in…”. Koszt: B6 `menubar.js` 3586 B (limit 3072 B, przed animacją 3154 B).
+
+- Pigułka `active` toru zostaje półprzezroczysta (16 % akcentu, krycie `--ts-state-selected-fill`). Odrzucone: kryjąca mieszanka `color-mix(in oklab, …)` z tłem toru, żeby szara pigułka hover nie prześwitywała: kolor różnił się o 1–7 na kanał (np. contrast jasny 206 zamiast 212). Właściciel („już wolę przezroczystość”), 2026-11-05.
+
 ## Do decyzji właściciela (otwarte)
 
+- Szara pigułka hover prześwituje przez półprzezroczystą pigułkę `active`, gdy na nią najeżdża (zrzut właściciela 05.11, `ToggleGroup` w karcie).
+
+- Budżet B6 `menubar.js` (3586 B > 3072 B): odchudzić pasek albo podnieść limit.
+
 - Wejście toastu (W16): V0 bez wejścia (desktop), V1 krycie, V2 wjazd od krawędzi — runda G, 3 nagrania.
+
 - Kroje strony: K1 Bricolage (rekomendacja), K2 Sora, K3 Inter Display — runda H.
+
 - Motyw strony: S1 obecna, S2 dark violet neon mini szkło (rekomendacja), S3 jasna — runda H.

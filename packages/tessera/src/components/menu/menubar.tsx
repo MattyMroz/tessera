@@ -24,7 +24,7 @@ import { createScopeAnchor, ScopeContext } from '../../lib/scope'
 import { useHost } from '../../lib/slot'
 import type { Choices } from '../../lib/theme'
 import { Pill } from '../toggle-group/toggle-group'
-import { MenuPopup, MenuSubmenu, MenuSubmenuContent, MenuSubmenuTrigger, MenuTrigger } from './menu'
+import { MenuPopup, MenuSubmenu, MenuSubmenuContent, MenuSubmenuTrigger, MenuTrigger, FillContext } from './menu'
 
 const TRIGGER = '[role="menuitem"]'
 const SHOWN = `:scope > ${TRIGGER}:not(:disabled)`
@@ -98,12 +98,13 @@ export function Menubar({ moreLabel, size, variant, children }: MenubarProps) {
   const [held, setHeld] = useState<HTMLElement | null>(null)
   const [bar] = useState(() => createBar(setHeld))
   const hover = useIndicator({ axis: 'x', items: TRIGGER, hover: true, focus: true })
-  const open = useIndicator({ axis: 'x', items: TRIGGER })
-  const holder = variant === 'accent' ? open : hover
+  const open = useIndicator({ axis: 'x', items: TRIGGER, follow: true })
+  const accent = variant === 'accent'
 
   useLayoutEffect(() => {
-    holder.select(held, null)
-  }, [holder, held])
+    open.select(held, null)
+    hover.select(accent ? null : held, null, accent && held !== null)
+  }, [accent, open, hover, held])
 
   useLayoutEffect(() => {
     const button = more.current
@@ -134,10 +135,12 @@ export function Menubar({ moreLabel, size, variant, children }: MenubarProps) {
       data-size={size}
     >
       <Pill variant="hover" ride={hover.ride} squash={hover.squash} />
-      {variant === 'accent' && <Pill variant="active" ride={open.ride} squash={open.squash} />}
+      {accent && <Pill variant="active" ride={open.ride} squash={open.squash} />}
       <BarContext value={bar}>
-        {children}
-        <More label={moreLabel} button={more} />
+        <FillContext value={accent || null}>
+          {children}
+          <More label={moreLabel} button={more} />
+        </FillContext>
       </BarContext>
     </BaseMenubar>
   )

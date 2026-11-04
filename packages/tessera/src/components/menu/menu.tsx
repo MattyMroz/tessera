@@ -2,7 +2,7 @@
 
 import { Menu as BaseMenu } from '@base-ui/react/menu'
 import ChevronRight from 'lucide-react/icons/chevron-right'
-import { createContext, useLayoutEffect, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
+import { createContext, use, useLayoutEffect, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
 import { useIndicator } from '../../lib/indicator'
 import { createMenuFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
@@ -48,9 +48,11 @@ export const LIST_POPUP = {
   'data-content': 'controls',
 } as const
 
-export function useListPill(items: string) {
+export const FillContext = createContext<true | null>(null)
+
+export function useListPill(items: string, fill: true | null = null) {
   const { container, ride, squash, select } = useIndicator({ axis: 'y', items, hover: true, focus: true })
-  return { container, select, pill: <Pill variant="hover" ride={ride} squash={squash} /> }
+  return { container, select, pill: <Pill variant="hover" fill={fill} ride={ride} squash={squash} /> }
 }
 
 export function ListRow({ mark, icon, trail, label }: Omit<RowContent, 'children'> & { mark?: MarkKind | undefined; label: ReactElement }) {
@@ -75,7 +77,7 @@ export function MenuPopup({ children, width, scope, place, ref, ...props }: Menu
     release: (trigger) => setHeld((current) => (current === trigger ? null : current)),
     flight: createMenuFlight(),
   }))
-  const { container, select, pill } = useListPill(MENU_ITEM)
+  const { container, select, pill } = useListPill(MENU_ITEM, use(FillContext))
   useLayoutEffect(() => {
     select(held, null)
   }, [select, held])

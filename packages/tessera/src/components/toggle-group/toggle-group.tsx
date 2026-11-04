@@ -49,11 +49,11 @@ type ToggleGroupItemBase = {
 export type ToggleGroupItemProps = ToggleGroupItemBase &
   ({ readonly children: ReactNode; readonly 'aria-label'?: string } | { readonly children?: undefined; readonly 'aria-label': string })
 
-type PillProps = Pick<IndicatorParts, 'ride' | 'squash'> & { readonly variant: 'hover' | ToggleGroupVariant }
+type PillProps = Pick<IndicatorParts, 'ride' | 'squash'> & { readonly variant: 'hover' | ToggleGroupVariant; readonly fill?: true | null }
 
-export function Pill({ variant, ride, squash }: PillProps) {
+export function Pill({ variant, fill, ride, squash }: PillProps) {
   return (
-    <div ref={ride} data-recipe="indicator" data-variant={variant} aria-hidden="true">
+    <div ref={ride} data-recipe="indicator" data-variant={variant} data-fill={fill ? 'selected' : undefined} aria-hidden="true">
       <div ref={squash} data-slot="squash" />
     </div>
   )

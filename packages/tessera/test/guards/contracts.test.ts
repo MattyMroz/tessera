@@ -499,6 +499,7 @@ it('accepts data attributes, labels from props, clicks on interactive elements a
 
 const OPTIONAL_CONTEXT_REASONS: Readonly<Record<string, string>> = {
   BarContext: 'a Tooltip outside a TooltipBar owns its popup, so no bar is a state, not a misplaced part',
+  FillContext: 'a menu outside an accent menubar fills its hover pill with the neutral hover step, so no fill is a state, not a misplaced part',
 }
 const OPTIONAL_CONTEXTS: ReadonlySet<string> = new Set(Object.keys(OPTIONAL_CONTEXT_REASONS))
 

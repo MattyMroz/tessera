@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { visit } from './helpers'
+import { choose, visit } from './helpers'
 
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 const TOLERANCE = 0.5
@@ -74,6 +74,24 @@ test('never scales the track and stretches only the thumb towards the middle on 
     await page.mouse.move(0, 0)
     await page.mouse.up()
     await page.waitForTimeout(500)
+  }
+})
+
+test('keeps the thumb its own shape on a press with the motion off', async ({ page }) => {
+  await choose(page, 'motion', 'off')
+  for (const state of ['off', 'on'] as const) {
+    const target = track(page, `lg ${state}`)
+    await target.scrollIntoViewIfNeeded()
+    const rest = await geometry(target)
+    const rect = await target.boundingBox()
+    if (!rect) throw new Error('no track')
+    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2)
+    await page.mouse.down()
+    await expect(target).toHaveAttribute('data-pressing', '')
+    const pressed = await geometry(target)
+    expect(Math.abs(pressed.thumb - rest.thumb), `${state} not stretched`).toBeLessThanOrEqual(TOLERANCE)
+    await page.mouse.move(0, 0)
+    await page.mouse.up()
   }
 })
 

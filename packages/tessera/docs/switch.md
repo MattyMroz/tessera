@@ -25,7 +25,7 @@ A switch needs a name: `children`, a `FieldLabel` of its `Field` or `aria-label`
 - Label: half the box from the track (`--ts-size-label-gap`), centred on it; a click on the label presses and toggles the track.
 - Click: the thumb stretches to a capsule 1.25 × its width from the side it stands on, on the elastic curve of the indicator (`--ts-motion-ease-elastic`, `--ts-motion-duration-choice`) with compositor properties only: two round ends (`::before`, `::after` of the squash) and two bars (`data-slot="bar"`), one end translated by `--ts-size-thumb-stretch` and the bar between the ends scaled on X; the track does not scale.
 - Toggle: the thumb rides to the other place on the indicator engine, 220 ms with an overshoot of 0.1 × the height, the same both ways.
-- With `motion: off` and reduced motion the thumb stands at its place in one frame.
+- With `motion: off` and reduced motion the thumb stands at its place in one frame and does not stretch on a press: the stretch is multiplied by `--ts-motion-press-stretch` of the `motion` engine (1 with motion, 0 without; owner decision 04.11).
 
 ## Example
 

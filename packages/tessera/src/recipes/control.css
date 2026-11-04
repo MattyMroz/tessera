@@ -445,6 +445,10 @@
     flex: 1;
   }
 
+  [data-surface='bar'] > [data-recipe='control'] {
+    flex-shrink: 0;
+  }
+
   [data-recipe='control'][data-slot='close'],
   [data-slot='header'] > [data-slot='action'] > [data-recipe='control'] {
     border-radius: var(--ts-shape-concentric);
