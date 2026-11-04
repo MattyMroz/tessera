@@ -917,6 +917,40 @@ test('stacks a menu and a popover opened from a dialog over it, a toast over the
   expect(above).toEqual({ dialogOnTop: true, found: ['toast', 'tooltip'] })
 })
 
+test('opens a select over its trigger without locking the page, keeps its scrollbar and carries the list with the trigger', async ({ page }) => {
+  await visit(page, '/')
+  const select = page.getByRole('region', { name: 'Select', exact: true }).getByRole('combobox').nth(1)
+  await select.scrollIntoViewIfNeeded()
+  const width = await page.evaluate(() => document.documentElement.clientWidth)
+  await select.click()
+  const list = page.getByRole('listbox')
+  await expect(list).toBeVisible()
+  expect(await page.evaluate(() => [getComputedStyle(document.documentElement).overflowY, getComputedStyle(document.body).overflowY, document.documentElement.clientWidth])).toEqual(['auto', 'visible', width])
+  const gap = async (): Promise<number> => {
+    const [trigger, popup] = await Promise.all([box(select), box(list)])
+    return popup.y - trigger.y
+  }
+  const before = await gap()
+  const scrolled = await page.evaluate(() => scrollY)
+  await page.mouse.move(1, 1)
+  await page.mouse.wheel(0, 120)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(scrolled)
+  await expect(list).toBeVisible()
+  expect(Math.abs((await gap()) - before)).toBeLessThanOrEqual(TOLERANCE)
+})
+
+test('keeps the sticky columns of the page in the window while a context menu locks the scroll', async ({ page }) => {
+  await visit(page, '/')
+  const columns = (): Promise<number[]> =>
+    page.evaluate(() => [...document.querySelectorAll('nav[aria-label="Elements"], aside[aria-label="Theme"]')].map((element) => Math.round(element.getBoundingClientRect().top)))
+  const area = page.getByText('Right-click this page', { exact: true })
+  await area.scrollIntoViewIfNeeded()
+  const rest = await columns()
+  await area.click({ button: 'right' })
+  await expect(page.getByRole('menu')).toBeVisible()
+  expect(await columns()).toEqual(rest)
+})
+
 test('tunes the follow and the hover exit on <html> from the motion lab of the panel and resets them to the engine', async ({ page }) => {
   await visit(page, FOUNDATION)
   const read = (name: string): Promise<string> => page.evaluate((property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim(), name)

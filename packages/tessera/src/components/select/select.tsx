@@ -2,10 +2,10 @@
 
 import { Select as BaseSelect } from '@base-ui/react/select'
 import ChevronDown from 'lucide-react/icons/chevron-down'
-import { createContext, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { createContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
 import { readMotion } from '../../lib/motion'
-import { watchAlignText } from '../../lib/select-align'
+import { textOnValue } from '../../lib/select-align'
 import { SWAP_IN, SWAP_OUT } from '../../lib/value-swap'
 import { useHost } from '../../lib/slot'
 import type { Choices } from '../../lib/theme'
@@ -20,7 +20,7 @@ const OPTION = '[role="option"]'
 
 const CHOSEN_TEXT = `${OPTION}[aria-selected="true"] [data-slot="label"]`
 
-type Host = { readonly size: Choices['size'] | undefined; readonly value: RefObject<HTMLSpanElement | null> }
+type Host = { readonly size: Choices['size'] | undefined; readonly value: HTMLSpanElement | null; readonly setValue: (element: HTMLSpanElement | null) => void }
 
 const MarkContext = createContext<{ readonly mark: MarkKind } | null>(null)
 const HostContext = createContext<Host | null>(null)
@@ -28,9 +28,9 @@ const HostContext = createContext<Host | null>(null)
 export type SelectProps = BaseSelect.Root.Props<string> & { size?: Choices['size'] }
 
 export function Select({ modal, size, ...props }: SelectProps) {
-  const value = useRef<HTMLSpanElement>(null)
+  const [value, setValue] = useState<HTMLSpanElement | null>(null)
   return (
-    <HostContext value={{ size, value }}>
+    <HostContext value={{ size, value, setValue }}>
       <BaseSelect.Root {...props} modal={modal ?? false} />
     </HostContext>
   )
@@ -39,7 +39,7 @@ export function Select({ modal, size, ...props }: SelectProps) {
 type Shown = { readonly key: string; readonly label: ReactNode }
 
 function Swap({ shown }: { shown: Shown }) {
-  const { value } = useHost(HostContext, 'Select', 'SelectTrigger')
+  const { setValue } = useHost(HostContext, 'Select', 'SelectTrigger')
   const [current, setCurrent] = useState(shown)
   const [previous, setPrevious] = useState<Shown | null>(null)
   if (current.key !== shown.key) {
@@ -68,7 +68,7 @@ function Swap({ shown }: { shown: Shown }) {
           {previous.label}
         </span>
       )}
-      <span ref={composeRefs(into, value)} data-slot="swap-in">
+      <span ref={composeRefs(into, setValue)} data-slot="swap-in">
         {current.label}
       </span>
     </span>
@@ -94,22 +94,20 @@ export function SelectTrigger({ placeholder, labels, ...props }: SelectTriggerPr
 
 export type SelectContentProps = Unstyled<BaseSelect.Popup.Props> & { align?: SelectAlign; mark?: MarkKind }
 
+const ON_TRIGGER_COLLISION = { side: 'shift', align: 'shift', fallbackAxisSide: 'none' } as const
+
 export function SelectContent({ align, mark, children, ref, ...props }: SelectContentProps) {
   const { container, pill } = useListPill(OPTION)
   const { size, value } = useHost(HostContext, 'Select', 'SelectContent')
-  const [positioner, setPositioner] = useState<HTMLElement | null>(null)
-  const [popup, setPopup] = useState<HTMLElement | null>(null)
+  const [positioner, setPositioner] = useState<HTMLDivElement | null>(null)
   const onTrigger = (align ?? 'trigger') === 'trigger'
-
-  useLayoutEffect(() => {
-    if (!onTrigger || positioner === null || popup === null) return
-    return watchAlignText({ positioner, popup, value: () => value.current, chosen: CHOSEN_TEXT })
-  }, [onTrigger, positioner, popup, value])
+  const offsets = textOnValue({ positioner, value, chosen: CHOSEN_TEXT })
+  const placement = onTrigger ? { sideOffset: offsets.side, alignOffset: offsets.align, collisionAvoidance: ON_TRIGGER_COLLISION } : {}
 
   return (
     <BaseSelect.Portal>
-      <BaseSelect.Positioner ref={setPositioner} positionMethod="absolute" alignItemWithTrigger={onTrigger} side={align === 'top' ? 'top' : 'bottom'} align="start">
-        <BaseSelect.Popup {...props} {...LIST_POPUP} ref={composeRefs(ref, container, setPopup)} data-width="trigger" data-size={size}>
+      <BaseSelect.Positioner ref={setPositioner}positionMethod="absolute" alignItemWithTrigger={false} side={align === 'top' ? 'top' : 'bottom'} align="start" {...placement}>
+        <BaseSelect.Popup {...props} {...LIST_POPUP} ref={composeRefs(ref, container)} data-width="trigger" data-size={size}>
           {pill}
           <MarkContext value={{ mark: mark ?? 'check' }}>{children}</MarkContext>
         </BaseSelect.Popup>

@@ -19,10 +19,10 @@ A choice of one value from a list, built on Base UI `Select`. Import: `@mattymro
 ## Behaviour
 
 - Every option starts with the mark of [checkbox.md](checkbox.md) (`Mark`): the check draws itself on the chosen option, the dot springs with `mark="dot"`; the column of text is fixed.
-- On the trigger (`align="trigger"`, the default): the text of the chosen option lies on the text of the value with 0.00 px error at DSF 1, 1.25 and 1.5, at the lab magnifier 1× and 2× and while the page or a panel scrolls (`lib/select-align.ts`, measurement file Q7: three passes of the text rectangle, divided by `currentCSSZoom`). A list taller than the room keeps its own scroll.
+- On the trigger (`align="trigger"`, the default): the list hangs below the trigger by the ordinary anchored placement and is moved up and left by the offsets that lay the text of the chosen option on the text of the value (`lib/select-align.ts`, measurement file Q7: `sideOffset` and `alignOffset` measured at every placement). It does not use the Base UI `alignItemWithTrigger` mode, because that mode pins the list to the window and locks the scroll of the whole page, which hides the page scrollbar. The list follows the trigger while the page scrolls; it shifts to stay in the window instead of flipping. Error at DSF 1, 1.25 and 1.5 and at the lab magnifier 1× and 2×: at most 0.45 px (rounding of the placement). A list taller than the room keeps its own scroll.
 - The chevron of the trigger turns half a turn on open and back on close (`--ts-motion-flip`, `scene` time and the standard curve of the `motion` engine).
 - A new value replaces the old one in the trigger: the old value slides up and fades out, the new one slides in from below and fades in, with `translate` and `opacity` only, in the `follow` time and curve of the `motion` engine (`lib/value-swap.ts`; owner decision in `docs/decisions/e3-choices.md`).
-- Base UI gives the keyboard (arrows, Home/End, typeahead, Enter, Escape) and the focus return. Not modal by default; with `align="trigger"` Base UI still locks the scroll while the list is open.
+- Base UI gives the keyboard (arrows, Home/End, typeahead, Enter, Escape) and the focus return. Not modal by default: an open list never locks the scroll of the page and never hides its scrollbar.
 - No entry and no exit animation of the list.
 
 ## Example

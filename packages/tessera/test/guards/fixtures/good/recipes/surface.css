@@ -7,6 +7,10 @@
     z-index: var(--ts-depth-layer-tooltip);
   }
 
+  :root:has(> [data-recipe='surface'][data-variant='page']) {
+    overflow-y: auto;
+  }
+
   [data-recipe='surface'] {
     --_bg: var(--ts-depth-base-bg);
     container-type: inline-size;
