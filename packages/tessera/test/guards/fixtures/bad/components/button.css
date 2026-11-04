@@ -1,23 +1,91 @@
-.ts-button {
-  display: inline-flex;
-  border-radius: 8px;
-  background: #fff;
-  gap: 8px;
-  --button-height: 28px;
-  transition: opacity 150ms;
-  --_bg: hotpink;
-  --_gap: 13px;
-  gap: var(--_gap);
-  width: var(--size-h, 999px);
-  gap: var(--size-gap, 999px);
-  display: none !important;
-  order: 99;
-  order: -5;
-  flex-grow: 1.5;
-  grid-template-columns: 37% 1fr;
-  gap: calc(var(--space-2) * 1.5);
-  gap: var(--brand-gap);
-  padding-inline: var(--space-2);
-  position: absolute;
-  min-width: 0;
+@layer components {
+  [data-component='button'] {
+    display: inline-flex;
+    border-radius: 8px;
+    background: #fff;
+    gap: 8px;
+    --button-height: 28px;
+    transition: opacity 150ms;
+    --_bg: hotpink;
+    --_gap: 13px;
+    gap: var(--_gap);
+    width: var(--ts-size-height, 999px);
+    gap: var(--ts-size-gap, 999px);
+    display: none !important;
+    order: 99;
+    order: -5;
+    flex-grow: 1.5;
+    grid-template-columns: 37% 1fr;
+    gap: calc(var(--ts-space-inset) * 1.5);
+    gap: var(--brand-gap);
+    gap: var(--space-inset);
+    gap: var(--ts-in-space-density);
+    gap: var(--_ts-space-step);
+    padding-inline: var(--ts-space-inset);
+    position: absolute;
+    min-width: 0;
+    flex-basis: var(--ts-size-height);
+    grid-template-columns: var(--ts-shape-surface) 1fr;
+    row-gap: var(--ts-size-gap-x);
+    -webkit-box-ordinal-group: 1;
+    -ms-flex-order: 1;
+  }
+
+  [data-component='button']:focus-visible {
+    display: flex;
+  }
+
+  [data-component='button'] > * {
+    order: 1;
+  }
+
+  *, ::before {
+    display: block;
+  }
+
+  [data-recipe='control'] {
+    display: none;
+  }
+
+  button {
+    order: -1;
+  }
+
+  [data-component='panel'] {
+    display: none;
+  }
+
+  [data-component='button-group'] {
+    display: none;
+  }
+
+  [data-slot='icon'] {
+    order: 1;
+  }
+
+  [data-component='button'] ~ [data-component='button'] {
+    display: none;
+  }
+
+  :root [data-component='button'] {
+    display: flex;
+  }
+
+  [data-component='button'] {
+    & + [data-component='button'] {
+      display: none;
+    }
+
+    & > div {
+      order: 1;
+    }
+
+    :has(> &) {
+      display: none;
+    }
+  }
+}
+
+[data-component='button'] {
+  display: flex;
 }

@@ -1,0 +1,356 @@
+@layer theme {
+  :root {
+    --ts-color-background: #fdfdfe;
+    --ts-color-secondary-background: #f9f9fb;
+    --ts-color-tertiary-background: #ffffff;
+    --ts-color-raised-background: #ffffff;
+    --ts-color-inverse-background: #141417;
+    --ts-color-chip: #ffffff;
+    --ts-color-tooltip: #141417;
+    --ts-color-label: #141417;
+    --ts-color-secondary-label: #64646d;
+    --ts-color-hint-label: #64646d;
+    --ts-color-tertiary-label: #a0a0a9;
+    --ts-color-quaternary-label: #c9c9d0;
+    --ts-color-inverse-label: #fdfdfe;
+    --ts-color-tooltip-label: #fdfdfe;
+    --ts-color-inverse-hover: #2c2c31;
+    --ts-color-inverse-press: #3d3d42;
+    --ts-color-thumb: #ffffff;
+    --ts-color-separator: rgb(116 116 127 / 0.26);
+    --ts-color-opaque-separator: #e1e1e6;
+    --ts-color-control-border: rgb(116 116 127 / 0.82);
+    --ts-color-tint: var(--ts-color-inverse-background);
+    --ts-color-tint-bright: var(--ts-color-inverse-background);
+    --ts-color-tint-dim: var(--ts-color-inverse-background);
+    --ts-color-on-tint: var(--ts-color-inverse-label);
+    --ts-color-glow: transparent;
+    --ts-color-success: oklch(72.3% 0.219 149.579);
+    --ts-color-warning: oklch(70.5% 0.213 47.604);
+    --ts-color-danger: oklch(63.7% 0.237 25.331);
+    --ts-color-info: oklch(62.3% 0.214 259.815);
+    --ts-color-on-success: #070707;
+    --ts-color-on-warning: #070707;
+    --ts-color-on-danger: #070707;
+    --ts-color-on-info: #070707;
+    --ts-color-scrim: rgb(0 0 0 / 0.18);
+  }
+
+  [data-mode="dark"] {
+    --ts-color-background: #080808;
+    --ts-color-secondary-background: #0d0d0d;
+    --ts-color-tertiary-background: #121212;
+    --ts-color-raised-background: #1c1c1c;
+    --ts-color-inverse-background: #ececec;
+    --ts-color-chip: #393939;
+    --ts-color-tooltip: #2a2a2a;
+    --ts-color-label: #ececec;
+    --ts-color-secondary-label: #b9b9b9;
+    --ts-color-hint-label: #a2a2a2;
+    --ts-color-tertiary-label: #7b7b7b;
+    --ts-color-quaternary-label: #4b4b4b;
+    --ts-color-inverse-label: #080808;
+    --ts-color-tooltip-label: #ececec;
+    --ts-color-inverse-hover: #dddddd;
+    --ts-color-inverse-press: #cccccc;
+    --ts-color-thumb: #ffffff;
+    --ts-color-separator: rgb(139 139 139 / 0.24);
+    --ts-color-opaque-separator: #2d2d2d;
+    --ts-color-control-border: rgb(139 139 139 / 0.74);
+    --ts-color-scrim: rgb(0 0 0 / 0.4);
+  }
+
+  [data-mode="dark"][data-neutral="k1"] {
+    --ts-color-background: #08080a;
+    --ts-color-secondary-background: #0d0d10;
+    --ts-color-tertiary-background: #121215;
+    --ts-color-raised-background: #1c1c1f;
+    --ts-color-inverse-background: #ececf0;
+    --ts-color-chip: #38383c;
+    --ts-color-tooltip: #2a2a2d;
+    --ts-color-label: #ebebf2;
+    --ts-color-secondary-label: #b8b8bf;
+    --ts-color-hint-label: #a1a1a8;
+    --ts-color-tertiary-label: #7a7a80;
+    --ts-color-quaternary-label: #4a4a50;
+    --ts-color-inverse-label: #08080a;
+    --ts-color-tooltip-label: #ebebf2;
+    --ts-color-inverse-hover: #dddde1;
+    --ts-color-inverse-press: #cbccd0;
+    --ts-color-separator: rgb(138 138 145 / 0.24);
+    --ts-color-opaque-separator: #2c2c30;
+    --ts-color-control-border: rgb(138 138 145 / 0.74);
+  }
+
+  [data-mode="dark"][data-neutral="k3"] {
+    --ts-color-background: #06080b;
+    --ts-color-secondary-background: #0b0d11;
+    --ts-color-tertiary-background: #101316;
+    --ts-color-raised-background: #1a1d20;
+    --ts-color-inverse-background: #e8ecf2;
+    --ts-color-chip: #36393d;
+    --ts-color-tooltip: #282b2f;
+    --ts-color-label: #e6edf5;
+    --ts-color-secondary-label: #b4bac2;
+    --ts-color-hint-label: #9da3ab;
+    --ts-color-tertiary-label: #767b83;
+    --ts-color-quaternary-label: #464b52;
+    --ts-color-inverse-label: #06080b;
+    --ts-color-tooltip-label: #e6edf5;
+    --ts-color-inverse-hover: #d9dee3;
+    --ts-color-inverse-press: #c8ccd2;
+    --ts-color-separator: rgb(134 140 148 / 0.24);
+    --ts-color-opaque-separator: #2a2d31;
+    --ts-color-control-border: rgb(134 140 148 / 0.74);
+  }
+
+  [data-mode="dark"][data-neutral="k4"] {
+    --ts-color-background: #040405;
+    --ts-color-secondary-background: #070709;
+    --ts-color-tertiary-background: #0c0c0e;
+    --ts-color-raised-background: #151517;
+    --ts-color-inverse-background: #ececef;
+    --ts-color-chip: #313133;
+    --ts-color-tooltip: #232325;
+    --ts-color-label: #ebecf0;
+    --ts-color-secondary-label: #b9b9bd;
+    --ts-color-hint-label: #a1a2a6;
+    --ts-color-tertiary-label: #7a7a7f;
+    --ts-color-quaternary-label: #4a4a4e;
+    --ts-color-inverse-label: #040405;
+    --ts-color-tooltip-label: #ebecf0;
+    --ts-color-inverse-hover: #dddde0;
+    --ts-color-inverse-press: #cccccf;
+    --ts-color-separator: rgb(139 139 143 / 0.24);
+    --ts-color-opaque-separator: #252527;
+    --ts-color-control-border: rgb(139 139 143 / 0.74);
+  }
+
+  [data-accent="red"] {
+    --ts-color-tint: oklch(63.7% 0.237 25.331);
+    --ts-color-tint-bright: oklch(70.4% 0.191 22.216);
+    --ts-color-tint-dim: oklch(50.5% 0.213 27.518);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(63.7% 0.237 25.331 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="red"] {
+    --ts-color-glow: oklch(63.7% 0.237 25.331 / 0.45);
+  }
+
+  [data-accent="orange"] {
+    --ts-color-tint: oklch(70.5% 0.213 47.604);
+    --ts-color-tint-bright: oklch(75% 0.183 55.934);
+    --ts-color-tint-dim: oklch(55.3% 0.195 38.402);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(70.5% 0.213 47.604 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="orange"] {
+    --ts-color-glow: oklch(70.5% 0.213 47.604 / 0.45);
+  }
+
+  [data-accent="amber"] {
+    --ts-color-tint: oklch(76.9% 0.188 70.08);
+    --ts-color-tint-bright: oklch(82.8% 0.189 84.429);
+    --ts-color-tint-dim: oklch(55.5% 0.163 48.998);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(76.9% 0.188 70.08 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="amber"] {
+    --ts-color-glow: oklch(76.9% 0.188 70.08 / 0.45);
+  }
+
+  [data-accent="yellow"] {
+    --ts-color-tint: oklch(79.5% 0.184 86.047);
+    --ts-color-tint-bright: oklch(85.2% 0.199 91.936);
+    --ts-color-tint-dim: oklch(55.4% 0.135 66.442);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(79.5% 0.184 86.047 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="yellow"] {
+    --ts-color-glow: oklch(79.5% 0.184 86.047 / 0.45);
+  }
+
+  [data-accent="lime"] {
+    --ts-color-tint: oklch(76.8% 0.233 130.85);
+    --ts-color-tint-bright: oklch(84.1% 0.238 128.85);
+    --ts-color-tint-dim: oklch(53.2% 0.157 131.589);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(76.8% 0.233 130.85 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="lime"] {
+    --ts-color-glow: oklch(76.8% 0.233 130.85 / 0.45);
+  }
+
+  [data-accent="green"] {
+    --ts-color-tint: oklch(72.3% 0.219 149.579);
+    --ts-color-tint-bright: oklch(79.2% 0.209 151.711);
+    --ts-color-tint-dim: oklch(52.7% 0.154 150.069);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(72.3% 0.219 149.579 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="green"] {
+    --ts-color-glow: oklch(72.3% 0.219 149.579 / 0.45);
+  }
+
+  [data-accent="emerald"] {
+    --ts-color-tint: oklch(69.6% 0.17 162.48);
+    --ts-color-tint-bright: oklch(76.5% 0.177 163.223);
+    --ts-color-tint-dim: oklch(50.8% 0.118 165.612);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(69.6% 0.17 162.48 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="emerald"] {
+    --ts-color-glow: oklch(69.6% 0.17 162.48 / 0.45);
+  }
+
+  [data-accent="teal"] {
+    --ts-color-tint: oklch(70.4% 0.14 182.503);
+    --ts-color-tint-bright: oklch(77.7% 0.152 181.912);
+    --ts-color-tint-dim: oklch(51.1% 0.096 186.391);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(70.4% 0.14 182.503 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="teal"] {
+    --ts-color-glow: oklch(70.4% 0.14 182.503 / 0.45);
+  }
+
+  [data-accent="cyan"] {
+    --ts-color-tint: oklch(71.5% 0.143 215.221);
+    --ts-color-tint-bright: oklch(78.9% 0.154 211.53);
+    --ts-color-tint-dim: oklch(52% 0.105 223.128);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(71.5% 0.143 215.221 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="cyan"] {
+    --ts-color-glow: oklch(71.5% 0.143 215.221 / 0.45);
+  }
+
+  [data-accent="sky"] {
+    --ts-color-tint: oklch(68.5% 0.169 237.323);
+    --ts-color-tint-bright: oklch(74.6% 0.16 232.661);
+    --ts-color-tint-dim: oklch(50% 0.134 242.749);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(68.5% 0.169 237.323 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="sky"] {
+    --ts-color-glow: oklch(68.5% 0.169 237.323 / 0.45);
+  }
+
+  [data-accent="blue"] {
+    --ts-color-tint: oklch(62.3% 0.214 259.815);
+    --ts-color-tint-bright: oklch(70.7% 0.165 254.624);
+    --ts-color-tint-dim: oklch(48.8% 0.243 264.376);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(62.3% 0.214 259.815 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="blue"] {
+    --ts-color-glow: oklch(62.3% 0.214 259.815 / 0.45);
+  }
+
+  [data-accent="indigo"] {
+    --ts-color-tint: oklch(58.5% 0.233 277.117);
+    --ts-color-tint-bright: oklch(67.3% 0.182 276.935);
+    --ts-color-tint-dim: oklch(45.7% 0.24 277.023);
+    --ts-color-on-tint: #ffffff;
+    --ts-color-glow: oklch(58.5% 0.233 277.117 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="indigo"] {
+    --ts-color-glow: oklch(58.5% 0.233 277.117 / 0.45);
+  }
+
+  [data-accent="violet"] {
+    --ts-color-tint: oklch(60.6% 0.25 292.717);
+    --ts-color-tint-bright: oklch(70.2% 0.183 293.541);
+    --ts-color-tint-dim: oklch(49.1% 0.27 292.581);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(60.6% 0.25 292.717 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="violet"] {
+    --ts-color-glow: oklch(60.6% 0.25 292.717 / 0.45);
+  }
+
+  [data-accent="purple"] {
+    --ts-color-tint: oklch(62.7% 0.265 303.9);
+    --ts-color-tint-bright: oklch(71.4% 0.203 305.504);
+    --ts-color-tint-dim: oklch(49.6% 0.265 301.924);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(62.7% 0.265 303.9 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="purple"] {
+    --ts-color-glow: oklch(62.7% 0.265 303.9 / 0.45);
+  }
+
+  [data-accent="fuchsia"] {
+    --ts-color-tint: oklch(66.7% 0.295 322.15);
+    --ts-color-tint-bright: oklch(74% 0.238 322.16);
+    --ts-color-tint-dim: oklch(51.8% 0.253 323.949);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(66.7% 0.295 322.15 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="fuchsia"] {
+    --ts-color-glow: oklch(66.7% 0.295 322.15 / 0.45);
+  }
+
+  [data-accent="pink"] {
+    --ts-color-tint: oklch(65.6% 0.241 354.308);
+    --ts-color-tint-bright: oklch(71.8% 0.202 349.761);
+    --ts-color-tint-dim: oklch(52.5% 0.223 3.958);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(65.6% 0.241 354.308 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="pink"] {
+    --ts-color-glow: oklch(65.6% 0.241 354.308 / 0.45);
+  }
+
+  [data-accent="rose"] {
+    --ts-color-tint: oklch(64.5% 0.246 16.439);
+    --ts-color-tint-bright: oklch(71.2% 0.194 13.428);
+    --ts-color-tint-dim: oklch(51.4% 0.222 16.935);
+    --ts-color-on-tint: #070707;
+    --ts-color-glow: oklch(64.5% 0.246 16.439 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="rose"] {
+    --ts-color-glow: oklch(64.5% 0.246 16.439 / 0.45);
+  }
+
+  [data-accent="slate"] {
+    --ts-color-tint: oklch(55.4% 0.046 257.417);
+    --ts-color-tint-bright: oklch(70.4% 0.04 256.788);
+    --ts-color-tint-dim: oklch(37.2% 0.044 257.287);
+    --ts-color-on-tint: #ffffff;
+    --ts-color-glow: oklch(55.4% 0.046 257.417 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="slate"] {
+    --ts-color-glow: oklch(55.4% 0.046 257.417 / 0.45);
+  }
+
+  [data-accent="zinc"] {
+    --ts-color-tint: oklch(55.2% 0.016 285.938);
+    --ts-color-tint-bright: oklch(70.5% 0.015 286.067);
+    --ts-color-tint-dim: oklch(37% 0.013 285.805);
+    --ts-color-on-tint: #ffffff;
+    --ts-color-glow: oklch(55.2% 0.016 285.938 / 0.22);
+  }
+
+  [data-mode="dark"][data-accent="zinc"] {
+    --ts-color-glow: oklch(55.2% 0.016 285.938 / 0.45);
+  }
+}

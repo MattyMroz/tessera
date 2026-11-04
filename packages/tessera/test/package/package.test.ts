@@ -8,6 +8,13 @@ import { filesIn, packageDir } from './helpers'
 
 type Entry = { key: string; source: string | undefined; types: string | undefined; file: string }
 
+const RELATIVE_CSS_IMPORT = /@import\s+(["'])(\.[^"']+)\1/g
+const ICON_SET = 'lucide-react'
+const ICON_SPECIFIER = /["']lucide-react[/"']/g
+const ICON_IMPORT = /import\s+([^'";]+?)\s+from\s*(["'])(lucide-react[^"']*)\2/g
+const ICON_MODULE = /^lucide-react\/icons\/[a-z0-9-]+$/
+const DEFAULT_BINDING = /^[A-Za-z_$][\w$]*$/
+
 let sandbox = ''
 let packed = ''
 let contents: typeof manifest
@@ -55,7 +62,7 @@ beforeAll(() => {
   `, archive, resolve(sandbox, 'unpacked')], packageDir)
   renameSync(resolve(sandbox, 'unpacked/package'), packed)
   contents = JSON.parse(readFileSync(resolve(packed, 'package.json'), 'utf8'))
-  for (const name of Object.keys(contents.peerDependencies)) {
+  for (const name of Object.keys({ ...contents.peerDependencies, ...contents.dependencies })) {
     const target = resolve(sandbox, 'node_modules', name)
     mkdirSync(dirname(target), { recursive: true })
     symlinkSync(realpathSync(resolve(packageDir, 'node_modules', name)), target, 'junction')
@@ -70,6 +77,12 @@ it('packs a manifest with CSS-only side effects and no root export', () => {
   expect(contents.name).toBe('@mattymroz/tessera')
   expect(contents.sideEffects).toEqual(['**/*.css'])
   expect(Object.keys(contents.exports)).not.toContain('.')
+})
+
+it('exports the public entry points of the package', () => {
+  expect(Object.keys(contents.exports).sort()).toEqual([
+    './components/*', './eslint', './lib/*', './lib/theme-script', './package.json', './tailwind.css', './tessera.css', './themes/*',
+  ])
 })
 
 it('backs every export with its source file and ships the declared types and JavaScript', () => {
@@ -103,6 +116,35 @@ it('resolves every entry from the tarball and imports its JavaScript in a consum
       assert.ok(Object.keys(module).length > 0, specifier);
     }
   `, packed, JSON.stringify(entries().map(({ key }) => key))], sandbox)
+})
+
+it('ships the file behind every relative CSS import of the packed stylesheets', () => {
+  const imports = filesIn(resolve(packed, 'dist'), /\.css$/).flatMap((file) =>
+    [...readFileSync(file, 'utf8').matchAll(RELATIVE_CSS_IMPORT)].map((match) => ({ file, target: resolve(dirname(file), match[2] ?? '') })),
+  )
+  expect(imports.length).toBeGreaterThan(0)
+  const missing = imports
+    .filter(({ target }) => !existsSync(target))
+    .map(({ file, target }) => `${relative(packed, file)} -> ${relative(packed, target)}`.replaceAll('\\', '/'))
+  expect(missing).toEqual([])
+})
+
+it('depends on the icon set with a version range', () => {
+  expect(contents.dependencies[ICON_SET]).toMatch(/^\^\d+\.\d+\.\d+$/)
+})
+
+it('imports every icon of the built JavaScript by default from its own module of the icon set', () => {
+  const files = filesIn(resolve(packed, 'dist'), /\.js$/).map((file) => ({
+    file: relative(packed, file).replaceAll('\\', '/'),
+    code: readFileSync(file, 'utf8'),
+  }))
+  const imports = files.flatMap(({ file, code }) =>
+    [...code.matchAll(ICON_IMPORT)].map((match) => ({ file, binding: match[1] ?? '', module: match[3] ?? '' })),
+  )
+  expect(imports.length).toBeGreaterThan(0)
+  expect(imports.filter(({ binding, module }) => !DEFAULT_BINDING.test(binding) || !ICON_MODULE.test(module))).toEqual([])
+  const unmatched = files.filter(({ code }) => [...code.matchAll(ICON_SPECIFIER)].length !== [...code.matchAll(ICON_IMPORT)].length)
+  expect(unmatched.map(({ file }) => file)).toEqual([])
 })
 
 it('rejects the package root and direct file paths through the package resolver', () => {

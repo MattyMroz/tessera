@@ -1,0 +1,18 @@
+@layer components {
+  [data-focus] {
+    --_focus-offset: var(--ts-focus-offset);
+    --_focus-under: 0 0 transparent;
+  }
+
+  [data-focus='inset'],
+  [data-surface='joined'] > [data-focus] {
+    --_focus-offset: var(--ts-focus-offset-inset);
+  }
+
+  [data-focus]:focus-visible:not([data-input='pointer']),
+  [data-focus]:has(> [data-slot='input']:focus-visible) {
+    outline: var(--ts-focus-width) solid var(--ts-focus-color);
+    outline-offset: var(--_focus-offset);
+    box-shadow: var(--_glow), var(--_focus-under);
+  }
+}

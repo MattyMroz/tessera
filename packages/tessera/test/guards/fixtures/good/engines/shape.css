@@ -1,0 +1,34 @@
+@property --ts-shape-k {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+@layer theme {
+  :root {
+    --ts-in-shape-radius: 1;
+    --_ts-shape-cap: 0.45;
+    --ts-shape-control: calc(8px * var(--ts-in-shape-radius) * var(--ts-shape-k));
+    --ts-shape-pill: calc(var(--ts-size-height) * var(--_ts-shape-cap));
+    --ts-shape-ring: var(--ts-color-separator);
+  }
+
+  :root[data-corners='square'],
+  :where([data-density="compact"]) > [data-corners],
+  :is([data-surface]) [data-inset]:not([data-surface='card']),
+  [data-level] > :not([data-inset]) {
+    --ts-in-shape-radius: 0;
+  }
+
+  @supports (corner-shape: superellipse(2)) {
+    :root {
+      --_ts-shape-cap: 0.72;
+    }
+  }
+
+  @media (prefers-contrast:   more) {
+    :root {
+      --ts-shape-stroke: 2px;
+    }
+  }
+}

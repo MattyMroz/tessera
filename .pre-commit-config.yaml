@@ -1,17 +1,9 @@
-# Git hooks from the agents preset (presets/hooks/assets/pre-commit-config.yaml): CORE, DATA FILES, SPELLING,
-# MARKDOWN and FRONTEND gates for bun. ESLint replaces the preset's Biome block, because Tessera ships ESLint rules.
-#
-#   git config --local core.autocrlf false
-#   prek install
-#   prek run --all-files
-
 minimum_pre_commit_version: "4.0.0"
 default_install_hook_types: [pre-commit, commit-msg, pre-push]
 default_stages: [pre-commit]
+exclude: ^\.hooks/
 
 repos:
-# ── CORE ─────────────────────────────────────────────────────────────────────
-
   - repo: meta
     hooks:
       - id: check-hooks-apply
@@ -24,7 +16,9 @@ repos:
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        stages: [pre-commit]
       - id: end-of-file-fixer
+        stages: [pre-commit]
       - id: mixed-line-ending
         args: [--fix=lf]
       - id: fix-byte-order-marker
@@ -32,12 +26,16 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=1024]
+        stages: [pre-commit]
       - id: check-case-conflict
       - id: check-illegal-windows-names
       - id: detect-private-key
       - id: forbid-submodules
       - id: destroyed-symlinks
-      # Work happens on branches in .worktrees/; main only receives merges.
+        stages: [pre-commit]
+      - id: check-json
+        exclude: (^|/)\.vscode/|(tsconfig[^/]*|biome)\.json$
+      - id: check-toml
       - id: no-commit-to-branch
 
   - repo: https://github.com/compilerla/conventional-pre-commit
@@ -47,7 +45,6 @@ repos:
         stages: [commit-msg]
         args:
           - --force-scope
-          # One scope per area of the tree; build, test and ci are types, not areas.
           - --scopes=repo,docs,engine,recipe,component,theme,lib,eslint,lab
           - feat
           - fix
@@ -61,73 +58,85 @@ repos:
           - build
           - revert
 
-  - repo: https://github.com/MattyMroz/agents
-    rev: hooks-v1.3.2
-    hooks:
-      # U+FFFD is what a botched encoding leaves behind.
-      - id: no-replacement-char
-      - id: commit-validation
-      # Tests carry no comments or docstrings; it covers TypeScript as well as Python.
-      - id: no-test-prose
-
-# ── DATA FILES ───────────────────────────────────────────────────────────────
-
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - id: check-json
-        exclude: (tsconfig.*\.json|\.vscode/)$
-
-# ── SPELLING ─────────────────────────────────────────────────────────────────
-
   - repo: https://github.com/crate-ci/typos
     rev: v1.49.0
     hooks:
       - id: typos
         args: [--force-exclude]
         types_or: [javascript, jsx, ts, tsx, css, shell]
-
-# ── MARKDOWN ─────────────────────────────────────────────────────────────────
+        stages: [pre-commit]
 
   - repo: https://github.com/hukkin/mdformat
     rev: 0.7.22
     hooks:
       - id: mdformat
         args: [--number]
-        # It puts a blank line between "Validation:" and its list, which the
-        # commit-validation check on PR descriptions rejects.
-        exclude: ^\.github/pull_request_template\.md$
         additional_dependencies:
           - mdformat-gfm==0.4.1
           - mdformat-tables==1.0.0
           - mdformat-frontmatter==2.0.8
 
-# ── FRONTEND (bun) ───────────────────────────────────────────────────────────
-# Slow gates run on push, not on every commit.
-
   - repo: local
     hooks:
+      - id: no-replacement-char
+        name: no U+FFFD replacement character
+        entry: python .hooks/text_guard.py
+        language: python
+        types: [text]
+      - id: no-secret-tokens
+        name: no API tokens in tracked files
+        entry: python .hooks/secret_tokens.py
+        language: python
+        types: [text]
+      - id: no-ai-trailers
+        name: no AI attribution in the commit message
+        entry: python .hooks/ai_trailers.py
+        language: python
+        stages: [commit-msg]
+      - id: no-test-prose
+        name: no comments or prose in tests
+        entry: python .hooks/prose_guard.py
+        language: python
+        files: \.(py|ts|tsx|js|jsx|mjs|cjs|mts|cts)$
       - id: typecheck
         name: typecheck
         entry: bun run typecheck
         language: system
         pass_filenames: false
-        stages: [pre-push]
-      - id: lint
-        name: eslint
-        entry: bun run lint
-        language: system
-        pass_filenames: false
+        always_run: true
         stages: [pre-push]
       - id: build
         name: build
         entry: bun run build
         language: system
         pass_filenames: false
+        always_run: true
         stages: [pre-push]
-      - id: vitest
-        name: vitest
+      - id: lint
+        name: lint
+        entry: bun run lint
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: test
+        name: unit tests
         entry: bunx vitest run
         language: system
         pass_filenames: false
+        always_run: true
         stages: [pre-push]
+      - id: browsers
+        name: playwright browsers
+        entry: bun run --cwd apps/docs playwright install --with-deps chromium webkit
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+      - id: browser-tests
+        name: browser tests
+        entry: bun run --filter @mattymroz/tessera-docs test:browser
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]

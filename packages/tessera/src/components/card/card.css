@@ -1,0 +1,37 @@
+@layer components {
+  [data-component='card'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ts-space-group);
+  }
+
+  [data-component='card'] > [data-slot='header'] {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--ts-space-inset) var(--ts-space-group);
+  }
+
+  [data-component='card'] > [data-slot='header'] > [data-slot='description'] {
+    flex-basis: 100%;
+    order: 1;
+  }
+
+  [data-component='card'] > [data-slot='header'] > [data-slot='action'] {
+    display: flex;
+    gap: var(--ts-space-inset);
+  }
+
+  [data-component='card']:has(> [data-component='field']) {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+    column-gap: 0;
+  }
+
+  [data-component='card']:has(> [data-component='field']) > [data-slot='header'],
+  [data-component='card']:has(> [data-component='field']) > [data-slot='actions'] {
+    grid-column: 1 / -1;
+  }
+}

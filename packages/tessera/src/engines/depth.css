@@ -1,0 +1,77 @@
+@layer theme {
+  :root,
+  [data-mode],
+  [data-neutral] {
+    --ts-depth-sunken-bg: color-mix(in oklab, var(--ts-color-label) var(--_ts-depth-sunken-tone), var(--ts-color-background));
+    --ts-depth-base-bg: color-mix(in oklab, var(--ts-color-label) var(--_ts-depth-base-tone), var(--ts-color-background));
+    --ts-depth-raised-bg: color-mix(in oklab, var(--ts-color-label) var(--_ts-depth-raised-tone), var(--ts-color-raised-background));
+    --_ts-depth-overlay-fill: color-mix(in oklab, var(--ts-color-label) var(--_ts-depth-overlay-tone), var(--ts-color-raised-background));
+    --ts-depth-overlay-bg: var(--_ts-depth-overlay-fill);
+    --ts-depth-modal-bg: var(--_ts-depth-overlay-fill);
+  }
+
+  :root,
+  [data-mode] {
+    --_ts-depth-sunken-tone: 6%;
+    --_ts-depth-base-tone: 0%;
+    --_ts-depth-raised-tone: 0%;
+    --_ts-depth-overlay-tone: 0%;
+    --ts-depth-sunken-shadow: none;
+    --ts-depth-base-shadow: 0 1px 2px rgb(20 20 23 / 0.08), 0 2px 8px rgb(20 20 23 / 0.06);
+    --ts-depth-raised-shadow: 0 1px 2px rgb(20 20 23 / 0.1), 0 2px 6px rgb(20 20 23 / 0.05);
+    --ts-depth-raised-drop: drop-shadow(0 1px 1px rgb(20 20 23 / 0.1)) drop-shadow(0 2px 3px rgb(20 20 23 / 0.05));
+    --ts-depth-overlay-shadow: 0 4px 16px oklch(0% 0 0 / 0.1), 0 1px 3px oklch(0% 0 0 / 0.08);
+    --ts-depth-modal-shadow: 0 16px 48px oklch(0% 0 0 / 0.16), 0 4px 12px oklch(0% 0 0 / 0.08);
+  }
+
+  [data-mode='dark'] {
+    --_ts-depth-sunken-tone: 4%;
+    --_ts-depth-base-tone: 7%;
+    --_ts-depth-raised-tone: 7%;
+    --_ts-depth-overlay-tone: 14%;
+    --ts-depth-base-shadow: none;
+    --ts-depth-raised-shadow: 0 1px 2px oklch(0% 0 0 / 0.5), 0 2px 6px oklch(0% 0 0 / 0.3);
+    --ts-depth-raised-drop: drop-shadow(0 1px 1px oklch(0% 0 0 / 0.5)) drop-shadow(0 2px 3px oklch(0% 0 0 / 0.3));
+    --ts-depth-overlay-shadow: 0 8px 24px oklch(0% 0 0 / 0.45), 0 2px 6px oklch(0% 0 0 / 0.3);
+    --ts-depth-modal-shadow: 0 24px 64px oklch(0% 0 0 / 0.6), 0 4px 16px oklch(0% 0 0 / 0.4);
+  }
+
+  :root,
+  [data-material='solid'] {
+    --ts-depth-backdrop: none;
+  }
+
+  [data-material='solid'] {
+    --ts-depth-overlay-bg: var(--_ts-depth-overlay-fill);
+    --ts-depth-modal-bg: var(--_ts-depth-overlay-fill);
+  }
+
+  [data-material='translucent'] {
+    --ts-depth-backdrop: blur(24px);
+    --ts-depth-overlay-bg: color-mix(in oklab, var(--_ts-depth-overlay-fill) 85%, transparent);
+    --ts-depth-modal-bg: color-mix(in oklab, var(--_ts-depth-overlay-fill) 85%, transparent);
+  }
+
+  :root {
+    --ts-depth-layer-popup: 1040;
+    --ts-depth-layer-toast: 1045;
+    --ts-depth-layer-tooltip: 1050;
+  }
+
+  :root,
+  [data-neon='off'] {
+    --_ts-depth-neon: 0px;
+  }
+
+  [data-neon='mini'],
+  [data-neon='full'] {
+    --_ts-depth-neon: 6px;
+  }
+
+  :root,
+  [data-neon],
+  [data-mode],
+  [data-accent] {
+    --ts-depth-glow: 0 0 var(--_ts-depth-neon) var(--ts-color-glow);
+  }
+}

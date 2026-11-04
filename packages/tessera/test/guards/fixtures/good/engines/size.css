@@ -1,0 +1,36 @@
+@property --ts-i-value {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --ts-i-inline-size {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-block-size {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@layer theme {
+  :root,
+  [data-size] {
+    --ts-size-gap: var(--ts-space-inset);
+    --ts-size-text: var(--ts-type-body-size);
+  }
+
+  [data-size='xs'] {
+    --ts-size-gap: var(--ts-space-inset);
+  }
+
+  @media (pointer: coarse) {
+    :root,
+    [data-size] {
+      --ts-size-height: max(var(--_ts-size-step), 24px);
+    }
+  }
+}

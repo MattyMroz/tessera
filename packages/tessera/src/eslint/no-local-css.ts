@@ -10,10 +10,8 @@ const REMOTE = /^(?:https?:)?\/\//i
 const TESSERA = '@mattymroz/tessera/tessera.css'
 const ENTRY_IMPORTS: ReadonlySet<string> = new Set(['tailwindcss', TESSERA, '@mattymroz/tessera/tailwind.css'])
 const IMPORT = /@import[\t ]*(["'])([^"'\r\n]*)\1[\t ]*;/g
-// A value whose start is an unknown interpolation could be a package or a CDN, so it raises nothing.
 const known = (values: string[]) => values.filter((value) => !value.startsWith(HOLE))
 
-// A CSS entry joins Tailwind and the Tessera bridge in one compilation and holds nothing of its own.
 function entry(css: string): boolean {
   const imports = [...css.matchAll(IMPORT)].map((match) => match[2] ?? '')
   return css.replace(IMPORT, '').trim() === ''

@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme inline {
+  --spacing-inset: var(--ts-space-inset);
+  --spacing-card: 16px;
+  --color-brand: var(--brand-blue);
+  --spacing-density: var(--ts-in-space-density);
+  --spacing-double: calc(var(--ts-space-card) * 2);
+  --spacing-safe: var(--ts-space-card, 1px);
+  gap: var(--ts-space-inset);
+}
+
+@theme {
+  --spacing-group: var(--ts-space-group);
+}
+
+.ts-gap {
+  gap: var(--ts-space-inset);
+}

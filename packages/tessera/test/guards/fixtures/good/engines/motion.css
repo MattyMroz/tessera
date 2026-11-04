@@ -1,0 +1,43 @@
+@keyframes ts-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes ts-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    translate: 100% 0;
+  }
+}
+
+@keyframes ts-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50.5% {
+    opacity: var(--ts-motion-pulse-low);
+    scale: 1;
+  }
+}
+
+@layer theme {
+  :root,
+  [data-motion='on'] {
+    --ts-motion-duration-fast: 100ms;
+    --ts-motion-spin: ts-spin;
+    --ts-motion-loop: 1s;
+    --ts-motion-pulse-low: 0.4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --ts-motion-spin: none;
+    }
+  }
+}

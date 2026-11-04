@@ -1,4 +1,26 @@
-/* The style entry of the package and the only place of the cascade order. The order matches Tailwind's, so importing
-   Tessera before or after Tailwind never reorders layers: engine tokens live in theme, recipes and components in
-   components, and the application's utilities win over both. */
 @layer theme, base, components, utilities;
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/cascadia-code/wght.css';
+@import '../engines/color.css';
+@import '../engines/type.css';
+@import '../engines/motion.css';
+@import '../engines/space.css';
+@import '../engines/size.css';
+@import '../engines/shape.css';
+@import '../engines/depth.css';
+@import '../engines/state.css';
+@import '../engines/focus.css';
+@import '../recipes/control.css';
+@import '../recipes/surface.css';
+@import '../recipes/row.css';
+@import '../recipes/indicator.css';
+@import '../recipes/focus.css';
+@import '../recipes/text.css';
+@import '../components/button/button-group.css';
+@import '../components/card/card.css';
+@import '../components/alert/alert.css';
+@import '../components/field/field.css';
+@import '../components/toggle-group/toggle-group.css';
+@import '../components/checkbox/checkbox.css';
+@import '../components/radio/radio.css';
+@import '../components/switch/switch.css';

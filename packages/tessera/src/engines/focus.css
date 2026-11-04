@@ -1,0 +1,36 @@
+@layer theme {
+  :root {
+    --ts-focus-width: 2px;
+    --ts-focus-offset: 2px;
+    --ts-focus-offset-inset: -2px;
+  }
+
+  :root,
+  [data-mode] {
+    --_ts-focus-label-alpha: 60%;
+  }
+
+  [data-mode='dark'] {
+    --_ts-focus-label-alpha: 70%;
+  }
+
+  :root,
+  [data-accent='contrast'] {
+    --_ts-focus-accent: 0;
+  }
+
+  [data-accent]:not([data-accent='contrast']) {
+    --_ts-focus-accent: 1;
+  }
+
+  :root,
+  [data-mode],
+  [data-accent],
+  [data-neutral] {
+    --ts-focus-color: color-mix(
+      in oklab,
+      var(--ts-color-tint) calc(var(--_ts-focus-accent) * 100%),
+      color-mix(in oklab, var(--ts-color-label) var(--_ts-focus-label-alpha), transparent)
+    );
+  }
+}

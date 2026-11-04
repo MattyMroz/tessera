@@ -1,15 +1,12 @@
 import type { Rule, SourceCode } from 'eslint'
-import { asNode, child, children, HOLE, keyName, texts, unwrap, variableOf } from './static-values'
+import { asNode, child, children, constInitializer, HOLE, keyName, MAX_DEPTH, texts, unwrap, variableOf } from './static-values'
 import type { Node } from './static-values'
 
 const KEYFRAME_KEYS = new Set(['transform', 'translate', 'scale', 'rotate', 'opacity', 'offset', 'easing', 'composite'])
 const MUTATING_METHODS = new Set(['push', 'unshift', 'splice', 'pop', 'shift', 'reverse', 'sort', 'fill', 'copyWithin'])
 const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'])
-// Self-referencing builders would recurse forever; real keyframe builders stay far below this depth.
-const MAX_DEPTH = 6
 
 export type MotionOptions = {
-  /** Allows `requestAnimationFrame` in the files this option is scoped to with ESLint `files`; the reason is required and the file must call it. */
   animationFrameReason?: string
 }
 
@@ -28,14 +25,12 @@ function mutates(identifier: Node): boolean {
   return use?.type === 'CallExpression' && child(use, 'callee') === parent && MUTATING_METHODS.has(keyName(parent) ?? '')
 }
 
-// A const binding counts only while nothing writes into it, so a frame object filled in later stays unknown.
 function binding(identifier: Node, source: SourceCode): Node | undefined {
   const variable = variableOf(identifier, source)
   const definition = variable?.defs[0]
   if (definition?.type === 'FunctionName') return definition.node as unknown as Node
-  if (definition?.type !== 'Variable' || definition.parent.kind !== 'const' || definition.node.id.type !== 'Identifier') return undefined
   if (variable?.references.some((reference) => mutates(reference.identifier as unknown as Node))) return undefined
-  return asNode(definition.node.init)
+  return constInitializer(identifier, source)
 }
 
 function returned(fn: Node): Node[] {
@@ -99,7 +94,6 @@ export const compositorMotion: Rule.RuleModule = {
     const { animationFrameReason }: MotionOptions = context.options[0] ?? {}
     const source = context.sourceCode
     let animationFrames = 0
-    // One report per property name in a call; an unknown frame is reported where it is passed.
     const checkFrames = (sites: Node[]): void => {
       const reported = new Set<string>()
       for (const site of sites) {

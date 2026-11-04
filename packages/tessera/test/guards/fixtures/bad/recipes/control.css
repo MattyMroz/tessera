@@ -1,24 +1,168 @@
-.ts-control {
-  padding: 0 12px;
-  color: var(--brand-blue);
-  --control-height: var(--size-h);
-  border-radius: var(--shape-control);
-  --_c: var(--brand-blue);
-  color: var(--_c);
-  --_h: 28px;
-  height: var(--_h);
-  background: var(--color-surface, red);
-  gap: calc(var(--space-2) * 1.5);
-  transition: width var(--motion-fast);
-  background: var(--color-surface) !important;
-  background: rgb(0 0 0);
-  color: var(--in-accent);
-  hotpink;
+@layer components {
+  [data-recipe='control'] {
+    padding: 0 12px;
+    color: var(--brand-blue);
+    --control-height: var(--ts-size-height);
+    --ts-control-height: var(--ts-size-height);
+    --_ts-control-height: var(--ts-size-height);
+    border-radius: var(--ts-shape-control);
+    --_c: var(--brand-blue);
+    color: var(--_c);
+    --_h: 28px;
+    height: var(--_h);
+    background: var(--ts-color-background, red);
+    gap: calc(var(--ts-space-inset) * 1.5);
+    opacity: 0.5;
+    z-index: 2;
+    width: 50%;
+    transition: width var(--ts-motion-duration-fast);
+    background: var(--ts-color-background) !important;
+    background: rgb(0 0 0);
+    color: var(--ts-in-color-accent);
+    color: var(--_ts-color-tint);
+    color: var(--color-tint);
+    font-family: '';
+    content: 'x';
+    hotpink;
+    transition: top var(--ts-motion-duration-fast) var(--ts-motion-ease-out), left var(--ts-motion-duration-fast) var(--ts-motion-ease-out);
+    transition: all var(--ts-motion-duration-fast);
+    transition: opacity var(--_fast);
+    transition-property: opacity, left;
+    will-change: width;
+    width: opacity;
+    z-index: calc(1 + 1 + 1);
+    width: calc(var(--ts-size-height) * (1 + 1 + 1));
+    opacity: calc(1 / (1 + 1));
+    width: min(100%, 100%);
+  }
+
+  body {
+    background: var(--ts-color-tint);
+  }
+
+  * {
+    opacity: 0;
+  }
+
+  :root {
+    opacity: 0;
+  }
+
+  [data-recipe='control'], button {
+    opacity: 0;
+  }
+
+  [data-recipe='surface'] {
+    opacity: 0;
+  }
+
+  [data-focus] {
+    opacity: 0;
+  }
+
+  [data-recipe-x='control'] {
+    opacity: 0;
+  }
+
+  [data-recipe='control'] {
+    -webkit-transition: top var(--ts-motion-duration-fast) var(--ts-motion-ease-out);
+    -moz-transition: opacity var(--ts-motion-duration-fast);
+    -webkit-box-shadow: var(--ts-depth-glow);
+    --_one: 1;
+    --_copy: var(--_one);
+    --_two: calc(var(--_one) + 1);
+    --_three: calc(var(--_one) + var(--_one) + var(--_one));
+    z-index: calc(var(--_two) + 1);
+    width: calc(var(--ts-size-height) * var(--_three));
+    height: calc(var(--ts-size-height) * var(--_copy));
+    margin: max(var(--_copy), var(--ts-space-inset));
+  }
+
+  [data-recipe='control'] ~ * {
+    opacity: 0;
+  }
+
+  [data-recipe='control'] + [data-recipe='control'] {
+    opacity: 0;
+  }
+
+  :root:has([data-recipe='control']) {
+    opacity: 0;
+  }
+
+  html [data-recipe='control'] {
+    opacity: 0;
+  }
+
+  body > [data-recipe='control'] {
+    opacity: 0;
+  }
+
+  [data-slot='icon'] {
+    opacity: 0;
+  }
+
+  :has(> [data-recipe='indicator']) {
+    opacity: 0;
+  }
+
+  [data-recipe='control'] {
+    & ~ body {
+      opacity: 0;
+    }
+
+    & + & {
+      opacity: 0;
+    }
+
+    & > div {
+      opacity: 0;
+    }
+
+    & [data-recipe='surface'] {
+      opacity: 0;
+    }
+
+    :has(> &) {
+      opacity: 0;
+    }
+
+    & > [data-slot='icon'] {
+      & > svg > path {
+        opacity: 0;
+      }
+    }
+  }
+
+  @media (hover: none) {
+  }
+
+  @media (min-width: 640px) {
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+  }
+
+  @supports (overflow-clip-margin: 1px) {
+  }
+
+  @supports (overflow-clip-margin: border-box) {
+    [data-recipe='control'][aria-busy='true'] {
+      opacity: 0;
+    }
+  }
+
+  @layer theme {
+  }
+}
+
+[data-recipe='control'] {
+  border-style: solid;
 }
 
 @media (hover: hover) {
-  .ts-control {
-    background: var(--color-surface-hover);
+  [data-recipe='control']:hover {
+    background: var(--ts-color-background);
   }
 }
 

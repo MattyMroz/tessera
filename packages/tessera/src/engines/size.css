@@ -1,0 +1,91 @@
+@property --ts-i-value {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --ts-i-inline-size {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-block-size {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@layer theme {
+  :root,
+  [data-size='lg'] {
+    --_ts-size-step: 28px;
+    --ts-size-text: var(--ts-type-body-size);
+    --ts-size-leading: var(--ts-type-body-leading);
+    --ts-size-icon: 16px;
+    --ts-size-icon-stroke: 2.25;
+  }
+
+  [data-size='xs'] {
+    --_ts-size-step: 16px;
+    --ts-size-text: var(--ts-type-mini-size);
+    --ts-size-leading: var(--ts-type-mini-leading);
+    --ts-size-icon: 10px;
+    --ts-size-icon-stroke: 2.4;
+  }
+
+  [data-size='sm'] {
+    --_ts-size-step: 20px;
+    --ts-size-text: var(--ts-type-small-size);
+    --ts-size-leading: var(--ts-type-small-leading);
+    --ts-size-icon: 12px;
+    --ts-size-icon-stroke: 2.25;
+  }
+
+  [data-size='md'] {
+    --_ts-size-step: 24px;
+    --ts-size-text: var(--ts-type-detail-size);
+    --ts-size-leading: var(--ts-type-detail-leading);
+    --ts-size-icon: 14px;
+    --ts-size-icon-stroke: 2.25;
+  }
+
+  [data-size='xl'] {
+    --_ts-size-step: 36px;
+    --ts-size-text: var(--ts-type-title-size);
+    --ts-size-leading: var(--ts-type-title-leading);
+    --ts-size-icon: 18px;
+    --ts-size-icon-stroke: 2;
+  }
+
+  :root,
+  [data-size] {
+    --ts-size-step: var(--_ts-size-step);
+    --ts-size-height: var(--ts-size-step);
+    --ts-size-gap: round(var(--ts-size-step) / 4 - 2px, 0.5px);
+    --ts-size-wrap: round(var(--ts-size-height) / 8, 0.5px);
+    --ts-size-label-min: calc(var(--ts-size-height) * 2.5);
+    --ts-size-box: var(--ts-size-icon);
+    --ts-size-mark-stroke: 3;
+    --ts-size-label-gap: calc(var(--ts-size-box) / 2);
+    --ts-size-dot-scale: 0.44;
+    --ts-size-track-block: round(var(--ts-size-height) * 6 / 7, 1px);
+    --ts-size-thumb-inset: round(var(--ts-size-track-block) / 8, 1px);
+    --ts-size-thumb: calc(var(--ts-size-track-block) - var(--ts-size-thumb-inset) - var(--ts-size-thumb-inset));
+    --ts-size-track-inline: calc(var(--ts-size-track-block) + var(--ts-size-thumb));
+    --ts-size-thumb-stretch: round(var(--ts-size-thumb) / 4, 1px);
+    --ts-size-rail: max(2px, round(var(--ts-size-height) / 7, 1px));
+    --ts-size-cap-pad: calc((var(--ts-size-leading) - 1cap) / 2);
+    --ts-size-cap-inset: calc((var(--ts-size-step) - 1cap) / 2);
+    --ts-size-icon-cap-pad: calc((var(--ts-size-icon) - 1cap) / 2);
+  }
+
+  @media (pointer: coarse) {
+    :root,
+    [data-size] {
+      --ts-size-height: max(var(--ts-size-step), 24px);
+      --ts-size-box: max(var(--ts-size-icon), 24px);
+      --ts-size-track-block: max(round(var(--ts-size-height) * 6 / 7, 1px), 24px);
+    }
+  }
+}
