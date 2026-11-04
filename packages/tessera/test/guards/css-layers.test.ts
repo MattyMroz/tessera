@@ -160,8 +160,8 @@ it('rejects literals other than 0, 1, -1 and 100%, non-compositor motion, vendor
     ["[data-recipe='control'] > [data-slot='busy'] > svg", 'unused selector exception'],
     ["[data-recipe='control'] > [data-slot='icon'][data-dot] > svg", 'unused selector exception'],
     ["[data-recipe='control'] > [data-slot='mark'] > svg", 'unused selector exception'],
-    ["[data-recipe='control'][aria-checked='true'] > [data-slot='mark'] > svg:first-child", 'unused selector exception'],
-    ["[data-recipe='control'][aria-checked='mixed'] > [data-slot='mark'] > svg:last-child", 'unused selector exception'],
+    ["[data-recipe='control'][aria-haspopup='listbox'] > [data-slot='icon']:last-child > svg", 'unused selector exception'],
+    ["[data-recipe='control'][aria-haspopup='listbox'][data-popup-open] > [data-slot='icon']:last-child > svg", 'unused selector exception'],
     ["[data-slot='choice']:has(> [data-recipe='control'])", 'unused selector exception'],
     [
       "[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field']):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before",
@@ -171,7 +171,6 @@ it('rejects literals other than 0, 1, -1 and 100%, non-compositor motion, vendor
       "[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before",
       'unused value exception',
     ],
-    ["[data-recipe='control'] > [data-slot='mark'] > svg", 'unused value exception'],
     ["[data-slot='choice']:has(> [data-recipe='control'])", 'unused value exception'],
     ['(overflow-clip-margin: border-box)', 'unused supports condition'],
   ])
@@ -210,6 +209,7 @@ it('accepts a literal --_level only under the listed aria-level rules, keeps eve
     ['--_level: 2', 'literal value'],
     ['@supports (overflow-clip-margin: border-box)', 'at-rule not allowed'],
     ["[data-recipe='row'] [data-slot='icon'] > svg", 'unused selector exception'],
+    ["[data-recipe='row'] > [data-slot='mark'] > svg", 'unused selector exception'],
     ["[data-recipe='row'][aria-level='7']", 'unused value exception'],
   ])
 })

@@ -133,6 +133,13 @@ Przewijany obszar może mieć własną warstwę kompozytora (przewijanie składa
 
 Dowód, że test dalej łapie kaskadę: przy tymczasowo wyłączonym przycięciu pętli (`overflow: visible` zamiast `overflow: clip` w bloku `@supports` przepisu `control`) oba testy oblewają, bo z pętlą pojawia się 17 (DPR 1) i 12 (DPR 1,5) dodatkowych warstw `Overlap` (przyciski, tory segmentów, pole), których bez pętli nie ma. Po przywróceniu przycięcia oba przechodzą.
 
+## Wyjątek: popup nad przewijanym panelem (2026-11-04)
+
+- Od układu aplikacji laboratorium (kolumny stoją, przewija się `#lab-main`, decyzja właściciela 2026-11-04) test pętli pod otwartym menu przy DPR 1 dostawał jedną warstwę więcej: popup menu z portalu (`div[role="presentation"]`, powód `Overlap`). Ikona leżała poza ekranem (y = −676 px w panelu), menu na dole okna: geometrycznie się nie nakładają.
+- Mechanizm: przy DPR 1 Chromium nie kompozytuje przewijanego panelu (zachowuje wygładzanie LCD tekstu), dopóki w nim nie ma warstwy; pętla dokłada warstwę, panel dostaje warstwę przewijania, a popup malowany po panelu i leżący nad nim dostaje `Overlap`. Przy DPR 1,5 panel ma warstwę zawsze, więc test przechodził.
+- Odrzucone: wymuszenie warstwy panelu na stałe (`will-change: scroll-position`) zabiera wygładzanie LCD całemu tekstowi panelu przy DPR 1, a to gorsze niż jedna warstwa popupu, która istnieje tylko przy otwartym popupie nad pętlą.
+- Kontrakt testu (`lab.spec.ts`, „adds exactly one compositor layer of its own…”): pętla dokłada swoją warstwę, a pod otwartym menu dodatkowo najwyżej jedną warstwę samego popupu z powodem `Overlap`; każda inna różnica oblewa. Prowadzący, 2026-11-04.
+
 ## Nagrania (checkpoint 3)
 
 MP4 H.264 1280 × 800 w scratchpadzie sesji, katalog `C:\Users\MATTYM~1\AppData\Local\Temp\claude\c--Users-MattyMroz-Desktop-PROJECTS-MangaShift\bf52428f-8c8b-4947-ae94-9593f37d8ba6\scratchpad\cp3\`: `toggle-spring-{before,after}.mp4`, `toggle-elastic-{before,after}.mp4` (kliknięcia wzdłuż „Group 3” i „Group 8”), `menu-{before,after}.mp4` (hover w dół i w górę przez separator), `loops-after.mp4` (`/foundation`: obrót, pulsowanie, przesuw). Skrypt nagrań: `scratchpad\scripts\tmp-video.spec.ts`.

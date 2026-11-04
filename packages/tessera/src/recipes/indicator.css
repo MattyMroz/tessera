@@ -7,7 +7,38 @@
     background: var(--_base);
   }
 
-  [data-recipe='indicator'] {
+  [data-recipe='indicator']:is([data-variant='check'], [data-variant='dot']) {
+    pointer-events: none;
+  }
+
+  [data-recipe='indicator'][data-variant='check'] > svg {
+    grid-area: 1 / 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw);
+  }
+
+  :is([aria-checked='true'], [aria-selected='true']) > [data-recipe='indicator'][data-variant='check'] > svg:first-child,
+  [aria-checked='mixed'] > [data-recipe='indicator'][data-variant='check'] > svg:last-child {
+    stroke-dashoffset: 0;
+    transition-duration: var(--ts-motion-duration-draw-in);
+  }
+
+  [data-recipe='indicator'][data-variant='dot'] {
+    border-radius: 100%;
+    background: currentColor;
+    scale: 0;
+  }
+
+  :is([aria-checked='true'], [aria-selected='true']) > [data-recipe='indicator'][data-variant='dot'] {
+    scale: var(--ts-size-dot-scale);
+    transition: scale var(--ts-motion-duration-choice) var(--ts-motion-ease-elastic);
+  }
+
+  [data-recipe='indicator']:where(:not([data-variant='check'], [data-variant='dot'])) {
     --_fill: var(--ts-state-ink);
     --_fill-opacity: var(--ts-state-indicator);
     position: absolute;
@@ -26,6 +57,26 @@
       transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
     }
 
+    :has(> [data-recipe='row'][data-highlighted][data-tone='accent'], > * > [data-recipe='row'][data-highlighted][data-tone='accent']) > &[data-variant='hover'] {
+      --_fill: var(--ts-color-tint);
+    }
+
+    :has(> [data-recipe='row'][data-highlighted][data-tone='danger'], > * > [data-recipe='row'][data-highlighted][data-tone='danger']) > &[data-variant='hover'] {
+      --_fill: var(--ts-color-danger);
+    }
+
+    :has(> [data-recipe='row'][data-highlighted][data-tone='success'], > * > [data-recipe='row'][data-highlighted][data-tone='success']) > &[data-variant='hover'] {
+      --_fill: var(--ts-color-success);
+    }
+
+    :has(> [data-recipe='row'][data-highlighted][data-tone='warning'], > * > [data-recipe='row'][data-highlighted][data-tone='warning']) > &[data-variant='hover'] {
+      --_fill: var(--ts-color-warning);
+    }
+
+    :has(> [data-recipe='row'][data-highlighted][data-tone='info'], > * > [data-recipe='row'][data-highlighted][data-tone='info']) > &[data-variant='hover'] {
+      --_fill: var(--ts-color-info);
+    }
+
     &[data-variant='active'] {
       --_fill: var(--ts-state-selected-fill-color);
       --_fill-opacity: var(--ts-state-selected-fill);
@@ -41,7 +92,7 @@
     }
 
     &[data-variant='thumb'] {
-      --_fill: var(--ts-depth-raised-bg);
+      --_fill: var(--ts-color-thumb);
       --_fill-opacity: 1;
       scale: var(--ts-motion-press-rest);
 
@@ -86,10 +137,6 @@
         right: var(--ts-shape-thumb);
         transform-origin: right;
       }
-    }
-
-    &[data-variant='thumb'][data-on] {
-      --_fill: var(--ts-color-on-tint);
     }
 
     [data-pressing] > &[data-variant='thumb']:not([data-on]) > [data-slot='squash']::after {

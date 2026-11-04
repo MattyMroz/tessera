@@ -48,6 +48,7 @@
     --ts-motion-press-scale: 0.97;
     --ts-motion-press-rest: 0.99999;
     --ts-motion-press-hold: var(--ts-motion-duration-press-in);
+    --ts-motion-flip: 0.5turn;
   }
 
   [data-motion='off'] {

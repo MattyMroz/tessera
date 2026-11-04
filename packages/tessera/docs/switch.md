@@ -21,7 +21,7 @@ A switch needs a name: `children`, a `FieldLabel` of its `Field` or `aria-label`
 ## Behaviour
 
 - Geometry: track = height × 6/7 (at least 24 px on touch), inset = round(track / 8), thumb = track − 2 × inset, width = track + thumb; every value on whole pixels.
-- Look: off is a 12 % base of the ink without a border, on is filled with the tint and its glow; hover and press step the plate on the `state` ladder and the hover fades out in the hover-out time; the thumb is raised (white with a shadow) when off and the color on the tint when on.
+- Look: off is a 12 % base of the ink without a border, on is filled with the tint and its glow; hover and press step the plate on the `state` ladder and the hover fades out in the hover-out time; the thumb is white with a shadow (`--ts-color-thumb`) in both states and both modes, as in iOS.
 - Label: half the box from the track (`--ts-size-label-gap`), centred on it; a click on the label presses and toggles the track.
 - Click: the thumb stretches to a capsule 1.25 × its width from the side it stands on, on the elastic curve of the indicator (`--ts-motion-ease-elastic`, `--ts-motion-duration-choice`) with compositor properties only: two round ends (`::before`, `::after` of the squash) and two bars (`data-slot="bar"`), one end translated by `--ts-size-thumb-stretch` and the bar between the ends scaled on X; the track does not scale.
 - Toggle: the thumb rides to the other place on the indicator engine, 220 ms with an overshoot of 0.1 × the height, the same both ways.

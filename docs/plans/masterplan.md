@@ -102,6 +102,7 @@ Otwarte pozycje z audytu `reviews/e2-foundation-gaps-2.md`; plan E3 rozstrzyga k
 - M-14: slot `icon` dla `start`/`end` pola razem z G17 (Select, Combobox).
 - M-15: wariant `screen-title` w `text` z pierwszym ekranem (Ustawienia).
 - M-16: Button `busy` z własną ikoną (wskaźnik zamiast ikony) i decyzja, czy zajęty przycisk przyjmuje kliknięcia.
+- M-17 (decyzja właściciela 04.11): filar koloru od nowa, cała paleta (akcenty, tony, znak na akcencie, np. wyblakły żółty) i cały ciemny tryb (np. cień kciuka Switcha); wzorem kolory MangaShift. Dopiero po bieżących zadaniach. Switch, Checkbox i Radio nie są przyjęte, dopóki kolor nie jest zrobiony. Decyzja w M-17: znak na akcencie (kropka Radio, ptaszek Checkboxa) biały zawsze (v2, MangaShift) czy pod kontrast tła (shadcn `primary-foreground`, dziś czarny także na niebieskim i zielonym); zestawienie A/B pokazane właścicielowi 04.11; właściciel: „białe lepiej wygląda” (wstępny wybór B, rozstrzygany w filarze koloru), a przy akcencie bez koloru (szary, kontrast) znak ciemny tam, gdzie akcent jest jasny, bez dyskusji; to reguła v2. To samo dla jasnego kolorowego akcentu (np. żółty): do zdefiniowania w M-17, co znaczy „jasny” (próg kontrastu bieli na akcencie, liczony, nie ręczna flaga `foreground` w `scripts/palette.ts`).
 
 ## Aktualny etap
 

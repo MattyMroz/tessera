@@ -7,6 +7,7 @@
 @import "../engines/type.css";
 @import "../recipes/control.css";
 @import "../recipes/focus.css";
+@import "../recipes/indicator.css";
 @import "../recipes/row.css";
 @import "../recipes/surface.css";
 @import '../components/button.css';

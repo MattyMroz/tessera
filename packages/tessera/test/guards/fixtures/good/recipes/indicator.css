@@ -1,0 +1,25 @@
+@layer components {
+  :has(> [data-recipe='indicator']) {
+    position: relative;
+  }
+
+  [data-recipe='indicator'] ~ [data-recipe='control']::before {
+    background: var(--_base);
+  }
+
+  [data-recipe='indicator'][data-variant='check'] > svg {
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw);
+  }
+
+  :is([aria-checked='true'], [aria-selected='true']) > [data-recipe='indicator'][data-variant='check'] > svg:first-child,
+  [aria-checked='mixed'] > [data-recipe='indicator'][data-variant='check'] > svg:last-child {
+    stroke-dashoffset: 0;
+  }
+
+  @media (forced-colors: active) {
+    [data-recipe='indicator'] ~ [data-recipe='control'][aria-checked='true']:not(:disabled, [data-disabled]) {
+      color: HighlightText;
+    }
+  }
+}

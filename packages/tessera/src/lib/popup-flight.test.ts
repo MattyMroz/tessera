@@ -126,8 +126,8 @@ function positioner(left?: number): FakePositioner {
 
 function setup(motion: Motion = MOTION) {
   const clock = { time: 0 }
-  const page = { scroll: { x: 0, y: 0 } }
-  const flight = createPopupFlight({ grace: GRACE, motion: () => motion, now: () => clock.time, scroll: () => page.scroll })
+  const page = { scroll: { x: 0, y: 0 }, panes: 0 }
+  const flight = createPopupFlight({ grace: GRACE, motion: () => motion, now: () => clock.time, scroll: () => page.scroll, panes: () => page.panes })
   const open = (left: number, trigger?: string) => {
     const anchor = positioner(left)
     const popup = popupAt(left)
@@ -237,6 +237,23 @@ describe('createPopupFlight', () => {
     close(file.anchor, file.popup)
     page.scroll = { x: 50, y: 0 }
     expect(open(50).popup.animate).not.toHaveBeenCalled()
+  })
+
+  it('opens the next popup on its place when a pane scrolled after the previous one closed', () => {
+    const { page, open, close } = setup()
+    const file = open(100)
+    close(file.anchor, file.popup)
+    page.panes += 1
+    expect(open(50).popup.animate).not.toHaveBeenCalled()
+  })
+
+  it('moves a shown popup to another trigger without a flight when a pane scrolled meanwhile', () => {
+    const { page, open, move } = setup()
+    const { anchor, popup } = open(100, 'undo')
+    page.panes += 1
+    popup.moveTo(50)
+    move(anchor, popup, 150, 'redo')
+    expect(popup.animate).not.toHaveBeenCalled()
   })
 
   it('flies a popup that moves to another trigger from where it is seen after the page scrolled', () => {

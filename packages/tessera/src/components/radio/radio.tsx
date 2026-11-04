@@ -7,6 +7,7 @@ import { composeRefs } from '../../lib/compose-refs'
 import { watchPresses } from '../../lib/press'
 import type { Choices } from '../../lib/theme'
 import type { Unstyled } from '../../lib/unstyled'
+import { Mark } from '../checkbox/checkbox'
 
 export type RadioGroupProps = Unstyled<BaseRadioGroup.Props<string>> & {
   size?: Choices['size']
@@ -24,7 +25,7 @@ export function Radio({ ref, children, ...props }: RadioProps) {
   return (
     <label data-component="radio" data-slot="choice">
       <BaseRadio.Root {...props} ref={composeRefs(ref, watchPresses)} data-recipe="control" data-slot="box" data-focus="outer">
-        <span data-slot="dot" aria-hidden="true" />
+        <Mark kind="dot" />
       </BaseRadio.Root>
       <span data-recipe="text" data-variant="label">
         {children}

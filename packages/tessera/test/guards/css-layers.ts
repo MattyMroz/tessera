@@ -128,8 +128,12 @@ const ICON_GLYPH = "[data-recipe='control'] > [data-slot='icon'] > svg"
 const BUSY_GLYPH = "[data-recipe='control'] > [data-slot='busy'] > svg"
 const DOT_GLYPH = "[data-recipe='control'] > [data-slot='icon'][data-dot] > svg"
 const MARK_GLYPH = "[data-recipe='control'] > [data-slot='mark'] > svg"
-const MARK_CHECKED = "[data-recipe='control'][aria-checked='true'] > [data-slot='mark'] > svg:first-child"
-const MARK_MIXED = "[data-recipe='control'][aria-checked='mixed'] > [data-slot='mark'] > svg:last-child"
+const LISTBOX_CHEVRON = "[data-recipe='control'][aria-haspopup='listbox'] > [data-slot='icon']:last-child > svg"
+const LISTBOX_CHEVRON_OPEN = "[data-recipe='control'][aria-haspopup='listbox'][data-popup-open] > [data-slot='icon']:last-child > svg"
+const MARK_DRAWING = "[data-recipe='indicator'][data-variant='check'] > svg"
+const MARK_CHECKED = ":is([aria-checked='true'], [aria-selected='true']) > [data-recipe='indicator'][data-variant='check'] > svg:first-child"
+const MARK_MIXED = "[aria-checked='mixed'] > [data-recipe='indicator'][data-variant='check'] > svg:last-child"
+const ROW_MARK_GLYPH = "[data-recipe='row'] > [data-slot='mark'] > svg"
 const CHOICE_HOST = "[data-slot='choice']:has(> [data-recipe='control'])"
 const ROW_ICON_GLYPH = "[data-recipe='row'] [data-slot='icon'] > svg"
 const SURFACE_ICON_GLYPH = "[data-recipe='surface'] > [data-slot='icon'] > svg"
@@ -141,9 +145,9 @@ const POSITIONER_LAYERS = [
   "[data-side]:has(> [data-recipe='surface'][data-variant='tooltip'])",
 ]
 const RECIPE_SELECTOR_EXCEPTIONS: Readonly<Record<string, readonly string[]>> = {
-  control: [ICON_GLYPH, BUSY_GLYPH, DOT_GLYPH, MARK_GLYPH, MARK_CHECKED, MARK_MIXED, CHOICE_HOST],
-  indicator: [INDICATOR_HOST, INDICATOR_REPLACES_CONTROL_INK, INDICATOR_CHOICE_LABEL],
-  row: [ROW_ICON_GLYPH],
+  control: [ICON_GLYPH, BUSY_GLYPH, DOT_GLYPH, MARK_GLYPH, LISTBOX_CHEVRON, LISTBOX_CHEVRON_OPEN, CHOICE_HOST],
+  indicator: [INDICATOR_HOST, INDICATOR_REPLACES_CONTROL_INK, INDICATOR_CHOICE_LABEL, MARK_DRAWING, MARK_CHECKED, MARK_MIXED],
+  row: [ROW_ICON_GLYPH, ROW_MARK_GLYPH],
   surface: [...POSITIONER_LAYERS, SURFACE_ICON_GLYPH],
 }
 const ARIA_LEVEL_INDENT: Readonly<Record<string, string>> = {
@@ -172,11 +176,11 @@ const HOVER_EXIT: Readonly<Record<string, string>> = {
 }
 
 const MARK_DRAW: Readonly<Record<string, string>> = {
-  [MARK_GLYPH]: 'transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw)',
+  [MARK_DRAWING]: 'transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw)',
 }
 const SOURCE_LISTS: Lists = {
   selectors: RECIPE_SELECTOR_EXCEPTIONS,
-  values: { row: ARIA_LEVEL_INDENT, control: { ...HOVER_EXIT, ...MARK_DRAW, [CHOICE_HOST]: 'contain: layout' } },
+  values: { row: ARIA_LEVEL_INDENT, control: { ...HOVER_EXIT, [CHOICE_HOST]: 'contain: layout' }, indicator: MARK_DRAW },
   vendor: VENDOR_VARIABLES,
 }
 

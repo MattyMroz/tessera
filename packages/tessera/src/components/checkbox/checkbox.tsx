@@ -21,17 +21,29 @@ export function CheckboxGroup({ size, ...props }: CheckboxGroupProps) {
   return <BaseCheckboxGroup {...props} data-component="checkbox" data-size={size} />
 }
 
+export type MarkKind = 'check' | 'dot'
+
+export function Mark({ kind, mixed }: { kind: MarkKind; mixed?: boolean }) {
+  return (
+    <span data-slot="mark" data-recipe="indicator" data-variant={kind} aria-hidden="true">
+      {kind === 'check' && (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} />
+        </svg>
+      )}
+      {mixed === true && (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 12h12" pathLength={1} />
+        </svg>
+      )}
+    </span>
+  )
+}
+
 export function Checkbox({ size, ref, children, ...props }: CheckboxProps) {
   const box = (
     <BaseCheckbox.Root {...props} ref={composeRefs(ref, watchPresses)} data-recipe="control" data-slot="box" data-size={size} data-focus="outer">
-      <span data-slot="mark" aria-hidden="true">
-        <svg viewBox="-4 -4 32 32" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} />
-        </svg>
-        <svg viewBox="-4 -4 32 32" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6 12h12" pathLength={1} />
-        </svg>
-      </span>
+      <Mark kind="check" mixed />
     </BaseCheckbox.Root>
   )
   if (children == null)

@@ -18,7 +18,7 @@ Radio takes no `className`, `style` or `render`.
 
 ## Rendered attributes
 
-`<div role="radiogroup" data-component="radio">` with one `<label data-component="radio" data-slot="choice">` per option: `<span role="radio" aria-checked data-recipe="control" data-slot="box" data-focus="outer">` with `<span data-slot="dot">` and `<span data-recipe="text" data-variant="label">`.
+`<div role="radiogroup" data-component="radio">` with one `<label data-component="radio" data-slot="choice">` per option: `<span role="radio" aria-checked data-recipe="control" data-slot="box" data-focus="outer">` with the shared mark part `<span data-slot="mark" data-recipe="indicator" data-variant="dot">` (`docs/decisions/e3-marks.md`) and `<span data-recipe="text" data-variant="label">`.
 
 ## Behaviour
 

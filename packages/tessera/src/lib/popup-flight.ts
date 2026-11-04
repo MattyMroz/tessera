@@ -2,9 +2,9 @@
 
 import { useLayoutEffect, useRef, useState, type RefCallback } from 'react'
 import { SETTLED, type Point, type Rect } from './flight'
-import type { Motion } from './motion'
+import { readMotion, type Motion } from './motion'
 
-export const SUBMENU_FLIGHT_GRACE = 150
+const FLIGHT_GRACE = 150
 
 export type FlightOrigin = { readonly rect: Rect; readonly side: string | undefined }
 
@@ -27,6 +27,7 @@ export type PopupFlightOptions<P extends FlightPopup> = {
   readonly motion: (popup: P) => Motion
   readonly now?: () => number
   readonly scroll?: () => Point
+  readonly panes?: () => number
 }
 
 export type PopupFlight<P extends FlightPopup> = {
@@ -45,6 +46,7 @@ type Shown = {
   readonly transform: string
   readonly target: FlightOrigin
   readonly scroll: Point
+  readonly panes: number
   readonly trigger: string | undefined
   readonly closedAt: number | null
 }
@@ -91,6 +93,24 @@ function pageScroll(): Point {
   return { x: window.scrollX, y: window.scrollY }
 }
 
+let paneScrolls = 0
+let countingPanes = false
+
+function paneScrollCount(): number {
+  if (!countingPanes) {
+    countingPanes = true
+    const view = globalThis.document
+    view.addEventListener(
+      'scroll',
+      (event) => {
+        if (event.target !== view) paneScrolls += 1
+      },
+      { capture: true, passive: true },
+    )
+  }
+  return paneScrolls
+}
+
 function seenAt(shown: Shown, scroll: Point): FlightOrigin {
   const { rect, side } = shown.target
   const left = rect.left + shown.scroll.x - scroll.x
@@ -106,7 +126,7 @@ function drifted(previous: FlightOrigin, visible: FlightOrigin | null, target: F
 }
 
 export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOptions<P>): PopupFlight<P> {
-  const { grace, motion, now = () => performance.now(), scroll = pageScroll } = options
+  const { grace, motion, now = () => performance.now(), scroll = pageScroll, panes = paneScrollCount } = options
   const running = new WeakMap<P, FlightAnimation>()
   let last: Shown | null = null
 
@@ -120,8 +140,8 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
     if (last?.positioner === positioner && last.closedAt === null) last = { ...last, closedAt: now() }
   }
 
-  const recent = (positioner: FlightPositioner, at: Point): FlightOrigin | null => {
-    if (!last || last.positioner === positioner) return null
+  const recent = (positioner: FlightPositioner, at: Point, scrolled: number): FlightOrigin | null => {
+    if (!last || last.positioner === positioner || last.panes !== scrolled) return null
     return last.closedAt === null || now() - last.closedAt <= grace ? seenAt(last, at) : null
   }
 
@@ -155,8 +175,10 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
     const target = flightOrigin(popup)
     if (!target) return
     const at = scroll()
-    if (!stays) fly(popup, same ? drifted(seenAt(same, at), visible, target) : recent(positioner, at), target)
-    last = { positioner, transform, target, scroll: at, trigger, closedAt: null }
+    const scrolled = panes()
+    const known = same !== null && same.panes === scrolled
+    if (!stays) fly(popup, known ? drifted(seenAt(same, at), visible, target) : recent(positioner, at, scrolled), target)
+    last = { positioner, transform, target, scroll: at, panes: scrolled, trigger, closedAt: null }
   }
 
   return {
@@ -172,6 +194,10 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
       }
     },
   }
+}
+
+export function createMenuFlight(): PopupFlight<HTMLElement> {
+  return createPopupFlight<HTMLElement>({ grace: FLIGHT_GRACE, motion: readMotion })
 }
 
 export function usePopupFlight(flight: PopupFlight<HTMLElement>, trigger?: string): PopupFlightParts {

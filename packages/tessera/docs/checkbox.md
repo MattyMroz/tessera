@@ -21,7 +21,7 @@ Checkbox takes no `className`, `style` or `render`.
 
 ## Rendered attributes
 
-`<span role="checkbox" aria-checked data-recipe="control" data-slot="box" data-focus="outer">` with `<span data-slot="mark">` holding the check and the minus (`<svg>` with one path, `pathLength` 1), and the hidden `<input>` of Base UI. With `children` the box sits in `<label data-component="checkbox" data-slot="choice">` beside `<span data-recipe="text" data-variant="label">`; without `children` it sits in `<span data-component="checkbox" data-slot="choice">`. The wrapper has `contain: layout`, so the hidden input of Base UI (`position: fixed` without `name`) makes no compositor layer. A group is `<div data-component="checkbox" role="group">`.
+`<span role="checkbox" aria-checked data-recipe="control" data-slot="box" data-focus="outer">` with the shared mark part `<span data-slot="mark" data-recipe="indicator" data-variant="check">` holding the check and the minus (`<svg>` with one path, `pathLength` 1; drawing in the `indicator` recipe, `docs/decisions/e3-marks.md`), and the hidden `<input>` of Base UI. With `children` the box sits in `<label data-component="checkbox" data-slot="choice">` beside `<span data-recipe="text" data-variant="label">`; without `children` it sits in `<span data-component="checkbox" data-slot="choice">`. The wrapper has `contain: layout`, so the hidden input of Base UI (`position: fixed` without `name`) makes no compositor layer. A group is `<div data-component="checkbox" role="group">`.
 
 ## Behaviour
 

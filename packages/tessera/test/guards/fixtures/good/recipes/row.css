@@ -10,6 +10,10 @@
       }
     }
 
+    & > [data-slot='mark'] > svg {
+      stroke-width: var(--ts-size-icon-stroke);
+    }
+
     &[aria-level] {
       --_level: 7;
       padding-inline-start: calc(var(--ts-shape-control-side) + var(--_level) * var(--ts-space-indent));

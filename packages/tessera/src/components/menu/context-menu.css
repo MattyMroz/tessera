@@ -1,0 +1,5 @@
+@layer components {
+  [data-component='context-menu'] {
+    display: contents;
+  }
+}

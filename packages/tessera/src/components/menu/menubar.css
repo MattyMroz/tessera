@@ -1,0 +1,7 @@
+@layer components {
+  [data-component='menubar'] {
+    display: flex;
+    flex: 1;
+    align-items: center;
+  }
+}

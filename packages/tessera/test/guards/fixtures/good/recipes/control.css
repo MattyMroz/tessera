@@ -39,12 +39,15 @@
     }
 
     & > [data-slot='mark'] > svg {
-      transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw);
+      stroke-width: var(--ts-size-mark-stroke);
     }
 
-    &[aria-checked='true'] > [data-slot='mark'] > svg:first-child,
-    &[aria-checked='mixed'] > [data-slot='mark'] > svg:last-child {
-      stroke-dashoffset: 0;
+    &[aria-haspopup='listbox'] > [data-slot='icon']:last-child > svg {
+      transition: rotate var(--ts-motion-duration-scene) var(--ts-motion-ease-standard);
+    }
+
+    &[aria-haspopup='listbox'][data-popup-open] > [data-slot='icon']:last-child > svg {
+      rotate: var(--ts-motion-flip);
     }
     & [data-slot='label'] {
       min-width: 0;

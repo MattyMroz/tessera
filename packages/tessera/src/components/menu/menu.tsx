@@ -1,18 +1,18 @@
 'use client'
 
 import { Menu as BaseMenu } from '@base-ui/react/menu'
-import Check from 'lucide-react/icons/check'
 import ChevronRight from 'lucide-react/icons/chevron-right'
-import { createContext, useLayoutEffect, useState, type ReactNode, type RefObject } from 'react'
+import { createContext, useLayoutEffect, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
 import { useIndicator } from '../../lib/indicator'
-import { readMotion } from '../../lib/motion'
-import { createPopupFlight, SUBMENU_FLIGHT_GRACE, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
+import { createMenuFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
 import { createScopeAnchor, ScopeContext, type ScopeAnchor } from '../../lib/scope'
 import { useHost } from '../../lib/slot'
 import type { Tone } from '../../lib/tone'
 import type { Unstyled } from '../../lib/unstyled'
 import { Button, type ButtonProps } from '../button/button'
+import { Mark, type MarkKind } from '../checkbox/checkbox'
+import { Pill } from '../toggle-group/toggle-group'
 
 type RowContent = {
   icon?: ReactNode
@@ -39,43 +39,50 @@ const MENU_ITEM = '[role^="menuitem"]'
 const SubmenusContext = createContext<Submenus | null>(null)
 const SubmenuTriggerContext = createContext<((trigger: HTMLElement | null) => void) | null>(null)
 
-function Row({ icon, trail, children }: RowContent) {
+export const LIST_POPUP = {
+  'data-recipe': 'surface',
+  'data-level': 'overlay',
+  'data-material': 'solid',
+  'data-surface': '',
+  'data-inset': 'inset',
+  'data-content': 'controls',
+} as const
+
+export function useListPill(items: string) {
+  const { container, ride, squash, select } = useIndicator({ axis: 'y', items, hover: true, focus: true })
+  return { container, select, pill: <Pill variant="hover" ride={ride} squash={squash} /> }
+}
+
+export function ListRow({ mark, icon, trail, label }: Omit<RowContent, 'children'> & { mark?: MarkKind | undefined; label: ReactElement }) {
   return (
     <>
+      {mark !== undefined && <Mark kind={mark} />}
       {icon != null && <span data-slot="icon">{icon}</span>}
-      <span data-slot="label">{children}</span>
+      {label}
       {trail != null && <span data-slot="trail">{trail}</span>}
     </>
   )
 }
 
-function MenuPopup({ children, width, scope, ref, ...props }: MenuPopupWidthProps & { readonly scope: ScopeAnchor }) {
+function Row({ mark, icon, trail, children }: RowContent & { mark?: MarkKind }) {
+  return <ListRow mark={mark} icon={icon} trail={trail} label={<span data-slot="label">{children}</span>} />
+}
+
+export function MenuPopup({ children, width, scope, place, ref, ...props }: MenuPopupWidthProps & { readonly scope: ScopeAnchor; readonly place?: 'context' | 'bar' }) {
   const [held, setHeld] = useState<HTMLElement | null>(null)
   const [submenus] = useState<Submenus>(() => ({
     hold: setHeld,
     release: (trigger) => setHeld((current) => (current === trigger ? null : current)),
-    flight: createPopupFlight<HTMLElement>({ grace: SUBMENU_FLIGHT_GRACE, motion: readMotion }),
+    flight: createMenuFlight(),
   }))
-  const { container, ride, squash, select } = useIndicator({ axis: 'y', items: MENU_ITEM, hover: true, focus: true })
+  const { container, select, pill } = useListPill(MENU_ITEM)
   useLayoutEffect(() => {
     select(held, null)
   }, [select, held])
 
   return (
-    <BaseMenu.Popup
-      {...props}
-      ref={composeRefs(ref, scope.copyTo, container)}
-      data-recipe="surface"
-      data-level="overlay"
-      data-material="solid"
-      data-surface=""
-      data-inset="inset"
-      data-content="controls"
-      data-width={width === 'trigger' ? width : undefined}
-    >
-      <div ref={ride} data-recipe="indicator" data-variant="hover" aria-hidden="true">
-        <div ref={squash} data-slot="squash" />
-      </div>
+    <BaseMenu.Popup {...props} {...LIST_POPUP} ref={composeRefs(ref, scope.copyTo, container)} data-width={width === 'trigger' ? width : undefined} data-variant={place}>
+      {pill}
       <SubmenusContext value={submenus}>{children}</SubmenusContext>
     </BaseMenu.Popup>
   )
@@ -127,10 +134,26 @@ export type MenuCheckboxItemProps = Unstyled<BaseMenu.CheckboxItem.Props, 'child
 export function MenuCheckboxItem({ trail, children, ...props }: MenuCheckboxItemProps) {
   return (
     <BaseMenu.CheckboxItem {...props} data-recipe="row">
-      <Row icon={<BaseMenu.CheckboxItemIndicator render={<Check />} />} trail={trail}>
+      <Row mark="check" trail={trail}>
         {children}
       </Row>
     </BaseMenu.CheckboxItem>
+  )
+}
+
+export function MenuRadioGroup(props: Unstyled<BaseMenu.RadioGroup.Props>) {
+  return <BaseMenu.RadioGroup {...props} />
+}
+
+export type MenuRadioItemProps = Unstyled<BaseMenu.RadioItem.Props, 'children'> & Omit<RowContent, 'icon'>
+
+export function MenuRadioItem({ trail, children, ...props }: MenuRadioItemProps) {
+  return (
+    <BaseMenu.RadioItem {...props} data-recipe="row">
+      <Row mark="dot" trail={trail}>
+        {children}
+      </Row>
+    </BaseMenu.RadioItem>
   )
 }
 

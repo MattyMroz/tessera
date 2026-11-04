@@ -51,7 +51,7 @@ export type ToggleGroupItemProps = ToggleGroupItemBase &
 
 type PillProps = Pick<IndicatorParts, 'ride' | 'squash'> & { readonly variant: 'hover' | ToggleGroupVariant }
 
-function Pill({ variant, ride, squash }: PillProps) {
+export function Pill({ variant, ride, squash }: PillProps) {
   return (
     <div ref={ride} data-recipe="indicator" data-variant={variant} aria-hidden="true">
       <div ref={squash} data-slot="squash" />

@@ -73,6 +73,7 @@
       var(--_ts-shape-ratio) * var(--ts-in-shape-radius) * var(--ts-size-box) * (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-control-curve)),
       var(--ts-size-box) * 0.35
     );
+    --ts-shape-mark-inset: calc(var(--ts-size-box) / 8 - var(--ts-shape-stroke));
     --ts-shape-track: calc(var(--ts-size-track-block) / 2);
     --ts-shape-thumb: calc(var(--ts-size-thumb) / 2);
   }
@@ -129,6 +130,7 @@
 
   [data-surface='track'],
   [data-surface='joined'],
+  [data-surface='bar'],
   [data-surface][data-content='controls'] {
     --_ts-shape-gap: var(--ts-size-wrap);
     --ts-shape-inset: calc(var(--_ts-shape-gap) + var(--ts-shape-stroke));
@@ -165,6 +167,7 @@
   }
 
   [data-surface='track'],
+  [data-surface='bar'],
   [data-surface][data-content='controls'] {
     --ts-shape-surface: calc(var(--ts-shape-control) + var(--_ts-shape-rounded) * var(--ts-shape-inset));
     --ts-shape-inner: var(--ts-shape-control);

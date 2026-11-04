@@ -30,8 +30,8 @@ Opisane: 470 pozycji · wysokie 55 · średnie 60 · niskie 132 · bez wartości
 
 ### ★ [@disarto_max · 2117664457862033627](https://x.com/disarto_max/status/2117664457862033627?a=abxWss9HZyzG9B4qyY0&s=20) · właściciel 2026-11-03
 
-- **Co pokazuje:** komponenty końcowe złożone z wielu komponentów (post nieobejrzany; opis do uzupełnienia po pobraniu).
-- **Dla Tessery:** kandydat na cel graniczny złożony z istniejących części.
+- **Co pokazuje:** cztery karty („Model router”, „Knowledge base”, pasek boczny, „Shard ring”), obejrzane 04.11 klatka po klatce (`tmp/ref/insp/x/2026-11-03-x-maxim-kuznetsov-some-of-my-favorite-ui-elements-from-the-las/`). W „Model router” (ok. 12–15 s) rząd „Fallback if [● Opus 5.5 ⌄] fails, retry on [● GPT-6.1 Sol ⌄]”: select to mała pigułka jak przycisk (kropka koloru, wartość, szewron, cienki obrys); po otwarciu szewron odwraca się w górę, lista otwiera się nad triggerem z etykietą grupy („IF THIS MODEL FAILS”), wiersze z kropką, nazwą i ceną po prawej, ptaszek w kolorze akcentu po prawej przy wybranej, hover jako tło wiersza. Po wyborze wartość zamienia się w ok. 100 ms: stary tekst odjeżdża w górę i gaśnie, nowy wjeżdża od dołu z rozmyciem, kropka zmienia kolor, szewron wraca w dół; szerokość triggera zmienia się w jednej klatce. Ta sama zamiana tekstu w stopce („LIVE ON CHAT-PROD” → „UNSAVED CHANGES”).
+- **Dla Tessery:** wzór Selecta: trigger jak przycisk Tessery, dwa tryby listy (nad/pod albo na triggerze), zamiana wartości ruchem tekstu w pionie z gaśnięciem.
 
 ### ★ [@disarto_max · 2117352562710245759](https://x.com/disarto_max/status/2117352562710245759?a=F9o2SOPgInsCmgRk4Mw&s=20) · właściciel 2026-11-03
 
