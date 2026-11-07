@@ -195,7 +195,7 @@ export default function Page() {
 
       <Foundation title="Small bar">
         <div data-size="xs" data-density="compact" data-corners="none" className="flex flex-wrap items-center gap-inset">
-          <TooltipBar side="bottom">
+          <TooltipBar>
             {TOOLS.map((tool) => (
               <Tooltip key={tool.label} content={tool.label}>
                 <Button variant="ghost" aria-label={tool.label} icon={<tool.Icon />} />
@@ -266,7 +266,7 @@ export default function Page() {
           <FileMenu label="Still menu" />
         </div>
         <div className="flex flex-wrap items-center gap-inset">
-          <TooltipBar side="bottom">
+          <TooltipBar>
             <div data-motion="off" className="flex items-center gap-inset">
               <Tooltip content="First still tip">
                 <Button variant="ghost">First still</Button>

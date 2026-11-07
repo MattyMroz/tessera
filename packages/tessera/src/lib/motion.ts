@@ -1,6 +1,7 @@
 export type Motion = {
   readonly pressHold: number
   readonly follow: number
+  readonly hoverOut: number
   readonly choice: number
   readonly overshoot: number
   readonly ease: string
@@ -21,6 +22,7 @@ export function parseMotion(read: (name: string) => string): Motion {
   return {
     pressHold: milliseconds(read('--ts-motion-press-hold')),
     follow: milliseconds(read('--ts-motion-duration-follow')),
+    hoverOut: milliseconds(read('--ts-motion-duration-hover-out')),
     choice: milliseconds(read('--ts-motion-duration-choice')),
     overshoot: Number.isFinite(overshoot) ? overshoot : 0,
     ease: read('--ts-motion-ease-hover').trim(),

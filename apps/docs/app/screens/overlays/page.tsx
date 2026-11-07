@@ -74,7 +74,7 @@ function Controls({ children }: { children?: ReactNode }) {
   return (
     <>
       <div className="flex flex-wrap items-center gap-inset">
-        <TooltipBar side="bottom">
+        <TooltipBar>
           {TOOLS.map((tool) => (
             <Tooltip key={tool.label} content={tool.label}>
               <Button variant="ghost" aria-label={tool.label} icon={<tool.Icon />} />

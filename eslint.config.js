@@ -51,4 +51,14 @@ export default defineConfig([
       ],
     },
   },
+  {
+    name: 'lab/sliding-frame-probe',
+    files: ['apps/docs/tests/sliding.spec.ts'],
+    rules: {
+      'tessera/compositor-motion': [
+        'error',
+        { animationFrameReason: 'the sliding guards read the pill and the menus in every rendering frame' },
+      ],
+    },
+  },
 ])

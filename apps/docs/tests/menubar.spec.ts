@@ -6,6 +6,43 @@ const FADE_FRAMES = 20
 const NARROW = 220
 const CENTRE_TOLERANCE = 0.5
 const SWEEP_STEPS = 12
+const GLIDE_STEPS = 6
+const HESITATION_MS = 200
+const CLOSE_FRAMES = 3
+const GAP_OFFSET = 3
+const TALL_WINDOW = { width: 1280, height: 900 }
+const REST_MS = 100
+
+type Point = { readonly x: number; readonly y: number }
+
+async function glide(page: Page, from: Point, to: Point): Promise<void> {
+  for (let step = 1; step <= GLIDE_STEPS; step += 1) {
+    await page.mouse.move(from.x + ((to.x - from.x) * step) / GLIDE_STEPS, from.y + ((to.y - from.y) * step) / GLIDE_STEPS)
+    await page.waitForTimeout(FRAME_MS)
+  }
+}
+
+async function centre(target: Locator): Promise<Point> {
+  const box = await target.boundingBox()
+  if (!box) throw new Error('no box')
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+}
+
+async function rest(page: Page, target: Locator): Promise<void> {
+  const point = await centre(target)
+  await page.mouse.move(point.x, point.y)
+}
+
+async function openArchive(page: Page): Promise<{ archive: Locator; compression: Locator }> {
+  await open(page, 'Bar A', 'File')
+  await rest(page, page.getByRole('menuitem', { name: 'Export', exact: true }))
+  const archive = page.getByRole('menuitem', { name: 'Archive', exact: true })
+  await expect(archive).toBeVisible()
+  await rest(page, archive)
+  const compression = page.getByRole('menuitem', { name: 'Compression', exact: true })
+  await expect(compression).toBeVisible()
+  return { archive, compression }
+}
 
 function frame(page: Page, label: string): Locator {
   return page.getByRole('group', { name: label, exact: true })
@@ -194,4 +231,70 @@ test('hides the menus that no longer fit behind "…" when the frame narrows and
   await bar.evaluate((element) => (element.style.width = ''))
   await expect(more).toBeHidden()
   await expect(bar.getByRole('menuitem', { name: 'Help', exact: true })).toBeVisible()
+})
+
+test('keeps a nested submenu open while the pointer pauses on its diagonal way into it', async ({ page }) => {
+  await page.setViewportSize(TALL_WINDOW)
+  const { archive, compression } = await openArchive(page)
+  const row = await archive.boundingBox()
+  const target = await compression.boundingBox()
+  if (!row || !target) throw new Error('no box')
+  expect(target.y).toBeGreaterThan(row.y + row.height)
+  const start = { x: row.x + row.width - row.height, y: row.y + row.height / 2 }
+  const gap = { x: row.x + row.width - GAP_OFFSET, y: row.y + row.height + GAP_OFFSET }
+  await glide(page, start, gap)
+  await page.waitForTimeout(HESITATION_MS)
+  await glide(page, gap, { x: target.x + target.height, y: target.y + target.height / 2 })
+  await expect(compression).toBeVisible()
+})
+
+test('closes a nested submenu at once when the pointer leaves its trigger for another row', async ({ page }) => {
+  const { archive, compression } = await openArchive(page)
+  await glide(page, await centre(archive), await centre(page.getByRole('menuitem', { name: 'Pages as WebP', exact: true })))
+  await page.waitForTimeout(FRAME_MS * CLOSE_FRAMES)
+  await expect(compression).toBeHidden({ timeout: 0 })
+})
+
+async function arriveOnCloseProject(page: Page): Promise<Locator> {
+  await page.setViewportSize(TALL_WINDOW)
+  await open(page, 'Bar A', 'File')
+  const exportRow = page.getByRole('menuitem', { name: 'Export', exact: true })
+  await rest(page, exportRow)
+  await expect(page.getByRole('menuitem', { name: 'Pages as PNG', exact: true })).toBeVisible()
+  const closeProject = page.getByRole('menuitem', { name: /^Close project/ })
+  const row = await closeProject.boundingBox()
+  if (!row) throw new Error('no box')
+  await glide(page, await centre(exportRow), { x: row.x + row.width - row.height, y: row.y + row.height / 2 })
+  return closeProject
+}
+
+test('hands the hover to a row of the menu where the pointer rests under an open submenu, without another move', async ({ page }) => {
+  const closeProject = await arriveOnCloseProject(page)
+  await expect(closeProject).toHaveAttribute('data-highlighted', '', { timeout: REST_MS + FRAME_MS * CLOSE_FRAMES })
+  await expect(page.getByRole('menuitem', { name: 'Pages as PNG', exact: true })).toBeHidden()
+})
+
+test('runs a row of the menu clicked right after the pointer arrives on it under an open submenu', async ({ page }) => {
+  await arriveOnCloseProject(page)
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByRole('menuitem', { name: 'Save as', exact: true })).toBeHidden()
+})
+
+test('moves the hover row by row while the pointer goes straight down the menu under an open submenu', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', 'Playwright WebKit moves the mouse with movementX and movementY 0, and Base UI ignores such moves over a row in WebKit')
+  await page.setViewportSize(TALL_WINDOW)
+  await open(page, 'Bar A', 'File')
+  const recent = page.getByRole('menuitem', { name: 'Open recent', exact: true })
+  await rest(page, recent)
+  await expect(page.getByRole('menu')).toHaveCount(2)
+  let from = await centre(recent)
+  for (const name of ['Save Ctrl+S', 'Save as Ctrl+Shift+S']) {
+    const row = page.getByRole('menuitem', { name, exact: true })
+    const to = { x: from.x, y: (await centre(row)).y }
+    await glide(page, from, to)
+    await expect(row).toHaveAttribute('data-highlighted', '', { timeout: FRAME_MS * CLOSE_FRAMES })
+    from = to
+  }
+  await expect(page.getByRole('menu')).toHaveCount(1)
 })

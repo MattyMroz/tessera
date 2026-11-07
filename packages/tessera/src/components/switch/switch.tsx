@@ -18,7 +18,7 @@ export type SwitchProps = Unstyled<BaseSwitch.Root.Props, 'children' | 'nativeBu
 export function Switch({ size, ref, children, checked, defaultChecked, onCheckedChange, ...props }: SwitchProps) {
   const [own, setOwn] = useState(defaultChecked ?? false)
   const on = checked ?? own
-  const { container, ride, squash, select } = useIndicator({ axis: 'x', items: SPOT })
+  const { container, ride, squash, select } = useIndicator({ axis: 'x', items: SPOT, placed: true })
   const offSpot = useRef<HTMLSpanElement>(null)
   const onSpot = useRef<HTMLSpanElement>(null)
 

@@ -153,7 +153,7 @@ test('closes the tooltip of a bar when the pointer leaves the bar through a gap'
   const draw = await box(page.getByRole('button', { name: 'Draw bubble' }))
   const gap = (pan.x + pan.width + draw.x) / 2
   await page.mouse.move(gap, centre(pan).y)
-  await moveOffTriggers(page, gap, pan.y - pan.height / 2)
+  await moveOffTriggers(page, gap, pan.y + pan.height * 2)
   await expect(popup).toHaveCount(0)
 })
 
@@ -297,4 +297,115 @@ test('opens a lone tooltip in place next to another lone tooltip, also one held 
   await expect(popup.filter({ hasText: 'Paste the copied bubble' })).toBeVisible()
   await page.waitForTimeout(SETTLE)
   expect(await flights(page)).toEqual([])
+})
+
+const GAP_HOLD = 400
+const EDGE_ROOM = 2
+const BRIGHT = 0.8
+const DIM = 0.3
+
+function tipTrigger(page: Page, name: string): Locator {
+  return page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name, exact: true })
+}
+
+function popupOf(page: Page, text: string): Locator {
+  return page.locator('[data-variant="tooltip"][data-open]', { hasText: text })
+}
+
+async function openTip(page: Page, trigger: Locator, text: string): Promise<Locator> {
+  await trigger.scrollIntoViewIfNeeded()
+  const { x, y } = centre(await box(trigger))
+  await page.mouse.move(x, y)
+  const popup = popupOf(page, text)
+  await expect(popup).toHaveCount(1)
+  await page.waitForTimeout(SETTLE)
+  return popup
+}
+
+function lightnessOf(popup: Locator, property: 'backgroundColor' | 'color'): Promise<number> {
+  return popup.evaluate((element, key) => {
+    const probe = document.createElement('div')
+    probe.style.color = getComputedStyle(element)[key]
+    probe.style.color = `oklab(from ${probe.style.color} l a b)`
+    document.body.append(probe)
+    const value = getComputedStyle(probe).color
+    probe.remove()
+    return Number.parseFloat(value.replace(/^oklab\(/, ''))
+  }, property)
+}
+
+for (const mode of ['light', 'dark'] as const) {
+  test(`inverts the tooltip against the ${mode} mode`, async ({ page }) => {
+    await page.evaluate((value) => document.documentElement.setAttribute('data-mode', value), mode)
+    const popup = await openTip(page, tipTrigger(page, 'Save'), 'Saves the chapter')
+    const [fill, label] = [await lightnessOf(popup, 'backgroundColor'), await lightnessOf(popup, 'color')]
+    if (mode === 'light') expect([fill < DIM, label > BRIGHT], `fill ${fill} label ${label}`).toEqual([true, true])
+    else expect([fill > BRIGHT, label < DIM], `fill ${fill} label ${label}`).toEqual([true, true])
+  })
+}
+
+test('opens a lone tooltip above its trigger with an arrow pointing at the middle of the trigger', async ({ page }) => {
+  const trigger = tipTrigger(page, 'Save')
+  const popup = await openTip(page, trigger, 'Saves the chapter')
+  const [tip, body, target] = await Promise.all([box(popup.locator('[data-slot="arrow"]')), box(popup), box(trigger)])
+  expect(body.y + body.height).toBeLessThan(target.y)
+  expect(Math.abs(centre(tip).x - centre(target).x)).toBeLessThanOrEqual(PIXEL)
+  expect(tip.y + tip.height).toBeGreaterThan(body.y + body.height)
+  expect(tip.y + tip.height).toBeLessThan(target.y)
+})
+
+test('opens a tooltip without an arrow when the arrow is turned off', async ({ page }) => {
+  const popup = await openTip(page, tipTrigger(page, 'Plain'), 'No arrow')
+  await expect(popup.locator('[data-slot="arrow"]')).toHaveCount(0)
+})
+
+test('opens a lone tooltip below its trigger when there is no room above', async ({ page }) => {
+  const trigger = tipTrigger(page, 'Save')
+  await trigger.scrollIntoViewIfNeeded()
+  await trigger.evaluate((element, room) => window.scrollBy(0, element.getBoundingClientRect().top - room), EDGE_ROOM)
+  const popup = await openTip(page, trigger, 'Saves the chapter')
+  const [tip, body, target] = await Promise.all([box(popup.locator('[data-slot="arrow"]')), box(popup), box(trigger)])
+  expect(body.y).toBeGreaterThan(target.y + target.height)
+  expect(tip.y).toBeLessThan(body.y)
+})
+
+test('opens the tooltip of a horizontal bar above it', async ({ page }) => {
+  const popup = await openTip(page, page.getByRole('button', { name: 'Pan', exact: true }).first(), 'Pan')
+  const [body, target] = await Promise.all([box(popup), box(page.getByRole('button', { name: 'Pan', exact: true }).first())])
+  expect(body.y + body.height).toBeLessThan(target.y)
+})
+
+test('opens the tooltip of a vertical bar on its right and on its left when there is no room on the right', async ({ page }) => {
+  const trigger = tipTrigger(page, 'Layers')
+  const popup = await openTip(page, trigger, 'Show layers')
+  const [body, target] = await Promise.all([box(popup), box(trigger)])
+  expect(body.x).toBeGreaterThan(target.x + target.width)
+  await page.mouse.move(0, 0)
+  await expect(popup).toHaveCount(0)
+  await trigger.evaluate((element, room) => {
+    const bar = element.closest('[data-component="tooltip-bar"]')
+    if (!(bar instanceof HTMLElement)) throw new Error('no bar')
+    bar.style.position = 'fixed'
+    bar.style.top = `${room * room * room * room}px`
+    bar.style.right = `${room}px`
+    bar.style.zIndex = `${room * room * room * room}`
+  }, EDGE_ROOM)
+  const flipped = await openTip(page, trigger, 'Show layers')
+  const [left, moved] = await Promise.all([box(flipped), box(trigger)])
+  expect(left.x + left.width).toBeLessThan(moved.x)
+})
+
+test('keeps the tooltip of a bar on its trigger while the pointer rests in the gap and closes it once the pointer leaves the bar', async ({ page }) => {
+  const pan = page.getByRole('button', { name: 'Pan', exact: true }).first()
+  const draw = page.getByRole('button', { name: 'Draw bubble', exact: true }).first()
+  const popup = await openTip(page, pan, 'Pan')
+  const [left, right] = await Promise.all([box(pan), box(draw)])
+  await recordTooltips(page)
+  await page.mouse.move((left.x + left.width + right.x) / 2, centre(left).y)
+  await page.waitForTimeout(GAP_HOLD)
+  const frames = await tooltipFrames(page)
+  expect(frames.filter((frame) => frame.tips.length === 0)).toEqual([])
+  await expect(popup).toHaveCount(1)
+  await moveOffTriggers(page, (left.x + left.width + right.x) / 2, left.y + left.height * 2)
+  await expect(popup).toHaveCount(0)
 })

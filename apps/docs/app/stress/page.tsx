@@ -110,7 +110,7 @@ function Scene() {
 
       <Region title="List">
         <div className="flex flex-col items-start">
-          <TooltipBar side="right">
+          <TooltipBar orientation="vertical">
             {LIST.map((index) => (
               <Tooltip key={index} content={`Tip ${index}`}>
                 <Button variant="ghost">{`Item ${index}`}</Button>

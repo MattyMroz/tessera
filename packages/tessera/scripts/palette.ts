@@ -88,7 +88,6 @@ export const DARK_LADDER = {
   'secondary-background': 0.16,
   'tertiary-background': 0.184,
   'raised-background': 0.228,
-  tooltip: 0.287,
   'opaque-separator': 0.296,
   chip: 0.343,
   'quaternary-label': 0.412,

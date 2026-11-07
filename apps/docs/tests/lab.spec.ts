@@ -221,7 +221,7 @@ test('derives the box, the track, the thumb and the rail of every size from the 
     expect([square.width, square.height], `${size} box`).toEqual([icon, icon])
     const height = CONTROL_HEIGHT[size as keyof typeof CONTROL_HEIGHT]
     expect(engine.block, `${size} track block`).toBeCloseTo(Math.round(height * TRACK_OF_HEIGHT), 1)
-    expect(engine.thumb, `${size} thumb`).toBeCloseTo(engine.block - 2 * Math.round(engine.block * INSET_OF_TRACK), 1)
+    expect(engine.thumb, `${size} thumb`).toBeCloseTo(engine.block * (1 - 2 * INSET_OF_TRACK), 1)
     expect(engine.inline, `${size} track inline`).toBeCloseTo(engine.block + engine.thumb, 1)
     expect([track.width, track.height], `${size} track`).toEqual([engine.inline, engine.block])
     expect([thumb.width, thumb.height], `${size} thumb`).toEqual([engine.thumb, engine.thumb])
@@ -966,4 +966,16 @@ test('tunes the follow and the hover exit on <html> from the motion lab of the p
   await lab.getByRole('button', { name: 'Reset motion', exact: true }).click()
   expect(await read('--ts-motion-duration-follow')).toBe(engine)
   expect(await page.evaluate(() => [...document.documentElement.style].filter((property) => property.startsWith('--ts-')))).toEqual([])
+})
+
+test('brings the element of a link of the element list to the top again when its link is clicked a second time after scrolling away', async ({ page }) => {
+  await page.goto('/')
+  const link = page.getByRole('navigation', { name: 'Elements' }).getByRole('link', { name: 'Menubar', exact: true })
+  const top = (): Promise<number> => page.evaluate(() => Math.round(document.getElementById('menubar')?.getBoundingClientRect().top ?? Number.NaN))
+  await link.click()
+  await expect.poll(top).toBeCloseTo(0, 0)
+  await page.mouse.wheel(0, page.viewportSize()?.height ?? 0)
+  await expect.poll(top).toBeLessThan(0)
+  await link.click()
+  await expect.poll(top).toBeCloseTo(0, 0)
 })

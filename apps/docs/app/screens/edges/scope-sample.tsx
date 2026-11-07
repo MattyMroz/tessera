@@ -75,7 +75,7 @@ export function ScopeSample() {
             <ScopeMenuContent />
           </Menu>
         ) : null}
-        <TooltipBar side="bottom">
+        <TooltipBar>
           <Tooltip content="Small tip">
             <Button variant="ghost">Small</Button>
           </Tooltip>

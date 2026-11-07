@@ -113,9 +113,54 @@ Właściciel przekazał prowadzącemu wybory („przy wyborze wybieraj te najlep
 
 - Pigułka `active` toru zostaje półprzezroczysta (16 % akcentu, krycie `--ts-state-selected-fill`). Odrzucone: kryjąca mieszanka `color-mix(in oklab, …)` z tłem toru, żeby szara pigułka hover nie prześwitywała: kolor różnił się o 1–7 na kanał (np. contrast jasny 206 zamiast 212). Właściciel („już wolę przezroczystość”), 2026-11-05.
 
+## Popupy bez przejścia, potwierdzone (06.11)
+
+- Wybór: menu, lista, podmenu, popover i tooltip dalej pojawiają się i znikają w tej samej klatce (decyzja z 02.11 zostaje).
+- Opcje: wejście 150–250 ms od skali 0,95 z punktu triggera i wyjście o 20 % krótsze, według 20 zasad z TikToka (`docs/research/e3-motion-rules-tiktok.md`, zasady #2, #10–12, #15).
+- Dlaczego: właściciel woli natychmiastowe pojawianie się, bez czekania na animację; tak samo zaleca Emil Kowalski dla elementów używanych cały dzień.
+- Kto, data: właściciel, 2026-11-06.
+- Próba na żywo (06.11, przełącznik w panelu laboratorium, usunięty po decyzji): `instant`, `macos` (wejście od razu, gaśnięcie 150 ms), `fade` (krycie 150 / 120 ms), `scale` (0,95 → 1 od triggera, 150 / 120 ms). Pomiar w Chromium: przy `fade` i `scale` menu jest widoczne po ok. 80 ms, w pełni po ok. 210 ms; przy `instant` w pierwszej klatce. Uwagi właściciela: `scale` „fajne”, ale wolniejsze, litery „dziwnie chodzą” (tekst w skali przeskakuje po pikselach), przejście lewo i prawo w pasku menu mruga (stare menu gaśnie, a nowe w tym czasie wchodzi), `macos` „zamyka się po prostu wolniej”.
+- Rozstrzygnięcie po próbie: `instant` dla wszystkich popupów. Prowadzący z upoważnienia właściciela („twoja decyzja”), 2026-11-06.
+
+## Trójkąt podmenu (06.11)
+
+- Wybór: łatka Base UI (`patches/@base-ui%2Freact@1.9.0.patch`, `safePolygon` i `useHoverReferenceInteraction`) z czterema regułami. Plan i research: `docs/plans/e3-submenu-triangle.md`.
+  1. Łaska trwa tylko przy ruchu w stronę podmenu (próbka co 4 px, promień ruchu trafia w bliższą krawędź podmenu, wzór Radix i menu-aim). Bez progu prędkości Base UI (0,1 px/ms).
+  2. Postój 100 ms nad innym wierszem menu oddaje mu hover. Postój w szczelinie ma 300 ms łaski (Radix, menu-aim).
+  3. Po zamknięciu podmenu wiersz pod kursorem dostaje sztuczny `mousemove` z prawdziwymi współrzędnymi (wzór React Aria).
+  4. `pointerdown` na wierszu w czasie łaski kończy łaskę i przekazuje klik do wiersza.
+- Opcje: `closeDelay` 150 albo 300 ms bez łatki. Odpadło, bo podmenu znikało o 110–240 ms za późno przy zjeździe na inny wiersz. Sama łaska 300 ms (pierwsza łatka) odpadła, bo wiersze pod podmenu były przez 300 ms martwe dla hovera i kliku (zgłoszenie właściciela).
+- Kto, data: właściciel („Łatka Base UI”, „zrób poprawnie”), 2026-11-06. Przyjęte na żywo: „akceptuję, fajnie to działa” (06.11).
+- Dowód: `menubar.spec.ts`, pięć testów „…submenu…” (Chromium i WebKit, `--repeat-each=5`: 45 zielonych, 5 pominiętych). Ruch w dół po wierszach jest pominięty w WebKit, bo Playwright WebKit wysyła ruch myszy z `movementX/Y` 0, a Base UI w WebKit odrzuca taki ruch nad wierszem.
+
+## Krzywa pigułki hover (06.11)
+
+- Wybór: pigułka, która goni kursor (`follow`, 100 ms), zostaje na `--ts-motion-ease-hover: ease-out`.
+- Opcje: `ease-in-out` (pomysł właściciela, zgodny z regułą Emila Kowalskiego „element na ekranie jedzie z A do B”). Odpadło, bo każdy nowy wiersz przerywa lot i zaczyna nowy od zerowej prędkości: przy szybkim przejeździe pigułka zostaje za kursorem i szarpie, a przy pojedynczym przeskoku przez pierwszą ćwierć czasu prawie stoi (na klatkach w połowie przeskoku ease-out ma ok. 40 % drogi, ease-in-out ledwo rusza).
+- Gdzie `ease-in-out` ma sens: ruch na ekranie bez udziału ręki, którego nic nie przerywa (przewijanie wywołane programem, przestawianie stosu toastów, karuzela, pętle oddechu). Osobny token dopiero z pierwszym takim elementem.
+- Kto, data: właściciel („faktycznie lepsze jest ease-out”), 2026-11-06.
+- Dowód: film porównawczy (ToggleGroup, Menubar, Menu; prawdziwa prędkość i 8× wolniej, spowolnienie animacji przez CDP `Animation.setPlaybackRate`) i próba na żywo na tymczasowej stronie `/pill-trial` (obie usunięte po decyzji).
+
+## Kciuk Switcha: proporcja 3/4 i spoczynek z CSS (07.11)
+
+- Wybrane: odstęp kciuka to dokładnie tor / 8 (`--ts-size-thumb-inset: calc(var(--ts-size-track-block) / 8)`, silnik `size`), więc kciuk ma 3/4 toru w każdym rozmiarze; przyrost wciśnięcia `--ts-size-thumb-stretch` to dokładnie kciuk / 4. Spoczynek kciuka ustawia CSS (przepis `indicator`, wariant `thumb`: rozmiar z silnika `size`, `translate` do miejsca wyłączonego albo włączonego), widoczny przed hydratacją; JS (`useIndicator` z `placed`) tylko leci i liczy klatki względem spoczynku z CSS.
+- Dlaczego: właściciel („proporcjonalnie ma być”, „ma być zawsze w tym samym momencie”). Zaokrąglanie do pełnego piksela CSS dawało proporcje 0,714 / 0,765 / 0,714 / 0,75 / 0,742 (xs–xl), a przy powiększeniu przeglądarki pełny piksel CSS i tak nie jest pełnym pikselem ekranu. Kciuk ustawiany pomiarem JS pojawiał się po torze.
+- Odrzucone: odstęp w całych pikselach CSS (zasada „pełne piksele” ze skilla `tessera-element`, przeczy wymaganiu proporcji).
+- Kto, kiedy: właściciel, 2026-11-07 („wygląda ok, accepted”). Dowód: `switch.spec.ts` („keeps the thumb three quarters…”, „shows the thumb on its place before any script runs”).
+- Otwarte: przy powiększeniu innym niż 100 % kciuk bywa poza środkiem o 0,2–0,8 piksela ekranu (test „paints the thumb in the middle of its end of the track at every browser zoom”, czerwony). Przyczyna: Chromium dociąga tło pudełka (płytka toru) do całych pikseli ekranu, a kciuka z transformacją nie. Pięć wariantów ujednolicenia nie zeszło poniżej 0,8 px; następny krok: pomiar wzorców (shadcn/Radix, v2) tym samym testem.
+
+## Standard suwnicy i Tooltip (07.11)
+
+- Wybrane: standard suwnicy S1–S10 z `docs/plans/e3-sliding.md` dla każdej pigułki i każdego przenoszonego popupu: w szczelinie suwnica stoi na ostatnim celu, dopóki kursor jest w grupie; wejście z niczego bez lotu; wyjście z grupy to gaśnięcie w miejscu; okno ciepła po wyjściu decyduje zegarem (nie kryciem z CSS) o locie z ostatniego widocznego miejsca; jeden strażnik dla każdej grupy. Tooltip: `TooltipBar` z własnym elementem grupy trzyma dymek w szczelinie (D2), strzałka domyślnie z wariantem bez (D3), kolor odwrócony względem trybu (D4), pasek poziomy nad / pod przy braku miejsca, pionowy z prawej / z lewej (D5), samodzielny tooltip bez lotu (D6, W16), bez animacji wejścia i wyjścia (D7, W16).
+- Dlaczego: właściciel („to jest jedna animacja”, „drugi raz nie zamierzam tego wykonywać”); wzorzec desktopu MangaShift i v2 (szczelina trzymana bez limitu, przelot), Radix (przerwanie z bieżącej wartości), Kevin Du, Base UI, Emil Kowalski (400 ms pierwszy, sąsiad od razu). Dziś trzy reguły szczeliny (pigułka bez limitu, tooltip ok. 415 ms, menu 150 ms), lot pigułki zależny od prędkości myszy (`gone()`) i błysk krycia przy powrocie w trakcie gaśnięcia.
+- Odrzucone: tooltip z kolorem powierzchni (Kevin Du, demo Base UI; wbrew wymaganiu właściciela z v2), przelot samodzielnych tooltipów (W16), przejście krycia przy wejściu (wszystkie wzorce poza desktopem; W16). Odwrócone: odrzucenie obszaru grupy tooltipa z 02.11 (`e3-tooltip.md` §1), teraz przez element `TooltipBar`, bez własnego magazynu.
+- Otwarte: D1, rozmiar w locie (skok na starcie / `scale` z korektą rogów / wyjątek `width`), wybór na wariantach na żywo.
+- Kto, kiedy: właściciel, 2026-11-07 („zgadzam się tutaj ze wszystkim”, „akceptuję wszystko”).
+- Zgłoszenie przy okazji (07.11): w menu Format wyzwalacze podmenu „Text” i „Bubble” tracą zaznaczenie na granicy między wierszami, podmenu znika na chwilę; w menu View przejście działa. Należy do S2.
+
 ## Do decyzji właściciela (otwarte)
 
-- Szara pigułka hover prześwituje przez półprzezroczystą pigułkę `active`, gdy na nią najeżdża (zrzut właściciela 05.11, `ToggleGroup` w karcie).
+- Szara pigułka hover prześwituje przez półprzezroczystą pigułkę `active`, gdy na nią najeżdża (zrzut właściciela 05.11, `ToggleGroup` w karcie). 06.11: wariant „szara znika w locie nad wybraną” zrobiony i odrzucony przez właściciela („ona miała przelatywać pomiędzy, pod spodem”, „co z tego, że prześwitywała”), cofnięty. Wymaganie: szara pigułka przelatuje pod wybraną z widocznym ruchem przy przejściu na lewo i na prawo od wybranej opcji. Prześwit nie jest błędem do usunięcia kosztem tego przelotu. 07.11 (właściciel): obecne zachowanie zostaje („to, co jest obecnie, jest ok”); przy przezroczystej wybranej przelot pod nią ma być widoczny. Potencjalny problem do standaryzacji przesuwania (sliding), gdy będą wszystkie elementy z przesuwaniem: dziś pigułka niczego nie pamięta i wynik zależy od prędkości myszy. Wolny przejazd Day → Week (wybrana) → Month gasi ją nad Day przez 150 ms i zapala na Month bez lotu; szybki przelatuje z Day przez Week na Month (`fly` w `lib/indicator.ts`: pigułka, która zgasła, nie leci). Opcje: czysty hover bez pamięci, chowanie się pod wybraną, pamięć ostatniego widocznego miejsca (było w MangaShift przy przesuwaniu). Model właściciela: szara pigułka nie chowa się pod wybraną, a kliknięcie zamienia je miejscami.
 
 - Budżet B6 `menubar.js` (3586 B > 3072 B): odchudzić pasek albo podnieść limit.
 

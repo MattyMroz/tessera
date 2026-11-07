@@ -6,6 +6,67 @@ const TOLERANCE = 0.5
 const STRETCH = 1.25
 const FRAME_SAMPLES = 30
 const FRAME_MS = 16
+const THUMB_SHARE = 0.75
+const SHARE_TOLERANCE = 0.001
+const LAYOUT_TOLERANCE = 0.01
+const PAINT_TOLERANCE = 0.15
+const ZOOMS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 2] as const
+const VIEWPORT = { width: 1280, height: 800 }
+const PLATE_MARGIN = 1
+
+type Box = { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
+
+async function paintedOffset(page: Page, target: Locator, box: Box, state: 'off' | 'on', zoom: number): Promise<{ x: number; y: number }> {
+  const ride = target.locator('[data-recipe="indicator"]')
+  const shot = await page.screenshot({ animations: 'disabled' })
+  await ride.evaluate((element) => element.style.setProperty('visibility', 'hidden'))
+  const bare = await page.screenshot({ animations: 'disabled' })
+  await ride.evaluate((element) => element.style.removeProperty('visibility'))
+  return page.evaluate(
+    async ({ shots, box, state, zoom, margin }) => {
+      const read = async (data: string) => {
+        const image = new Image()
+        image.src = `data:image/png;base64,${data}`
+        await image.decode()
+        const canvas = document.createElement('canvas')
+        canvas.width = image.width
+        canvas.height = image.height
+        const context = canvas.getContext('2d')
+        if (!context) throw new Error('no canvas')
+        context.drawImage(image, 0, 0)
+        const { data: channels, width } = context.getImageData(0, 0, image.width, image.height)
+        return (x: number, y: number) => {
+          const at = (y * width + x) * 4
+          return 0.2126 * (channels[at] ?? 0) + 0.7152 * (channels[at + 1] ?? 0) + 0.0722 * (channels[at + 2] ?? 0)
+        }
+      }
+      const [light, plate] = await Promise.all(shots.map(read))
+      if (!light || !plate) throw new Error('no shot')
+      const height = box.height * zoom
+      const left = box.x * zoom
+      const top = box.y * zoom
+      const right = (box.x + box.width) * zoom
+      const bottom = (box.y + box.height) * zoom
+      const column = Math.floor(state === 'on' ? right - height / 2 : left + height / 2)
+      const row = Math.floor((top + bottom) / 2)
+      const page = plate(column, Math.floor(top) - margin)
+      const trackLight = plate(Math.floor((left + right) / 2), row)
+      const thumbLight = light(column, row)
+      const clamp = (value: number) => Math.min(1, Math.max(0, value))
+      const gapAt = (x: number, y: number) => clamp((plate(x, y) - page) / (trackLight - page)) * (1 - clamp((light(x, y) - plate(x, y)) / (thumbLight - plate(x, y) || 1)))
+      const sum = (from: number, to: number, at: (step: number) => number) => {
+        let total = 0
+        for (let step = from; step <= to; step += 1) total += at(step)
+        return total
+      }
+      const above = sum(Math.floor(top) - margin, row, (y) => gapAt(column, y))
+      const below = sum(row + 1, Math.ceil(bottom) + margin, (y) => gapAt(column, y))
+      const end = state === 'on' ? sum(column + 1, Math.ceil(right) + margin, (x) => gapAt(x, row)) : sum(Math.floor(left) - margin, column, (x) => gapAt(x, row))
+      return { x: end - (above + below) / 2, y: (below - above) / 2 }
+    },
+    { shots: [shot.toString('base64'), bare.toString('base64')], box, state, zoom, margin: PLATE_MARGIN },
+  )
+}
 
 function track(page: Page, name: string): Locator {
   return page.getByRole('region', { name: 'Switch', exact: true }).getByRole('switch', { name, exact: true })
@@ -42,17 +103,58 @@ test.beforeEach(async ({ page }) => {
   await visit(page, '/components')
 })
 
-test('centres the thumb on whole pixels with one inset on every side at every size', async ({ page }) => {
+test('keeps the thumb three quarters of the track with one inset on every side at every size', async ({ page }) => {
   for (const size of SIZES) {
     for (const state of ['off', 'on'] as const) {
       const seen = await geometry(track(page, `${size} ${state}`))
       const inset = state === 'off' ? seen.start : seen.end
-      expect(Number.isInteger(Math.round(inset * 1000) / 1000), `${size} ${state} inset ${inset}`).toBe(true)
-      expect(Math.abs(seen.top - inset), `${size} ${state} top`).toBeLessThanOrEqual(TOLERANCE)
-      expect(Math.abs(seen.bottom - inset), `${size} ${state} bottom`).toBeLessThanOrEqual(TOLERANCE)
-      expect(Math.abs(seen.width - seen.height - seen.thumb), `${size} width = track + thumb`).toBeLessThanOrEqual(TOLERANCE)
+      expect(Math.abs(seen.thumb / seen.height - THUMB_SHARE), `${size} ${state} thumb ${seen.thumb} of ${seen.height}`).toBeLessThanOrEqual(SHARE_TOLERANCE)
+      expect(Math.abs(seen.top - inset), `${size} ${state} top`).toBeLessThanOrEqual(LAYOUT_TOLERANCE)
+      expect(Math.abs(seen.bottom - inset), `${size} ${state} bottom`).toBeLessThanOrEqual(LAYOUT_TOLERANCE)
+      expect(Math.abs(seen.width - seen.height - seen.thumb), `${size} width = track + thumb`).toBeLessThanOrEqual(LAYOUT_TOLERANCE)
     }
   }
+})
+
+test('paints the thumb in the middle of its end of the track at every browser zoom', async ({ browser }) => {
+  const misses: string[] = []
+  for (const zoom of ZOOMS) {
+    const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: zoom })
+    const page = await context.newPage()
+    await visit(page, '/components')
+    await page.mouse.move(0, 0)
+    for (const size of SIZES) {
+      for (const state of ['off', 'on'] as const) {
+        const target = track(page, `${size} ${state}`)
+        await target.scrollIntoViewIfNeeded()
+        const box = await target.boundingBox()
+        if (!box) throw new Error('no track')
+        const offset = await paintedOffset(page, target, box, state, zoom)
+        if (Math.hypot(offset.x, offset.y) > PAINT_TOLERANCE) misses.push(`${zoom}x ${size} ${state}: ${offset.x.toFixed(2)}, ${offset.y.toFixed(2)}`)
+      }
+    }
+    await context.close()
+  }
+  expect(misses).toEqual([])
+})
+
+test('shows the thumb on its place before any script runs', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  const page = await context.newPage()
+  await page.goto('/components')
+  for (const size of SIZES) {
+    for (const state of ['off', 'on'] as const) {
+      const target = track(page, `${size} ${state}`)
+      const opacity = await target.evaluate((element) => getComputedStyle(element.querySelector('[data-recipe="indicator"]') ?? element).opacity)
+      expect(opacity, `${size} ${state} visible`).toBe('1')
+      const seen = await geometry(target)
+      const inset = state === 'off' ? seen.start : seen.end
+      expect(Math.abs(seen.thumb / seen.height - THUMB_SHARE), `${size} ${state} thumb`).toBeLessThanOrEqual(SHARE_TOLERANCE)
+      expect(Math.abs(seen.top - inset), `${size} ${state} top`).toBeLessThanOrEqual(LAYOUT_TOLERANCE)
+      expect(Math.abs(seen.bottom - inset), `${size} ${state} bottom`).toBeLessThanOrEqual(LAYOUT_TOLERANCE)
+    }
+  }
+  await context.close()
 })
 
 test('never scales the track and stretches only the thumb towards the middle on a press', async ({ page }) => {

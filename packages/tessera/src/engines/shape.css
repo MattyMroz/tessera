@@ -76,6 +76,8 @@
     --ts-shape-mark-inset: calc(var(--ts-size-box) / 8 - var(--ts-shape-stroke));
     --ts-shape-track: calc(var(--ts-size-track-block) / 2);
     --ts-shape-thumb: calc(var(--ts-size-thumb) / 2);
+    --ts-shape-arrow: calc(var(--ts-size-arrow) / 4);
+    --ts-shape-arrow-turn: 45deg;
   }
 
   @supports (corner-shape: superellipse(2)) {

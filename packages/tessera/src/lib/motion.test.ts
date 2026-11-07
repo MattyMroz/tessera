@@ -19,6 +19,7 @@ describe('motion outputs', () => {
     const outputs: Record<string, string> = {
       '--ts-motion-press-hold': '.05s',
       '--ts-motion-duration-follow': '.1s',
+      '--ts-motion-duration-hover-out': '.15s',
       '--ts-motion-duration-choice': '220ms',
       '--ts-motion-choice-overshoot': '.1',
       '--ts-motion-ease-hover': ' ease-out',
@@ -27,7 +28,7 @@ describe('motion outputs', () => {
   })
 
   it('treats missing outputs as no motion', () => {
-    expect(parseMotion(() => '')).toEqual({ pressHold: 0, follow: 0, choice: 0, overshoot: 0, ease: '' })
+    expect(parseMotion(() => '')).toEqual({ pressHold: 0, follow: 0, hoverOut: 0, choice: 0, overshoot: 0, ease: '' })
   })
 
   describe('readMotion', () => {

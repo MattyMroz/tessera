@@ -1,0 +1,497 @@
+diff --git a/node_modules/@base-ui/react/.bun-tag-77bdcbdf37b0e8e7 b/.bun-tag-77bdcbdf37b0e8e7
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/@base-ui/react/.bun-tag-a6255f8c99d6329d b/.bun-tag-a6255f8c99d6329d
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/@base-ui/react/.bun-tag-f64b0be9c46e8f45 b/.bun-tag-f64b0be9c46e8f45
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/floating-ui-react/hooks/useHoverReferenceInteraction.js b/floating-ui-react/hooks/useHoverReferenceInteraction.js
+index dc00a4054e867a5538fb997bb4734eff426ce233..808dabd3bc0396a9693b13d982a64114900465e2 100644
+--- a/floating-ui-react/hooks/useHoverReferenceInteraction.js
++++ b/floating-ui-react/hooks/useHoverReferenceInteraction.js
+@@ -85,6 +85,7 @@ function useHoverReferenceInteraction(store, props = {}) {
+     }
+     const doc = (0, _owner.ownerDocument)(store.select('domReferenceElement'));
+     doc.removeEventListener('mousemove', instance.handler);
++    doc.removeEventListener('pointerdown', instance.handler, true);
+     instance.handler = undefined;
+   });
+   const clearPointerEvents = (0, _useStableCallback.useStableCallback)(() => {
+@@ -236,6 +237,7 @@ function useHoverReferenceInteraction(store, props = {}) {
+           }
+         });
+         doc.addEventListener('mousemove', instance.handler);
++        doc.addEventListener('pointerdown', instance.handler, true);
+         instance.handler(event);
+         return;
+       }
+diff --git a/floating-ui-react/hooks/useHoverReferenceInteraction.mjs b/floating-ui-react/hooks/useHoverReferenceInteraction.mjs
+index 25d989e87d6f61b32abf6f7bc428553184d4856d..decbfbfff3dd47c5bea2069db044c253eb3c6637 100644
+--- a/floating-ui-react/hooks/useHoverReferenceInteraction.mjs
++++ b/floating-ui-react/hooks/useHoverReferenceInteraction.mjs
+@@ -79,6 +79,7 @@ export function useHoverReferenceInteraction(store, props = {}) {
+     }
+     const doc = ownerDocument(store.select('domReferenceElement'));
+     doc.removeEventListener('mousemove', instance.handler);
++    doc.removeEventListener('pointerdown', instance.handler, true);
+     instance.handler = undefined;
+   });
+   const clearPointerEvents = useStableCallback(() => {
+@@ -230,6 +231,7 @@ export function useHoverReferenceInteraction(store, props = {}) {
+           }
+         });
+         doc.addEventListener('mousemove', instance.handler);
++        doc.addEventListener('pointerdown', instance.handler, true);
+         instance.handler(event);
+         return;
+       }
+diff --git a/floating-ui-react/safePolygon.js b/floating-ui-react/safePolygon.js
+index 63dc8e8d079f4c73fced260f07a6f08f1a04558f..70d4f486cb12a7ec34ae0995a65a8e20af6f0074 100644
+--- a/floating-ui-react/safePolygon.js
++++ b/floating-ui-react/safePolygon.js
+@@ -10,9 +10,122 @@ var _element = require("./utils/element");
+ var _nodes = require("./utils/nodes");
+ /* eslint-disable no-nested-ternary */
+
+-const CURSOR_SPEED_THRESHOLD = 0.1;
+-const CURSOR_SPEED_THRESHOLD_SQUARED = CURSOR_SPEED_THRESHOLD * CURSOR_SPEED_THRESHOLD;
++const POINTER_GRACE_MS = 300;
++const POINTER_REST_MS = 100;
++const HEADING_SAMPLE_DISTANCE = 4;
+ const POLYGON_BUFFER = 0.5;
++function isHeadingInto(fromX, fromY, toX, toY, rect, side) {
++  const deltaX = toX - fromX;
++  const deltaY = toY - fromY;
++  switch (side) {
++    case 'right':
++      return toX >= rect.left || deltaX > 0 && isBetween(toY + deltaY * (rect.left - toX) / deltaX, rect.top, rect.bottom);
++    case 'left':
++      return toX <= rect.right || deltaX < 0 && isBetween(toY + deltaY * (rect.right - toX) / deltaX, rect.top, rect.bottom);
++    case 'bottom':
++      return toY >= rect.top || deltaY > 0 && isBetween(toX + deltaX * (rect.top - toY) / deltaY, rect.left, rect.right);
++    case 'top':
++      return toY <= rect.bottom || deltaY < 0 && isBetween(toX + deltaX * (rect.bottom - toY) / deltaY, rect.left, rect.right);
++    default:
++      return false;
++  }
++}
++function isBetween(value, start, end) {
++  return value >= start && value <= end;
++}
++function menuOf(reference) {
++  return reference.closest('[role="menu"]');
++}
++function siblingRowAt(reference, pointX, pointY) {
++  const menu = menuOf(reference);
++  if (!menu) {
++    return null;
++  }
++  for (const row of menu.querySelectorAll('[role^="menuitem"]')) {
++    if (row !== reference && menuOf(row) === menu && isInsideRect(pointX, pointY, row.getBoundingClientRect())) {
++      return row;
++    }
++  }
++  return null;
++}
++const pointers = new WeakMap();
++function trackPointer(doc) {
++  if (pointers.has(doc)) {
++    return;
++  }
++  const at = {
++    x: null,
++    y: null
++  };
++  pointers.set(doc, at);
++  doc.addEventListener('pointermove', event => {
++    at.x = event.clientX;
++    at.y = event.clientY;
++  }, {
++    capture: true,
++    passive: true
++  });
++}
++function hoverUnderPointer(reference, pointX, pointY) {
++  const menu = menuOf(reference);
++  const doc = reference.ownerDocument;
++  const view = doc.defaultView;
++  if (!menu || !view) {
++    return;
++  }
++  view.requestAnimationFrame(() => {
++    const at = pointers.get(doc);
++    const x = at?.x ?? pointX;
++    const y = at?.y ?? pointY;
++    const target = doc.elementFromPoint(x, y);
++    if (target && menu.contains(target)) {
++      target.dispatchEvent(new view.MouseEvent('mousemove', {
++        bubbles: true,
++        cancelable: true,
++        view,
++        clientX: x,
++        clientY: y,
++        movementX: 1
++      }));
++      const row = target.closest('[role^="menuitem"]');
++      if (row) {
++        leaveWhenOut(row, view);
++      }
++    }
++  });
++}
++function leaveWhenOut(row, view) {
++  const doc = row.ownerDocument;
++  const onMove = event => {
++    if (!row.isConnected) {
++      doc.removeEventListener('pointermove', onMove, true);
++      return;
++    }
++    if (isInsideRect(event.clientX, event.clientY, row.getBoundingClientRect())) {
++      return;
++    }
++    doc.removeEventListener('pointermove', onMove, true);
++    row.dispatchEvent(new view.MouseEvent('mouseleave', {
++      view,
++      clientX: event.clientX,
++      clientY: event.clientY
++    }));
++  };
++  doc.addEventListener('pointermove', onMove, true);
++}
++function forwardClickTo(row) {
++  row.ownerDocument.addEventListener('click', click => {
++    if ((0, _element.contains)(row, (0, _element.getTarget)(click)) || !row.isConnected || !isInsideRect(click.clientX, click.clientY, row.getBoundingClientRect())) {
++      return;
++    }
++    click.stopPropagation();
++    click.preventDefault();
++    row.click();
++  }, {
++    capture: true,
++    once: true
++  });
++}
+ function hasIntersectingEdge(pointX, pointY, xi, yi, xj, yj) {
+   return yi >= pointY !== yj >= pointY && pointX <= (xj - xi) * (pointY - yi) / (yj - yi) + xi;
+ }
+@@ -63,33 +176,22 @@ function safePolygon(options = {}) {
+   }) => {
+     const side = placement?.split('-')[0];
+     let hasLanded = false;
+-    let lastX = null;
+-    let lastY = null;
+-    let lastCursorTime = typeof performance !== 'undefined' ? performance.now() : 0;
+-    function isCursorMovingSlowly(nextX, nextY) {
+-      const currentTime = performance.now();
+-      const elapsedTime = currentTime - lastCursorTime;
+-      if (lastX === null || lastY === null || elapsedTime === 0) {
+-        lastX = nextX;
+-        lastY = nextY;
+-        lastCursorTime = currentTime;
+-        return false;
+-      }
+-      const deltaX = nextX - lastX;
+-      const deltaY = nextY - lastY;
+-      const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+-      const thresholdSquared = elapsedTime * elapsedTime * CURSOR_SPEED_THRESHOLD_SQUARED;
+-      lastX = nextX;
+-      lastY = nextY;
+-      lastCursorTime = currentTime;
+-      return distanceSquared < thresholdSquared;
+-    }
++    let lastX = x;
++    let lastY = y;
++    let sampleX = x;
++    let sampleY = y;
+     function close() {
+       timeout.clear();
+       onClose();
++      if (elements.domReference && lastX != null && lastY != null) {
++        hoverUnderPointer(elements.domReference, lastX, lastY);
++      }
+     }
+     return function onMouseMove(event) {
+       timeout.clear();
++      if (elements.domReference) {
++        trackPointer(elements.domReference.ownerDocument);
++      }
+       const domReference = elements.domReference;
+       const floating = elements.floating;
+       if (!domReference || !floating || side == null || x == null || y == null) {
+@@ -99,6 +201,16 @@ function safePolygon(options = {}) {
+         clientX,
+         clientY
+       } = event;
++      lastX = clientX;
++      lastY = clientY;
++      if (event.type === 'pointerdown') {
++        const row = siblingRowAt(domReference, clientX, clientY);
++        if (row) {
++          forwardClickTo(row);
++          close();
++        }
++        return undefined;
++      }
+       const target = (0, _element.getTarget)(event);
+       const isLeave = event.type === 'mouseleave';
+       const isOverFloatingEl = (0, _element.contains)(floating, target);
+@@ -183,10 +295,6 @@ function safePolygon(options = {}) {
+         closeIfNoOpenChild();
+         return undefined;
+       }
+-      if (!isLeave && isCursorMovingSlowly(clientX, clientY)) {
+-        closeIfNoOpenChild();
+-        return undefined;
+-      }
+       let isInsidePolygon = false;
+       switch (side) {
+         case 'top':
+@@ -237,9 +345,20 @@ function safePolygon(options = {}) {
+       }
+       if (!isInsidePolygon) {
+         closeIfNoOpenChild();
+-      } else if (!hasLanded) {
+-        timeout.start(40, closeIfNoOpenChild);
++        return undefined;
++      }
++      if (hasLanded) {
++        return undefined;
++      }
++      if (!isLeave && Math.hypot(clientX - sampleX, clientY - sampleY) >= HEADING_SAMPLE_DISTANCE) {
++        if (!isHeadingInto(sampleX, sampleY, clientX, clientY, rect, side)) {
++          closeIfNoOpenChild();
++          return undefined;
++        }
++        sampleX = clientX;
++        sampleY = clientY;
+       }
++      timeout.start(siblingRowAt(domReference, clientX, clientY) ? POINTER_REST_MS : POINTER_GRACE_MS, closeIfNoOpenChild);
+       return undefined;
+     };
+   };
+diff --git a/floating-ui-react/safePolygon.mjs b/floating-ui-react/safePolygon.mjs
+index 5dffb4f687465eba180c3375d9314d4b358b27c9..4404ad2388721c7d17236123f790e92c8bc7c007 100644
+--- a/floating-ui-react/safePolygon.mjs
++++ b/floating-ui-react/safePolygon.mjs
+@@ -5,9 +5,122 @@ import { getNodeChildren } from "./utils/nodes.mjs";
+
+ /* eslint-disable no-nested-ternary */
+
+-const CURSOR_SPEED_THRESHOLD = 0.1;
+-const CURSOR_SPEED_THRESHOLD_SQUARED = CURSOR_SPEED_THRESHOLD * CURSOR_SPEED_THRESHOLD;
++const POINTER_GRACE_MS = 300;
++const POINTER_REST_MS = 100;
++const HEADING_SAMPLE_DISTANCE = 4;
+ const POLYGON_BUFFER = 0.5;
++function isHeadingInto(fromX, fromY, toX, toY, rect, side) {
++  const deltaX = toX - fromX;
++  const deltaY = toY - fromY;
++  switch (side) {
++    case 'right':
++      return toX >= rect.left || deltaX > 0 && isBetween(toY + deltaY * (rect.left - toX) / deltaX, rect.top, rect.bottom);
++    case 'left':
++      return toX <= rect.right || deltaX < 0 && isBetween(toY + deltaY * (rect.right - toX) / deltaX, rect.top, rect.bottom);
++    case 'bottom':
++      return toY >= rect.top || deltaY > 0 && isBetween(toX + deltaX * (rect.top - toY) / deltaY, rect.left, rect.right);
++    case 'top':
++      return toY <= rect.bottom || deltaY < 0 && isBetween(toX + deltaX * (rect.bottom - toY) / deltaY, rect.left, rect.right);
++    default:
++      return false;
++  }
++}
++function isBetween(value, start, end) {
++  return value >= start && value <= end;
++}
++function menuOf(reference) {
++  return reference.closest('[role="menu"]');
++}
++function siblingRowAt(reference, pointX, pointY) {
++  const menu = menuOf(reference);
++  if (!menu) {
++    return null;
++  }
++  for (const row of menu.querySelectorAll('[role^="menuitem"]')) {
++    if (row !== reference && menuOf(row) === menu && isInsideRect(pointX, pointY, row.getBoundingClientRect())) {
++      return row;
++    }
++  }
++  return null;
++}
++const pointers = new WeakMap();
++function trackPointer(doc) {
++  if (pointers.has(doc)) {
++    return;
++  }
++  const at = {
++    x: null,
++    y: null
++  };
++  pointers.set(doc, at);
++  doc.addEventListener('pointermove', event => {
++    at.x = event.clientX;
++    at.y = event.clientY;
++  }, {
++    capture: true,
++    passive: true
++  });
++}
++function hoverUnderPointer(reference, pointX, pointY) {
++  const menu = menuOf(reference);
++  const doc = reference.ownerDocument;
++  const view = doc.defaultView;
++  if (!menu || !view) {
++    return;
++  }
++  view.requestAnimationFrame(() => {
++    const at = pointers.get(doc);
++    const x = at?.x ?? pointX;
++    const y = at?.y ?? pointY;
++    const target = doc.elementFromPoint(x, y);
++    if (target && menu.contains(target)) {
++      target.dispatchEvent(new view.MouseEvent('mousemove', {
++        bubbles: true,
++        cancelable: true,
++        view,
++        clientX: x,
++        clientY: y,
++        movementX: 1
++      }));
++      const row = target.closest('[role^="menuitem"]');
++      if (row) {
++        leaveWhenOut(row, view);
++      }
++    }
++  });
++}
++function leaveWhenOut(row, view) {
++  const doc = row.ownerDocument;
++  const onMove = event => {
++    if (!row.isConnected) {
++      doc.removeEventListener('pointermove', onMove, true);
++      return;
++    }
++    if (isInsideRect(event.clientX, event.clientY, row.getBoundingClientRect())) {
++      return;
++    }
++    doc.removeEventListener('pointermove', onMove, true);
++    row.dispatchEvent(new view.MouseEvent('mouseleave', {
++      view,
++      clientX: event.clientX,
++      clientY: event.clientY
++    }));
++  };
++  doc.addEventListener('pointermove', onMove, true);
++}
++function forwardClickTo(row) {
++  row.ownerDocument.addEventListener('click', click => {
++    if (contains(row, getTarget(click)) || !row.isConnected || !isInsideRect(click.clientX, click.clientY, row.getBoundingClientRect())) {
++      return;
++    }
++    click.stopPropagation();
++    click.preventDefault();
++    row.click();
++  }, {
++    capture: true,
++    once: true
++  });
++}
+ function hasIntersectingEdge(pointX, pointY, xi, yi, xj, yj) {
+   return yi >= pointY !== yj >= pointY && pointX <= (xj - xi) * (pointY - yi) / (yj - yi) + xi;
+ }
+@@ -58,33 +171,22 @@ export function safePolygon(options = {}) {
+   }) => {
+     const side = placement?.split('-')[0];
+     let hasLanded = false;
+-    let lastX = null;
+-    let lastY = null;
+-    let lastCursorTime = typeof performance !== 'undefined' ? performance.now() : 0;
+-    function isCursorMovingSlowly(nextX, nextY) {
+-      const currentTime = performance.now();
+-      const elapsedTime = currentTime - lastCursorTime;
+-      if (lastX === null || lastY === null || elapsedTime === 0) {
+-        lastX = nextX;
+-        lastY = nextY;
+-        lastCursorTime = currentTime;
+-        return false;
+-      }
+-      const deltaX = nextX - lastX;
+-      const deltaY = nextY - lastY;
+-      const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+-      const thresholdSquared = elapsedTime * elapsedTime * CURSOR_SPEED_THRESHOLD_SQUARED;
+-      lastX = nextX;
+-      lastY = nextY;
+-      lastCursorTime = currentTime;
+-      return distanceSquared < thresholdSquared;
+-    }
++    let lastX = x;
++    let lastY = y;
++    let sampleX = x;
++    let sampleY = y;
+     function close() {
+       timeout.clear();
+       onClose();
++      if (elements.domReference && lastX != null && lastY != null) {
++        hoverUnderPointer(elements.domReference, lastX, lastY);
++      }
+     }
+     return function onMouseMove(event) {
+       timeout.clear();
++      if (elements.domReference) {
++        trackPointer(elements.domReference.ownerDocument);
++      }
+       const domReference = elements.domReference;
+       const floating = elements.floating;
+       if (!domReference || !floating || side == null || x == null || y == null) {
+@@ -94,6 +196,16 @@ export function safePolygon(options = {}) {
+         clientX,
+         clientY
+       } = event;
++      lastX = clientX;
++      lastY = clientY;
++      if (event.type === 'pointerdown') {
++        const row = siblingRowAt(domReference, clientX, clientY);
++        if (row) {
++          forwardClickTo(row);
++          close();
++        }
++        return undefined;
++      }
+       const target = getTarget(event);
+       const isLeave = event.type === 'mouseleave';
+       const isOverFloatingEl = contains(floating, target);
+@@ -178,10 +290,6 @@ export function safePolygon(options = {}) {
+         closeIfNoOpenChild();
+         return undefined;
+       }
+-      if (!isLeave && isCursorMovingSlowly(clientX, clientY)) {
+-        closeIfNoOpenChild();
+-        return undefined;
+-      }
+       let isInsidePolygon = false;
+       switch (side) {
+         case 'top':
+@@ -232,9 +340,20 @@ export function safePolygon(options = {}) {
+       }
+       if (!isInsidePolygon) {
+         closeIfNoOpenChild();
+-      } else if (!hasLanded) {
+-        timeout.start(40, closeIfNoOpenChild);
++        return undefined;
++      }
++      if (hasLanded) {
++        return undefined;
++      }
++      if (!isLeave && Math.hypot(clientX - sampleX, clientY - sampleY) >= HEADING_SAMPLE_DISTANCE) {
++        if (!isHeadingInto(sampleX, sampleY, clientX, clientY, rect, side)) {
++          closeIfNoOpenChild();
++          return undefined;
++        }
++        sampleX = clientX;
++        sampleY = clientY;
+       }
++      timeout.start(siblingRowAt(domReference, clientX, clientY) ? POINTER_REST_MS : POINTER_GRACE_MS, closeIfNoOpenChild);
+       return undefined;
+     };
+   };

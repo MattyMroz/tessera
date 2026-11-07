@@ -2,7 +2,7 @@ import { describe, expect, it, vi, type Mock } from 'vitest'
 import { MOTION } from '../../test/fixtures/motion'
 import type { Rect } from './flight'
 import type { Motion } from './motion'
-import { createPopupFlight, flightOffset, flightOrigin, type FlightPopup, type FlightPositioner } from './popup-flight'
+import { createPopupFlight, flightOffset, menuGrace, flightOrigin, type FlightPopup, type FlightPositioner } from './popup-flight'
 
 const GRACE = 400
 
@@ -127,7 +127,7 @@ function positioner(left?: number): FakePositioner {
 function setup(motion: Motion = MOTION) {
   const clock = { time: 0 }
   const page = { scroll: { x: 0, y: 0 }, panes: 0 }
-  const flight = createPopupFlight({ grace: GRACE, motion: () => motion, now: () => clock.time, scroll: () => page.scroll, panes: () => page.panes })
+  const flight = createPopupFlight({ grace: () => GRACE, motion: () => motion, now: () => clock.time, scroll: () => page.scroll, panes: () => page.panes })
   const open = (left: number, trigger?: string) => {
     const anchor = positioner(left)
     const popup = popupAt(left)
@@ -191,6 +191,11 @@ describe('createPopupFlight', () => {
     early.close(second.anchor, second.popup)
     early.clock.time = GRACE
     expect(early.open(160).popup.animate).toHaveBeenCalledOnce()
+  })
+
+  it('keeps a menu warm for the hover exit time of the motion engine', () => {
+    expect(menuGrace(MOTION)).toBe(MOTION.hoverOut)
+    expect(menuGrace({ ...MOTION, hoverOut: 0 })).toBe(0)
   })
 
   it('counts a popup removed without a closing state as closed', () => {

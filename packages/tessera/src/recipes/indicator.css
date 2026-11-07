@@ -53,7 +53,7 @@
       opacity: 1;
     }
 
-    &[data-variant='hover']:not([data-visible='true'], [data-off]) {
+    &[data-variant='hover']:is(:not([data-visible='true']), [data-return]):not([data-off]) {
       transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
     }
 
@@ -103,7 +103,16 @@
     &[data-variant='thumb'] {
       --_fill: var(--ts-color-thumb);
       --_fill-opacity: 1;
+      --_rest: calc(var(--ts-size-thumb-inset) - var(--ts-shape-stroke));
+      inline-size: var(--ts-size-thumb);
+      block-size: var(--ts-size-thumb);
+      opacity: 1;
+      translate: var(--_rest) var(--_rest);
       scale: var(--ts-motion-press-rest);
+
+      &[data-on] {
+        translate: calc(var(--ts-size-track-inline) - var(--ts-size-thumb) - var(--_rest) - var(--ts-shape-stroke) - var(--ts-shape-stroke)) var(--_rest);
+      }
 
       & > [data-slot='squash'] {
         position: relative;

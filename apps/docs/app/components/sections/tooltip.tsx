@@ -52,21 +52,30 @@ export function TooltipSection() {
           ))}
         </div>
       </Group>
-      <Group title="On the right">
-        <div className="flex flex-col items-start gap-inset">
-          {COLUMN.map((label) => (
-            <Tooltip key={label} content={`Show ${label.toLowerCase()}`} side="right">
-              <Button>{label}</Button>
-            </Tooltip>
-          ))}
+      <Group title="Without an arrow">
+        <div className="flex flex-wrap items-center gap-group">
+          <Tooltip content="No arrow" arrow={false}>
+            <Button variant="soft">Plain</Button>
+          </Tooltip>
         </div>
       </Group>
       <Group title="In a bar">
-        <div data-recipe="surface" data-level="base" data-surface="" data-inset="inset" className="flex items-center gap-inset self-start">
-          <TooltipBar side="bottom">
+        <div data-recipe="surface" data-level="base" data-surface="" data-inset="inset" className="self-start">
+          <TooltipBar>
             {TOOLS.map((tool) => (
               <Tooltip key={tool.label} content={tool.label}>
                 <Button aria-label={tool.label} icon={<tool.Icon />} />
+              </Tooltip>
+            ))}
+          </TooltipBar>
+        </div>
+      </Group>
+      <Group title="In a vertical bar">
+        <div data-recipe="surface" data-level="base" data-surface="" data-inset="inset" className="self-start">
+          <TooltipBar orientation="vertical">
+            {COLUMN.map((label) => (
+              <Tooltip key={label} content={`Show ${label.toLowerCase()}`}>
+                <Button>{label}</Button>
               </Tooltip>
             ))}
           </TooltipBar>

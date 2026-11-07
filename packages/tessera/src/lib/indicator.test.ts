@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Box } from './flight'
-import { measureBox, pickTarget, place, stickyHover, wallsOf, type IndicatorState } from './indicator'
+import { inside, measureBox, pickTarget, place, stickyHover, wallsOf, warm, type IndicatorState } from './indicator'
 
 type FakeNode = {
   readonly parent: FakeNode | null
@@ -105,9 +105,46 @@ describe('placement', () => {
     expect(place(shown, second, { ...box, height: 0 })).toBe('hide')
   })
 
-  it('returns from where it hid with a flight', () => {
-    expect(place(hidden, second, { ...box, x: 80 })).toBe('slide')
-    expect(place(hidden, first, box)).toBe('slide')
+  it('returns from where it hid with a flight while the group is warm', () => {
+    expect(place(hidden, second, { ...box, x: 80 }, true)).toBe('slide')
+    expect(place(hidden, first, box, true)).toBe('slide')
+  })
+
+  it('shows a target on its place without a flight once the group got cold', () => {
+    expect(place(hidden, second, { ...box, x: 80 }, false)).toBe('reveal')
+    expect(place(hidden, first, box, false)).toBe('reveal')
+  })
+})
+
+describe('pointer inside the group', () => {
+  const rect = { left: 10, top: 20, width: 100, height: 40 }
+
+  it('counts a point within the group, also over a separator, as inside', () => {
+    expect(inside(rect, 60, 40)).toBe(true)
+    expect(inside(rect, 10.5, 59.5)).toBe(true)
+  })
+
+  it('counts a point on or past the edge as outside', () => {
+    expect(inside(rect, 10, 40)).toBe(false)
+    expect(inside(rect, 60, 60)).toBe(false)
+    expect(inside(rect, 200, 40)).toBe(false)
+  })
+})
+
+describe('warm group', () => {
+  it('stays warm for the exit time after the pill hid, whatever the pill looks like meanwhile', () => {
+    expect(warm(1000, 1000, 150)).toBe(true)
+    expect(warm(1000, 1150, 150)).toBe(true)
+    expect(warm(1000, 1151, 150)).toBe(false)
+  })
+
+  it('is cold before the pill ever hid', () => {
+    expect(warm(null, 1000, 150)).toBe(false)
+  })
+
+  it('keeps a pill that hides at once warm only within the frame it hid in', () => {
+    expect(warm(1000, 1000, 0)).toBe(true)
+    expect(warm(1000, 1016, 0)).toBe(false)
   })
 })
 

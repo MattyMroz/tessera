@@ -889,13 +889,14 @@ export function overflowProblems(frames: Locator): Promise<string[]> {
       const visit = (parent: Element, clipped: boolean): void => {
         for (const element of parent.children) {
           if (!element.checkVisibility() || element.matches(formProxy)) continue
+          const pointsOut = element.matches("[data-slot='arrow']")
           const rect = element.getBoundingClientRect()
           const outside =
             rect.left < outer.left - TOLERANCE ||
             rect.right > outer.right + TOLERANCE ||
             rect.top < outer.top - TOLERANCE ||
             rect.bottom > outer.bottom + TOLERANCE
-          if (!clipped && (rect.width > 0 || rect.height > 0) && outside) {
+          if (!clipped && !pointsOut && (rect.width > 0 || rect.height > 0) && outside) {
             problems.push(
               `${name}: ${labelOf(element)} spans ${Math.round(rect.left - outer.left)}..${Math.round(rect.right - outer.left)} × ${Math.round(rect.top - outer.top)}..${Math.round(rect.bottom - outer.top)} px`,
             )

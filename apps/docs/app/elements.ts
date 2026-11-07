@@ -22,27 +22,40 @@ import { TextareaSection } from './components/sections/textarea'
 import { ToggleGroupSection } from './components/sections/toggle-group'
 import { TooltipSection } from './components/sections/tooltip'
 
-export const LAB_ELEMENTS: readonly { readonly id: string; readonly name: string; readonly Section: ComponentType }[] = [
-  { id: 'alert', name: 'Alert', Section: AlertSection },
-  { id: 'alert-dialog', name: 'Alert dialog', Section: AlertDialogSection },
-  { id: 'badge', name: 'Badge', Section: BadgeSection },
-  { id: 'button', name: 'Button', Section: ButtonSection },
-  { id: 'button-group', name: 'Button group', Section: ButtonGroupSection },
-  { id: 'card', name: 'Card', Section: CardSection },
-  { id: 'checkbox', name: 'Checkbox', Section: CheckboxSection },
-  { id: 'context-menu', name: 'Context menu', Section: ContextMenuSection },
-  { id: 'dialog', name: 'Dialog', Section: DialogSection },
-  { id: 'field', name: 'Field', Section: FieldSection },
-  { id: 'input', name: 'Input', Section: InputSection },
-  { id: 'kbd', name: 'Kbd', Section: KbdSection },
-  { id: 'menu', name: 'Menu', Section: MenuSection },
-  { id: 'menubar', name: 'Menubar', Section: MenubarSection },
-  { id: 'popover', name: 'Popover', Section: PopoverSection },
-  { id: 'radio', name: 'Radio', Section: RadioSection },
-  { id: 'select', name: 'Select', Section: SelectSection },
-  { id: 'switch', name: 'Switch', Section: SwitchSection },
-  { id: 'text', name: 'Text', Section: TextSection },
-  { id: 'textarea', name: 'Textarea', Section: TextareaSection },
-  { id: 'toggle-group', name: 'Toggle group', Section: ToggleGroupSection },
-  { id: 'tooltip', name: 'Tooltip', Section: TooltipSection },
+export type ElementStatus = 'not-ready' | 'accepted' | 'done'
+
+export const STATUS_MARKS: Readonly<Record<ElementStatus, { readonly mark: string; readonly label: string }>> = {
+  'not-ready': { mark: '✗', label: 'Not ready' },
+  accepted: { mark: '–', label: 'Accepted with work left' },
+  done: { mark: '✓', label: 'Done' },
+}
+
+export const LAB_ELEMENTS: readonly {
+  readonly id: string
+  readonly name: string
+  readonly status: ElementStatus
+  readonly Section: ComponentType
+}[] = [
+  { id: 'alert', name: 'Alert', status: 'not-ready', Section: AlertSection },
+  { id: 'alert-dialog', name: 'Alert dialog', status: 'not-ready', Section: AlertDialogSection },
+  { id: 'badge', name: 'Badge', status: 'not-ready', Section: BadgeSection },
+  { id: 'button', name: 'Button', status: 'accepted', Section: ButtonSection },
+  { id: 'button-group', name: 'Button group', status: 'not-ready', Section: ButtonGroupSection },
+  { id: 'card', name: 'Card', status: 'not-ready', Section: CardSection },
+  { id: 'checkbox', name: 'Checkbox', status: 'accepted', Section: CheckboxSection },
+  { id: 'context-menu', name: 'Context menu', status: 'not-ready', Section: ContextMenuSection },
+  { id: 'dialog', name: 'Dialog', status: 'not-ready', Section: DialogSection },
+  { id: 'field', name: 'Field', status: 'not-ready', Section: FieldSection },
+  { id: 'input', name: 'Input', status: 'not-ready', Section: InputSection },
+  { id: 'kbd', name: 'Kbd', status: 'not-ready', Section: KbdSection },
+  { id: 'menu', name: 'Menu', status: 'not-ready', Section: MenuSection },
+  { id: 'menubar', name: 'Menubar', status: 'accepted', Section: MenubarSection },
+  { id: 'popover', name: 'Popover', status: 'not-ready', Section: PopoverSection },
+  { id: 'radio', name: 'Radio', status: 'accepted', Section: RadioSection },
+  { id: 'select', name: 'Select', status: 'not-ready', Section: SelectSection },
+  { id: 'switch', name: 'Switch', status: 'accepted', Section: SwitchSection },
+  { id: 'text', name: 'Text', status: 'not-ready', Section: TextSection },
+  { id: 'textarea', name: 'Textarea', status: 'not-ready', Section: TextareaSection },
+  { id: 'toggle-group', name: 'Toggle group', status: 'not-ready', Section: ToggleGroupSection },
+  { id: 'tooltip', name: 'Tooltip', status: 'not-ready', Section: TooltipSection },
 ]

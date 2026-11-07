@@ -206,6 +206,8 @@ const LAB_BLOCKS: Readonly<Record<string, string>> = {
     "files: ['apps/docs/tests/lab.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the anti-FOUC test reads the theme attributes in the first rendering frame' }, ], },",
   'lab/tooltip-frame-probe':
     "files: ['apps/docs/tests/tooltip.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the tooltip guards read the shown tooltip in every rendering frame' }, ], },",
+  'lab/sliding-frame-probe':
+    "files: ['apps/docs/tests/sliding.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the sliding guards read the pill and the menus in every rendering frame' }, ], },",
 }
 
 it('configures the lab with the consumer plugin, one rule turned off for the foundation page and one rule configured for each frame probe', () => {
@@ -368,7 +370,6 @@ it('gives every component a section on the edges screen', () => {
 })
 
 const TIME_CONSTANTS = [
-  'FLIGHT_GRACE',
   'SAMPLE_STEP',
   'TOOLTIP_OPEN_DELAY',
   'TOOLTIP_GROUP_GRACE',
@@ -400,12 +401,12 @@ it('accepts the listed time constants defined in lib and used by lib and compone
   expect(timeConstantProblems({
     'lib/flight.ts': 'export const SAMPLE_STEP = 1 / 60\nconst MAX_SAMPLES = 600',
     'lib/motion.ts': 'export const MILLISECONDS_PER_SECOND = 1000',
-    'lib/popup-flight.ts': 'export const FLIGHT_GRACE = 150',
+    'lib/popup-flight.ts': 'export function menuGrace(motion: Motion): number {\n  return motion.hoverOut\n}',
     'lib/tooltip-group.ts':
       'export const TOOLTIP_OPEN_DELAY = 400\nexport const TOOLTIP_GROUP_GRACE: number = 400\nexport const TOOLTIP_CLOSE_DELAY = 100',
     'lib/collection.ts': "export const TYPEAHEAD_RESET = 500\nif (now - last > TYPEAHEAD_RESET) buffer = ''",
     'lib/press.ts': 'timer = setTimeout(lift, delay)',
-    'components/menu/menu.tsx': 'createPopupFlight({ grace: FLIGHT_GRACE })',
+    'components/menu/menu.tsx': 'createPopupFlight({ grace: menuGrace })',
     'components/tooltip/tooltip.tsx':
       '<BaseTooltip.Provider timeout={TOOLTIP_GROUP_GRACE}>{children}</BaseTooltip.Provider>\nconst TIMING = { delay: TOOLTIP_OPEN_DELAY, closeDelay: TOOLTIP_CLOSE_DELAY }',
   })).toEqual([])
@@ -414,7 +415,7 @@ it('accepts the listed time constants defined in lib and used by lib and compone
 it('finds a listed time constant missing from lib and a time constant outside the list', () => {
   expect(timeConstantProblems({
     'lib/flight.ts': 'export const SAMPLE_STEP = 1 / 60',
-    'lib/popup-flight.ts': 'export const FLIGHT_GRACE = 150\nconst HOLD = 300\nsetTimeout(release, HOLD)',
+    'lib/popup-flight.ts': 'const HOLD = 300\nsetTimeout(release, HOLD)',
     'components/menu/menu.tsx': 'const SWITCH_DELAY = 150\ncreatePopupFlight({ grace: SWITCH_DELAY })',
     'components/tooltip/tooltip.tsx':
       '<BaseTooltip.Provider timeout={OPEN_WINDOW}>{children}</BaseTooltip.Provider>\n<BaseTooltip.Trigger closeDelay={LEAVE_WINDOW} />',

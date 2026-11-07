@@ -22,7 +22,9 @@ Pomiar (Chromium i WebKit, klatka po klatce z `requestAnimationFrame`): kursor z
 
 Wybór: `closeDelay={TOOLTIP_CLOSE_DELAY}` (100 ms, `lib/tooltip-group.ts`, wartość desktopu MangaShift) na każdym wyzwalaczu, w pasku i poza nim. Bez własnego kodu: Base UI sam czyści zamknięcie przy wejściu na sąsiada. Wyjście poza pasek zamyka popup po 100 ms (desktop: tyle samo). Klawiatura (fokus, Escape) i dotyk (`mouseOnly`) bez zmian.
 
-Różnica wobec desktopu: desktop trzyma popup w całym prostokącie grupy bez limitu czasu, tu szczelina trzyma go 100 ms. Postój w szczelinie dłuższy niż 100 ms (ruch wolniejszy niż ok. 40–80 px/s przez szczelinę 4–8 px) zamyka popup. Jeśli właściciel chce trzymania przestrzennego, potrzebny jest element grupy (`TooltipBar` renderuje dziś tylko dzieci) — to zmiana API, do decyzji.
+Aktualizacja 07.11: zastąpione standardem suwnicy (`docs/plans/e3-sliding.md`, `e3-choices.md`): `TooltipBar` ma własny element grupy i trzyma dymek w szczelinie bez limitu czasu, jak desktop. Pomiar przed zmianą: szczelina trzymała dymek ok. 415–430 ms (zegary Base UI), nie 100 ms.
+
+Różnica wobec desktopu (stan z 02.11): desktop trzyma popup w całym prostokącie grupy bez limitu czasu, tu szczelina trzyma go 100 ms. Postój w szczelinie dłuższy niż 100 ms (ruch wolniejszy niż ok. 40–80 px/s przez szczelinę 4–8 px) zamyka popup. Jeśli właściciel chce trzymania przestrzennego, potrzebny jest element grupy (`TooltipBar` renderuje dziś tylko dzieci) — to zmiana API, do decyzji.
 
 ## 2. Tooltip startuje niżej i dolatuje na miejsce
 

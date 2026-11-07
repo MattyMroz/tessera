@@ -4,7 +4,9 @@ import { useLayoutEffect, useRef, useState, type RefCallback } from 'react'
 import { SETTLED, type Point, type Rect } from './flight'
 import { readMotion, type Motion } from './motion'
 
-const FLIGHT_GRACE = 150
+export function menuGrace(motion: Motion): number {
+  return motion.hoverOut
+}
 
 export type FlightOrigin = { readonly rect: Rect; readonly side: string | undefined }
 
@@ -23,7 +25,7 @@ export type FlightPositioner = {
 }
 
 export type PopupFlightOptions<P extends FlightPopup> = {
-  readonly grace: number
+  readonly grace: (motion: Motion) => number
   readonly motion: (popup: P) => Motion
   readonly now?: () => number
   readonly scroll?: () => Point
@@ -140,9 +142,9 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
     if (last?.positioner === positioner && last.closedAt === null) last = { ...last, closedAt: now() }
   }
 
-  const recent = (positioner: FlightPositioner, at: Point, scrolled: number): FlightOrigin | null => {
+  const recent = (positioner: FlightPositioner, popup: P, at: Point, scrolled: number): FlightOrigin | null => {
     if (!last || last.positioner === positioner || last.panes !== scrolled) return null
-    return last.closedAt === null || now() - last.closedAt <= grace ? seenAt(last, at) : null
+    return last.closedAt === null || now() - last.closedAt <= grace(motion(popup)) ? seenAt(last, at) : null
   }
 
   const fly = (popup: P, from: FlightOrigin | null, target: FlightOrigin): void => {
@@ -177,7 +179,7 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
     const at = scroll()
     const scrolled = panes()
     const known = same !== null && same.panes === scrolled
-    if (!stays) fly(popup, known ? drifted(seenAt(same, at), visible, target) : recent(positioner, at, scrolled), target)
+    if (!stays) fly(popup, known ? drifted(seenAt(same, at), visible, target) : recent(positioner, popup, at, scrolled), target)
     last = { positioner, transform, target, scroll: at, panes: scrolled, trigger, closedAt: null }
   }
 
@@ -197,7 +199,7 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
 }
 
 export function createMenuFlight(): PopupFlight<HTMLElement> {
-  return createPopupFlight<HTMLElement>({ grace: FLIGHT_GRACE, motion: readMotion })
+  return createPopupFlight<HTMLElement>({ grace: menuGrace, motion: readMotion })
 }
 
 export function usePopupFlight(flight: PopupFlight<HTMLElement>, trigger?: string): PopupFlightParts {

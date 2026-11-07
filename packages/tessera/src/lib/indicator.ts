@@ -33,6 +33,7 @@ export type IndicatorOptions = {
   readonly hover?: boolean
   readonly focus?: boolean
   readonly follow?: boolean
+  readonly placed?: boolean
 }
 
 export type IndicatorSelect = (active: HTMLElement | null, under: HTMLElement | null, off?: boolean) => void
@@ -53,6 +54,7 @@ type IndicatorSettings = {
   readonly hover: boolean
   readonly focus: boolean
   readonly follow: boolean
+  readonly placed: boolean
 }
 
 type IndicatorControl = {
@@ -64,7 +66,6 @@ type Running = { readonly flight: Flight; readonly size: Size; readonly walls: W
 
 const SOURCES: readonly IndicatorSource[] = ['hover', 'focus', 'active']
 const ROUNDING = 1
-const HIDDEN_OPACITY = 0.05
 
 export function pickTarget<T extends { readonly isConnected: boolean }>(targets: IndicatorTargets<T>, under: T | null = null): T | null {
   for (const source of SOURCES) {
@@ -84,14 +85,28 @@ function enabled(items: string): string {
   return `:is(${items}):not(:disabled, [data-disabled], [aria-disabled='true'])`
 }
 
+export function inside(rect: Rect, x: number, y: number): boolean {
+  return x > rect.left && x < rect.left + rect.width && y > rect.top && y < rect.top + rect.height
+}
+
+function frameTime(): number {
+  const time = document.timeline.currentTime
+  return typeof time === 'number' ? time : performance.now()
+}
+
 function near(a: Box, b: Box): boolean {
   return [a.x - b.x, a.y - b.y, a.width - b.width, a.height - b.height].every((delta) => Math.abs(delta) < SETTLED)
 }
 
-export function place<T>(state: IndicatorState<T>, target: T | null, box: Box | null): Placement {
+export function warm(hiddenAt: number | null, now: number, window: number): boolean {
+  return hiddenAt !== null && now - hiddenAt <= window
+}
+
+export function place<T>(state: IndicatorState<T>, target: T | null, box: Box | null, warmGroup = false): Placement {
   if (target === null || box === null || box.width <= 0 || box.height <= 0) return 'hide'
   if (state.box === null) return 'reveal'
-  if (!state.visible || target !== state.target) return 'slide'
+  if (!state.visible) return warmGroup ? 'slide' : 'reveal'
+  if (target !== state.target) return 'slide'
   return near(state.box, box) ? 'stay' : 'follow'
 }
 
@@ -149,6 +164,8 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
   let under: HTMLElement | null = null
   let off = false
   let state: IndicatorState<HTMLElement> = { target: null, box: null, visible: false }
+  let hiddenAt: number | null = null
+  let fading = false
   let running: Running | undefined
   const resizes = new ResizeObserver(() => update())
   const observeCollection = (): void => {
@@ -169,9 +186,12 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
   }
 
   const rest = (box: Box): void => {
+    if (settings.placed) return
     ride.style.transform = translate(box)
     writeInstance(ride, { '--ts-i-inline-size': `${box.width}px`, '--ts-i-block-size': `${box.height}px` })
   }
+
+  const shifted = (point: Point, box: Box): Point => (settings.placed ? { x: point.x - box.x, y: point.y - box.y } : point)
 
   const startFrom = (): Point => {
     const flight = running?.flight
@@ -180,17 +200,10 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
     return state.box ?? { x: 0, y: 0 }
   }
 
-  const gone = (): boolean => Number.parseFloat(getComputedStyle(ride).opacity) < HIDDEN_OPACITY
-
   const fly = (box: Box): void => {
-    const hidden = kind === 'follow' && gone()
     const position = startFrom()
     stop()
     rest(box)
-    if (hidden) {
-      ride.removeAttribute('data-wall')
-      return
-    }
     const flight = planFlight({ kind, from: position, to: box, motion: readMotion(container) })
     if (!flight) {
       ride.removeAttribute('data-wall')
@@ -199,7 +212,7 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
     const walls = wallsOf(container, getComputedStyle(container), axis)
     const { frames, wall } = course(flight, box, axis, walls)
     const timing: KeyframeAnimationOptions = { duration: flight.duration, easing: flight.easing }
-    const animations = [ride.animate(frames.map((frame) => ({ offset: frame.offset, transform: translate(frame) })), timing)]
+    const animations = [ride.animate(frames.map((frame) => ({ offset: frame.offset, transform: translate(shifted(frame, box)) })), timing)]
     if (wall) {
       ride.setAttribute('data-wall', wall)
       animations.push(squash.animate(frames.map((frame) => ({ offset: frame.offset, transform: squeeze(axis, frame.scale) })), timing))
@@ -215,13 +228,20 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
     ride.toggleAttribute('data-off', off)
     const target = off ? null : pickTarget({ hover: hovered, focus: focused, active }, under)
     const box = target ? measureIn(target, container) : null
-    const placement = place(state, target, box)
+    const returning = !state.visible && state.box !== null && target !== null && warm(hiddenAt, frameTime(), fading ? readMotion(container).hoverOut : 0)
+    const placement = place(state, target, box, returning)
     if (placement === 'stay') return
     if (placement === 'hide' || !target || !box) {
+      if (state.visible) {
+        hiddenAt = frameTime()
+        fading = settings.hover && !off
+      }
       ride.setAttribute('data-visible', 'false')
       state = { ...state, visible: false }
       return
     }
+    ride.toggleAttribute('data-return', returning)
+    hiddenAt = null
     if (placement === 'slide') fly(box)
     else {
       stop()
@@ -243,17 +263,30 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
     node instanceof Element && node.closest(settings.items) !== null && node.closest(items) === null
 
   const contains = (node: Element): boolean => container.contains(node)
-  const onMove = (event: PointerEvent): void => {
+  const onMove = (event: MouseEvent): void => {
     const next = stickyHover(event.target instanceof Element ? event.target : null, contains, items, hovered)
     const item = next instanceof HTMLElement ? next : null
     if (item === hovered) return
     hovered = item
     update()
   }
-  const onLeave = (): void => {
+  const forget = (): void => {
+    document.removeEventListener('pointermove', onOutside)
     if (!hovered) return
     hovered = null
     update()
+  }
+  const onOutside = (event: PointerEvent): void => {
+    if (!inside(container.getBoundingClientRect(), event.clientX, event.clientY)) forget()
+    else if (event.target instanceof Node && container.contains(event.target)) document.removeEventListener('pointermove', onOutside)
+  }
+  const onLeave = (event: Event): void => {
+    if (!hovered) return
+    if (event instanceof PointerEvent && inside(container.getBoundingClientRect(), event.clientX, event.clientY)) {
+      document.addEventListener('pointermove', onOutside)
+      return
+    }
+    forget()
   }
   const onFocusIn = (event: FocusEvent): void => {
     if (isDisabledItem(event.target)) return
@@ -270,6 +303,7 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
 
   if (settings.hover) {
     container.addEventListener('pointermove', onMove)
+    container.addEventListener('mousemove', onMove)
     container.addEventListener('pointerleave', onLeave)
     window.addEventListener('blur', onLeave)
   }
@@ -291,7 +325,9 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
       resizes.disconnect()
       mutations.disconnect()
       container.removeEventListener('pointermove', onMove)
+      container.removeEventListener('mousemove', onMove)
       container.removeEventListener('pointerleave', onLeave)
+      document.removeEventListener('pointermove', onOutside)
       window.removeEventListener('blur', onLeave)
       container.removeEventListener('focusin', onFocusIn)
       container.removeEventListener('focusout', onFocusOut)
@@ -305,6 +341,7 @@ export function useIndicator(options: IndicatorOptions): IndicatorParts {
   const hover = options.hover ?? false
   const focus = options.focus ?? false
   const follow = options.follow ?? false
+  const placed = options.placed ?? false
   const [container, setContainer] = useState<HTMLElement | null>(null)
   const [ride, setRide] = useState<HTMLElement | null>(null)
   const [squash, setSquash] = useState<HTMLElement | null>(null)
@@ -313,14 +350,14 @@ export function useIndicator(options: IndicatorOptions): IndicatorParts {
 
   useLayoutEffect(() => {
     if (!container || !ride || !squash) return
-    const indicator = connectIndicator({ container, ride, squash, axis, items, hover, focus, follow })
+    const indicator = connectIndicator({ container, ride, squash, axis, items, hover, focus, follow, placed })
     indicator.select(targets.current.active, targets.current.under, targets.current.off)
     control.current = indicator
     return () => {
       indicator.disconnect()
       control.current = null
     }
-  }, [container, ride, squash, axis, items, hover, focus, follow])
+  }, [container, ride, squash, axis, items, hover, focus, follow, placed])
 
   const select: IndicatorSelect = (active, under, off = false) => {
     targets.current = { active, under, off }

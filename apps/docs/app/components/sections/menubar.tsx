@@ -36,6 +36,8 @@ import type { ReactNode } from 'react'
 import { Group } from './group'
 
 const RECENT = Array.from({ length: 24 }, (_, index) => `Chapter ${index + 1}.msproj`)
+const TOOLS = ['Brush', 'Eraser', 'Lasso', 'Pen', 'Bucket'] as const
+const TOOL_OPTIONS = ['size', 'hardness', 'opacity'] as const
 
 function AppMenus() {
   return (
@@ -263,6 +265,18 @@ function AppMenus() {
         <MenuItem tone="info">Show the glossary</MenuItem>
         <MenuItem tone="accent">Publish</MenuItem>
         <MenuItem tone="danger">Discard the translation</MenuItem>
+      </MenubarMenu>
+      <MenubarMenu label="Tools">
+        {TOOLS.map((tool) => (
+          <MenuSubmenu key={tool}>
+            <MenuSubmenuTrigger>{tool}</MenuSubmenuTrigger>
+            <MenuSubmenuContent>
+              {TOOL_OPTIONS.map((option) => (
+                <MenuItem key={option}>{`${tool} ${option}`}</MenuItem>
+              ))}
+            </MenuSubmenuContent>
+          </MenuSubmenu>
+        ))}
       </MenubarMenu>
       <MenubarMenu label="Window">
         <MenuItem>Minimise</MenuItem>
