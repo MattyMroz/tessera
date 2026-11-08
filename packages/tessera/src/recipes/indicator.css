@@ -108,7 +108,6 @@
       block-size: var(--ts-size-thumb);
       opacity: 1;
       translate: var(--_rest) var(--_rest);
-      scale: var(--ts-motion-press-rest);
 
       &[data-on] {
         translate: calc(var(--ts-size-track-inline) - var(--ts-size-thumb) - var(--_rest) - var(--ts-shape-stroke) - var(--ts-shape-stroke)) var(--_rest);

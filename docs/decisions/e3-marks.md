@@ -20,4 +20,6 @@ Gospodarz daje tylko miejsce i rozmiar slotu `mark`: `control` (pudełko `Checkb
 
 ## Skutek
 
+Glif ptaszka w pudełku `Checkbox` ma ¾ pudełka (`--ts-shape-mark-inset` odsuwa slot z każdej strony o ⅛ pudełka), nie całe pudełko jak przy marginesie `viewBox` −4…28; widoczny ptaszek jest ten sam (14/24 · ¾ = 14/32). Test `checkbox.spec.ts` pilnuje proporcji ¾ i środka. Zmiana testu: 08.11, wykonanie prowadzący.
+
 Testy, które biorą `[data-recipe="indicator"]` za pigułkę, pomijają znaczniki (`:not([data-slot="mark"])` w `tests/helpers.ts`).

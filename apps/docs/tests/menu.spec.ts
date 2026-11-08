@@ -376,13 +376,13 @@ test('takes the side gap off the width of a submenu beside its menu in a narrow 
   expect(x + width).toBeLessThanOrEqual(room.window + TOLERANCE)
 })
 
-test('wraps every icon of a row in the icon slot, keeps the slot of an unchecked item and draws the chevron in it', async ({ page }) => {
+test('wraps every icon of a row in the icon slot, keeps the mark slot of an unchecked item and draws the chevron in the icon slot', async ({ page }) => {
   const menu = await openMenu(page)
-  const slot = (name: string): Locator => row(menu, name).locator(':scope > [data-slot="icon"]')
-  await expect(slot('Delete project').locator(':scope > svg')).toHaveCount(1)
-  await expect(slot('Show bubbles').locator(':scope > svg')).toHaveCount(1)
-  await expect(slot('Show reading order').locator('svg')).toHaveCount(0)
-  const [checked, unchecked] = await Promise.all([box(slot('Show bubbles')), box(slot('Show reading order'))])
+  const slot = (name: string, kind: 'icon' | 'mark'): Locator => row(menu, name).locator(`:scope > [data-slot="${kind}"]`)
+  await expect(slot('Delete project', 'icon').locator(':scope > svg')).toHaveCount(1)
+  await expect(slot('Show bubbles', 'mark').locator(':scope > svg')).toHaveCount(1)
+  await expect(slot('Show reading order', 'mark').locator(':scope > svg')).toHaveCount(1)
+  const [checked, unchecked] = await Promise.all([box(slot('Show bubbles', 'mark')), box(slot('Show reading order', 'mark'))])
   expect(unchecked.width).toBeGreaterThan(0)
   expect(Math.abs(unchecked.width - checked.width)).toBeLessThanOrEqual(TOLERANCE)
   await expect(row(menu, 'Export').locator(':scope > [data-slot="trail"] > [data-slot="icon"] > svg')).toHaveCount(1)

@@ -220,8 +220,19 @@ test.describe('optical symmetry', () => {
       const menu = await opened(page, region(page, 'Menu').getByRole('button', { name: 'Project', exact: true }), page.getByRole('menu'))
       for (const row of [menu.getByRole('menuitem', { name: 'New chapter' }), menu.locator('[data-variant="group-label"]').first()]) {
         const gaps = await opticalGaps(row)
-        expectEven(gaps, `${corners} menu row`)
-        expect(Math.abs(gaps.left - inset(gaps, controlSide(gaps))), `${corners} menu row side`).toBeLessThanOrEqual(TOLERANCE)
+        const column = await row.evaluate((element) => {
+          const probe = document.createElement('div')
+          probe.style.position = 'absolute'
+          probe.style.width = 'calc(var(--ts-size-icon) + var(--ts-size-gap))'
+          element.append(probe)
+          const width = probe.getBoundingClientRect().width
+          probe.remove()
+          return width
+        })
+        const side = inset(gaps, controlSide(gaps))
+        expect(Math.abs(gaps.left - Math.round(side * ICON_SIDE) - column), `${corners} menu row: left ${gaps.left} column ${column}`).toBeLessThanOrEqual(TOLERANCE)
+        expect(Math.abs(gaps.right - side), `${corners} menu row: right ${gaps.right} side ${side}`).toBeLessThanOrEqual(TOLERANCE)
+        expect(Math.abs(gaps.top - gaps.bottom), `${corners} menu row: top ${gaps.top} bottom ${gaps.bottom}`).toBeLessThanOrEqual(textTolerance())
       }
       await closed(page, menu)
     }

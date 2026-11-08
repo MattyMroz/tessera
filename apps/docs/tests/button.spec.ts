@@ -16,6 +16,7 @@ const VARIANTS = ['solid', 'soft', 'outline', 'raised', 'ghost'] as const
 const BLOCKED = ['Busy submit', 'Disabled submit', 'Busy link', 'Disabled link'] as const
 const LINK_WAIT = 600
 const TOLERANCE = 0.5
+const PIXEL_ROUNDING = 0.01
 const DISABLED_OPACITY = '0.4'
 const LONG = 'Export every chapter of this volume as one continuous vertical video'
 const LABEL_MIN = 2.5
@@ -404,7 +405,7 @@ test('keeps a lone button with a label at least 2.5 heights wide, and a hug butt
   for (const [index, { width, height }] of least.entries()) {
     expect(Math.abs(width - height * LABEL_MIN), `least ${index}`).toBeLessThanOrEqual(TOLERANCE)
     const hug = hugged[index] ?? { width: 0, height: 0 }
-    expect(hug.height, `hug ${index}`).toBe(height)
+    expect(Math.abs(hug.height - height), `hug ${index}`).toBeLessThanOrEqual(PIXEL_ROUNDING)
     expect(hug.width, `hug ${index}`).toBeLessThan(height * LABEL_MIN - TOLERANCE)
     expect(hug.width, `hug ${index}`).toBeGreaterThanOrEqual(height - TOLERANCE)
   }

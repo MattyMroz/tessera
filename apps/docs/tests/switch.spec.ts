@@ -13,6 +13,7 @@ const PAINT_TOLERANCE = 1
 const ZOOMS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 2] as const
 const VIEWPORT = { width: 1280, height: 800 }
 const PLATE_MARGIN = 1
+const COVERED = 0.5
 
 type Box = { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 
@@ -23,7 +24,7 @@ async function paintedOffset(page: Page, target: Locator, box: Box, state: 'off'
   const bare = await page.screenshot({ animations: 'disabled' })
   await ride.evaluate((element) => element.style.removeProperty('visibility'))
   return page.evaluate(
-    async ({ shots, box, state, zoom, margin }) => {
+    async ({ shots, box, state, zoom, margin, HALF }) => {
       const read = async (data: string) => {
         const image = new Image()
         image.src = `data:image/png;base64,${data}`
@@ -52,19 +53,20 @@ async function paintedOffset(page: Page, target: Locator, box: Box, state: 'off'
       const page = plate(column, Math.floor(top) - margin)
       const trackLight = plate(Math.floor((left + right) / 2), row)
       const thumbLight = light(column, row)
-      const clamp = (value: number) => Math.min(1, Math.max(0, value))
-      const gapAt = (x: number, y: number) => clamp((plate(x, y) - page) / (trackLight - page)) * (1 - clamp((light(x, y) - plate(x, y)) / (thumbLight - plate(x, y) || 1)))
+      const share = (value: number, from: number, to: number) => (to === from ? 0 : (value - from) / (to - from))
+      const gapAt = (x: number, y: number) =>
+        share(plate(x, y), page, trackLight) >= HALF && share(light(x, y), plate(x, y), thumbLight) < HALF ? 1 : 0
       const sum = (from: number, to: number, at: (step: number) => number) => {
         let total = 0
         for (let step = from; step <= to; step += 1) total += at(step)
         return total
       }
-      const above = sum(Math.floor(top) - margin, row, (y) => gapAt(column, y))
-      const below = sum(row + 1, Math.ceil(bottom) + margin, (y) => gapAt(column, y))
-      const end = state === 'on' ? sum(column + 1, Math.ceil(right) + margin, (x) => gapAt(x, row)) : sum(Math.floor(left) - margin, column, (x) => gapAt(x, row))
+      const above = sum(Math.floor(top), row, (y) => gapAt(column, y))
+      const below = sum(row + 1, Math.ceil(bottom) - 1, (y) => gapAt(column, y))
+      const end = state === 'on' ? sum(column + 1, Math.ceil(right) - 1, (x) => gapAt(x, row)) : sum(Math.floor(left), column, (x) => gapAt(x, row))
       return { x: end - (above + below) / 2, y: (below - above) / 2 }
     },
-    { shots: [shot.toString('base64'), bare.toString('base64')], box, state, zoom, margin: PLATE_MARGIN },
+    { shots: [shot.toString('base64'), bare.toString('base64')], box, state, zoom, margin: PLATE_MARGIN, HALF: COVERED },
   )
 }
 

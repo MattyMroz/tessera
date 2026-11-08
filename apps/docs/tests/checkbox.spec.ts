@@ -5,6 +5,7 @@ const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 const TOLERANCE = 0.5
 const BOX_RADIUS_CAP = 0.35
 const PIXEL_ROUNDING = 0.01
+const MARK_SHARE = 0.75
 
 function box(page: Page, name: string): Locator {
   return page.getByRole('region', { name: 'Checkbox', exact: true }).getByRole('checkbox', { name, exact: true })
@@ -42,7 +43,8 @@ test('sizes the box and its mark from the size engine and caps the radius at 35 
     if (!glyph) throw new Error('no mark')
     expect(Math.abs(glyph.x + glyph.width / 2 - (rect.x + rect.width / 2)), `${size} mark centred across`).toBeLessThanOrEqual(PIXEL_ROUNDING)
     expect(Math.abs(glyph.y + glyph.height / 2 - (rect.y + rect.height / 2)), `${size} mark centred down`).toBeLessThanOrEqual(PIXEL_ROUNDING)
-    expect(Math.abs(glyph.width - rect.width), `${size} mark spans the box`).toBeLessThanOrEqual(PIXEL_ROUNDING)
+    expect(Math.abs(glyph.width - rect.width * MARK_SHARE), `${size} mark spans three quarters of the box`).toBeLessThanOrEqual(PIXEL_ROUNDING)
+    expect(Math.abs(glyph.height - rect.height * MARK_SHARE), `${size} mark is three quarters of the box tall`).toBeLessThanOrEqual(PIXEL_ROUNDING)
     expect(radius, `${size} radius`).toBeLessThanOrEqual(boxSize * BOX_RADIUS_CAP + TOLERANCE)
   }
 })

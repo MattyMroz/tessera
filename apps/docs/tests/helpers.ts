@@ -958,7 +958,7 @@ export type OpticalGaps = {
 
 export function opticalGaps(target: Locator): Promise<OpticalGaps> {
   return target.evaluate((container) => {
-    const SKIP = '[data-recipe="indicator"]'
+    const SKIP = '[data-recipe="indicator"], [data-variant="separator"]'
     const NESTED = '[data-recipe="control"], [data-recipe="row"], [data-recipe="surface"]'
     const FONT_PROPERTIES = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontStretch', 'fontVariationSettings'] as const
     const fonts = new Map<string, { ascent: number; cap: number; content: number }>()

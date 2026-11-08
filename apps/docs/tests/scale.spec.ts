@@ -78,7 +78,7 @@ async function closed(page: Page, popup: Locator): Promise<void> {
 
 async function scale(page: Page): Promise<Record<string, number>> {
   const button = await style(softButton(page))
-  const iconButton = section(page, 'button').locator('> div').nth(1).locator('[data-variant="soft"]').first()
+  const iconButton = section(page, 'button').locator('> div').filter({ has: page.getByRole('heading', { name: 'Icons', exact: true }) }).locator('[data-variant="soft"]').first()
   const toggle = await style(page.getByRole('radiogroup', { name: 'Range (raised)', exact: true }))
   const track = await style(section(page, 'button-group').getByRole('group', { name: 'History', exact: true }))
   const menu = await opened(page, section(page, 'menu').getByRole('button', { name: 'Project', exact: true }), page.getByRole('menu'))
