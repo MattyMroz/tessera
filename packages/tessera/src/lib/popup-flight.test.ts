@@ -2,32 +2,39 @@ import { describe, expect, it, vi, type Mock } from 'vitest'
 import { MOTION } from '../../test/fixtures/motion'
 import type { Rect } from './flight'
 import type { Motion } from './motion'
-import { createPopupFlight, flightOrigin, menuGrace, morphFrom, morphTransform, type FlightPopup, type FlightPositioner } from './popup-flight'
+import { createPopupFlight, flightOffset, menuGrace, flightOrigin, type FlightPopup, type FlightPositioner } from './popup-flight'
 
 const GRACE = 400
 
 const rect = (left: number, top: number, width: number, height: number): Rect => ({ left, top, width, height })
+const from = (left: number, top: number, width: number, height: number, side: string) => ({ rect: rect(left, top, width, height), side })
 
-describe('morphFrom', () => {
-  const placed = (box: Rect, morph: { x: number; y: number; scaleX: number; scaleY: number }): Rect => {
-    const width = box.width * morph.scaleX
-    const height = box.height * morph.scaleY
-    return rect(box.left + box.width / 2 + morph.x - width / 2, box.top + box.height / 2 + morph.y - height / 2, width, height)
-  }
-
-  it('starts the new popup exactly on the rectangle of the previous one, also with another size', () => {
-    const previous = rect(300, 120, 180, 200)
-    const next = rect(300, 160, 220, 90)
-    expect(placed(next, morphFrom(previous, next))).toEqual(previous)
+describe('flightOffset', () => {
+  it('keeps the edge at the trigger still when a tooltip beside a column moves down', () => {
+    expect(flightOffset(from(54, 46, 60, 24, 'right'), rect(54, 86, 110, 24), 'right', 'center')).toEqual({ x: 0, y: -40 })
+    expect(flightOffset(from(40, 46, 60, 24, 'left'), rect(-10, 86, 110, 24), 'left', 'center')).toEqual({ x: 0, y: -40 })
   })
 
-  it('only slides between popups of one size', () => {
-    expect(morphFrom(rect(100, 46, 60, 24), rect(140, 46, 60, 24))).toEqual({ x: -40, y: 0, scaleX: 1, scaleY: 1 })
+  it('slides centre to centre along a row of centred tooltips', () => {
+    expect(flightOffset(from(100, 46, 60, 24, 'bottom'), rect(140, 46, 100, 30), 'bottom', 'center')).toEqual({ x: -60, y: 0 })
+    expect(flightOffset(from(100, 10, 60, 24, 'top'), rect(140, 4, 100, 30), 'top', 'center')).toEqual({ x: -60, y: 0 })
   })
 
-  it('writes the start of a morph as one translate and a scale only when the size changes', () => {
-    expect(morphTransform({ x: -40, y: 0, scaleX: 1, scaleY: 1 })).toEqual(['translate(-40px, 0px)', 'translate(0, 0)'])
-    expect(morphTransform({ x: 0, y: -40, scaleX: 0.5, scaleY: 2 })).toEqual(['translate(0px, -40px) scale(0.5, 2)', 'translate(0px, 0px) scale(1, 1)'])
+  it('lines up the start edges of menus opened from a bar and of submenus in a list', () => {
+    expect(flightOffset(from(95, 40, 200, 300, 'bottom'), rect(147, 40, 240, 180), 'bottom', 'start')).toEqual({ x: -52, y: 0 })
+    expect(flightOffset(from(300, 120, 180, 200, 'right'), rect(300, 160, 220, 90), 'right', 'start')).toEqual({ x: 0, y: -40 })
+  })
+
+  it('lines up the end edges for an end alignment', () => {
+    expect(flightOffset(from(95, 40, 200, 300, 'bottom'), rect(155, 40, 240, 180), 'bottom', 'end')).toEqual({ x: -100, y: 0 })
+  })
+
+  it('only moves along the row when the new popup opens on the other side', () => {
+    expect(flightOffset(from(95, 40, 200, 300, 'bottom'), rect(147, 10, 200, 20), 'top', 'start')).toEqual({ x: -52, y: 0 })
+  })
+
+  it('reads the logical sides of a submenu as left and right', () => {
+    expect(flightOffset(from(300, 120, 180, 200, 'inline-end'), rect(300, 160, 220, 90), 'inline-end', 'start')).toEqual({ x: 0, y: -40 })
   })
 })
 
@@ -80,6 +87,7 @@ function popupAt(left: number, init: { isConnected?: boolean; size?: number } = 
   }
   return {
     isConnected: init.isConnected ?? true,
+    dataset: { side: 'bottom', align: 'start' },
     getBoundingClientRect: () => new ClientRect({ ...place, left: place.left + shift }),
     animate: vi.fn<FlightPopup['animate']>(() => {
       playState = 'running'
@@ -140,7 +148,7 @@ function setup(motion: Motion = MOTION) {
 
 describe('flightOrigin', () => {
   it('reads a placed popup and skips one without a position or out of the document', () => {
-    expect(flightOrigin(popupAt(120))).toEqual({ rect: rect(120, 40, 200, 200) })
+    expect(flightOrigin(popupAt(120))).toEqual({ rect: rect(120, 40, 200, 200), side: 'bottom' })
     expect(flightOrigin(popupAt(0, { size: 0 }))).toBeNull()
     expect(flightOrigin(popupAt(120, { isConnected: false }))).toBeNull()
     expect(flightOrigin(null)).toBeNull()

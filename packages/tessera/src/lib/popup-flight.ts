@@ -8,10 +8,11 @@ export function menuGrace(motion: Motion): number {
   return motion.hoverOut
 }
 
-export type FlightOrigin = { readonly rect: Rect }
+export type FlightOrigin = { readonly rect: Rect; readonly side: string | undefined }
 
 export type FlightPopup = {
   readonly isConnected: boolean
+  readonly dataset: DOMStringMap
   getBoundingClientRect(): Rect
   animate(keyframes: Keyframe[], options: KeyframeAnimationOptions): FlightAnimation
 }
@@ -54,35 +55,40 @@ type Shown = {
 
 const CLOSED = 'data-closed'
 const WATCHED: readonly string[] = ['style', CLOSED]
-export type Morph = { readonly x: number; readonly y: number; readonly scaleX: number; readonly scaleY: number }
+const BESIDE: ReadonlySet<string> = new Set(['left', 'right', 'inline-start', 'inline-end'])
 
 function centre(start: number, size: number): number {
   return start + size / 2
 }
 
-export function morphFrom(from: Rect, to: Rect): Morph {
-  return {
-    x: centre(from.left, from.width) - centre(to.left, to.width),
-    y: centre(from.top, from.height) - centre(to.top, to.height),
-    scaleX: to.width > 0 ? from.width / to.width : 1,
-    scaleY: to.height > 0 ? from.height / to.height : 1,
-  }
+function edgeGap(from: Rect, to: Rect, side: string): number {
+  if (side === 'right' || side === 'inline-end') return from.left - to.left
+  if (side === 'left' || side === 'inline-start') return from.left + from.width - (to.left + to.width)
+  if (side === 'top') return from.top + from.height - (to.top + to.height)
+  return from.top - to.top
 }
 
-export function morphTransform({ x, y, scaleX, scaleY }: Morph): readonly [string, string] {
-  if (scaleX === 1 && scaleY === 1) return [`translate(${x}px, ${y}px)`, 'translate(0, 0)']
-  return [`translate(${x}px, ${y}px) scale(${scaleX}, ${scaleY})`, 'translate(0px, 0px) scale(1, 1)']
+function alignGap(from: Rect, to: Rect, alongX: boolean, align: string): number {
+  const [fromStart, fromSize, toStart, toSize] = alongX
+    ? [from.left, from.width, to.left, to.width]
+    : [from.top, from.height, to.top, to.height]
+  if (align === 'start') return fromStart - toStart
+  if (align === 'end') return fromStart + fromSize - (toStart + toSize)
+  return centre(fromStart, fromSize) - centre(toStart, toSize)
 }
 
-function settled({ x, y, scaleX, scaleY }: Morph, to: Rect): boolean {
-  return [x, y, (scaleX - 1) * to.width, (scaleY - 1) * to.height].every((delta) => Math.abs(delta) < SETTLED)
+export function flightOffset(from: FlightOrigin, to: Rect, side = 'bottom', align = 'center'): Point {
+  const beside = BESIDE.has(side)
+  const across = from.side === side ? edgeGap(from.rect, to, side) : 0
+  const along = alignGap(from.rect, to, !beside, align)
+  return beside ? { x: across, y: along } : { x: along, y: across }
 }
 
 export function flightOrigin(popup: FlightPopup | null): FlightOrigin | null {
   if (!popup?.isConnected) return null
   const { left, top, width, height } = popup.getBoundingClientRect()
   if (width <= 0 && height <= 0) return null
-  return { rect: { left, top, width, height } }
+  return { rect: { left, top, width, height }, side: popup.dataset.side }
 }
 
 function pageScroll(): Point {
@@ -108,17 +114,17 @@ function paneScrollCount(): number {
 }
 
 function seenAt(shown: Shown, scroll: Point): FlightOrigin {
-  const { rect } = shown.target
+  const { rect, side } = shown.target
   const left = rect.left + shown.scroll.x - scroll.x
   const top = rect.top + shown.scroll.y - scroll.y
-  return { rect: { ...rect, left, top } }
+  return { rect: { ...rect, left, top }, side }
 }
 
 function drifted(previous: FlightOrigin, visible: FlightOrigin | null, target: FlightOrigin): FlightOrigin {
   if (!visible) return previous
   const left = previous.rect.left + visible.rect.left - target.rect.left
   const top = previous.rect.top + visible.rect.top - target.rect.top
-  return { rect: { ...previous.rect, left, top } }
+  return { rect: { ...previous.rect, left, top }, side: previous.side }
 }
 
 export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOptions<P>): PopupFlight<P> {
@@ -145,10 +151,9 @@ export function createPopupFlight<P extends FlightPopup>(options: PopupFlightOpt
     if (!from) return
     const { follow, ease } = motion(popup)
     if (follow <= 0) return
-    const morph = morphFrom(from.rect, target.rect)
-    if (settled(morph, target.rect)) return
-    const [start, end] = morphTransform(morph)
-    const frames = [{ transform: start }, { transform: end }]
+    const offset = flightOffset(from, target.rect, target.side, popup.dataset.align)
+    if (Math.abs(offset.x) < SETTLED && Math.abs(offset.y) < SETTLED) return
+    const frames = [{ transform: `translate(${offset.x}px, ${offset.y}px)` }, { transform: 'translate(0, 0)' }]
     running.set(popup, popup.animate(frames, { duration: follow, easing: ease }))
   }
 
