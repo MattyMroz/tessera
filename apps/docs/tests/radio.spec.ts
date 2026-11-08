@@ -16,14 +16,14 @@ test('shows the dot only in the chosen circle, in its centre and in one proporti
   for (const size of ['xs', 'sm', 'md', 'lg', 'xl']) {
     const dots = await group(page, size)
       .getByRole('radio')
-      .evaluateAll((radios) => radios.map((radio) => getComputedStyle(radio.querySelector('[data-slot="dot"]') as Element).scale))
+      .evaluateAll((radios) => radios.map((radio) => getComputedStyle(radio.querySelector('[data-recipe="indicator"][data-variant="dot"]') as Element).scale))
     const proportion = await group(page, size).evaluate((element) => getComputedStyle(element).getPropertyValue('--ts-size-dot-scale').trim())
     expect(dots.map(Number), size).toEqual([0, Number(proportion), 0, 0])
     const seen = await group(page, size)
       .getByRole('radio', { checked: true })
       .evaluate((radio) => {
         const outer = radio.getBoundingClientRect()
-        const dot = (radio.querySelector('[data-slot="dot"]') as Element).getBoundingClientRect()
+        const dot = (radio.querySelector('[data-recipe="indicator"][data-variant="dot"]') as Element).getBoundingClientRect()
         return { dx: dot.left + dot.width / 2 - (outer.left + outer.width / 2), dy: dot.top + dot.height / 2 - (outer.top + outer.height / 2), ratio: dot.width / outer.width }
       })
     expect(Math.abs(seen.dx), `${size} centred across`).toBeLessThanOrEqual(CENTRE_TOLERANCE)
@@ -39,7 +39,7 @@ test('moves the choice with the arrows and from a click on a label, never moving
   await expect(options.nth(2)).toHaveAttribute('aria-checked', 'true')
   await group(page, 'lg').getByText('Fast', { exact: true }).click()
   await expect(options.nth(0)).toHaveAttribute('aria-checked', 'true')
-  expect(await options.nth(2).evaluate((radio) => getComputedStyle(radio.querySelector('[data-slot="dot"]') as Element).scale)).toBe('0')
+  expect(await options.nth(2).evaluate((radio) => getComputedStyle(radio.querySelector('[data-recipe="indicator"][data-variant="dot"]') as Element).scale)).toBe('0')
 })
 
 test('presses the circle like a button and grows the dot on the elastic curve of the engine', async ({ page }) => {
@@ -52,7 +52,7 @@ test('presses the circle like a button and grows the dot on the elastic curve of
   await expect(target).toHaveAttribute('data-pressing', '')
   await page.mouse.up()
   const growth = await target.evaluate((radio) => {
-    const dot = radio.querySelector('[data-slot="dot"]') as Element
+    const dot = radio.querySelector('[data-recipe="indicator"][data-variant="dot"]') as Element
     const probe = document.createElement('span')
     probe.style.transitionTimingFunction = 'var(--ts-motion-ease-elastic)'
     radio.append(probe)

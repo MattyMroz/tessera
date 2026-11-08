@@ -18,7 +18,7 @@ function measure({ positioner: frame, value: shown, chosen }: AlignParts): Offse
   const text = frame?.querySelector<HTMLElement>(chosen) ?? null
   const trigger = shown?.closest('button') ?? null
   if (frame === null || shown === null || text === null || trigger === null) return NO_OFFSETS
-  const zoom = frame.currentCSSZoom
+  const zoom = frame.currentCSSZoom ?? 1
   const anchor = trigger.getBoundingClientRect()
   const box = frame.getBoundingClientRect()
   const to = textRect(shown)

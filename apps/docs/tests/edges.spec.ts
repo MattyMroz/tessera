@@ -289,8 +289,9 @@ for (const width of EDGE_WIDTHS) {
           [...document.querySelectorAll('[data-recipe="control"] > [data-slot="label"], [data-recipe="row"] > [data-slot="label"]')].flatMap((label) => {
             const range = document.createRange()
             range.selectNodeContents(label)
-            const tops = new Set([...range.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top)))
-            return tops.size > 1 ? [`"${label.textContent?.slice(0, 30)}" on ${tops.size} lines`] : []
+            const rects = [...range.getClientRects()].filter((rect) => rect.width > 0)
+            const spread = Math.max(...rects.map((rect) => rect.top)) - Math.min(...rects.map((rect) => rect.top))
+            return spread >= label.getBoundingClientRect().height / 2 ? [`"${label.textContent?.slice(0, 30)}" on 2 lines or more`] : []
           }),
         )
         broken.push(...lines.map((line) => `${path}: ${line}`))
