@@ -9,6 +9,9 @@ const PRESSED_SCALE = '0.97'
 const STILL_FRAMES = 60
 const STILL_EVERY = 8
 const PRESS_HOLD = 250
+const SCALES = [1, 1.25, 1.5] as const
+const MIN_BEFORE = 3
+const BEFORE_PRESS = 60
 const VARIANTS = ['solid', 'soft', 'outline', 'raised', 'ghost'] as const
 const BLOCKED = ['Busy submit', 'Disabled submit', 'Busy link', 'Disabled link'] as const
 const LINK_WAIT = 600
@@ -178,66 +181,110 @@ test('presses the whole control of every button and only the parts and the plate
   }
 })
 
-test('keeps a popup and its trigger still before, while and after the trigger is pressed', async ({ page }) => {
-  const still = async (name: string, trigger: Locator, popup: Locator, open: () => Promise<void>): Promise<void> => {
+type StillFrame = { readonly trigger: string; readonly popup: string; readonly animations: number }
+type StillRun = { readonly frames: readonly StillFrame[]; readonly down: number }
+type StillPopup = { readonly selector: string; readonly index: number }
+
+async function pressWatched(page: Page, trigger: Locator, popup: StillPopup, open: (() => Promise<void>) | null): Promise<StillRun> {
+  if (open) {
     await open()
-    await expect(popup).toBeVisible()
+    await expect(page.locator(popup.selector).nth(popup.index)).toBeVisible()
     await settle(page)
-    await trigger.evaluate((element) => element.setAttribute('data-still-trigger', ''))
-    await popup.evaluate((element) => element.setAttribute('data-still-popup', ''))
-    await page.evaluate(
-      ({ count, every }) => {
-        const rect = (selector: string): string => {
-          const found = document.querySelector(selector)?.getBoundingClientRect()
-          return found ? [found.x, found.y, found.width, found.height].map((value) => value.toFixed(2)).join(' ') : ''
-        }
-        const frames: { trigger: string; popup: string; animations: number }[] = []
-        Object.assign(window, { stillFrames: frames })
-        const sample = (): void => {
-          frames.push({
-            trigger: rect('[data-still-trigger]'),
-            popup: rect('[data-still-popup]'),
-            animations: document.querySelector('[data-still-popup]')?.getAnimations({ subtree: true }).length ?? 0,
-          })
-        }
-        sample()
-        const timer = setInterval(() => {
-          sample()
-          if (frames.length >= count) clearInterval(timer)
-        }, every)
-      },
-      { count: STILL_FRAMES, every: STILL_EVERY },
-    )
-    const target = await box(trigger)
-    await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2)
-    await page.mouse.down()
-    await page.waitForTimeout(PRESS_HOLD)
-    await page.mouse.up()
-    const framesOf = (): Promise<{ trigger: string; popup: string; animations: number }[]> =>
-      page.evaluate(() => (window as unknown as { stillFrames: { trigger: string; popup: string; animations: number }[] }).stillFrames)
-    await expect.poll(async () => (await framesOf()).length).toBe(STILL_FRAMES)
-    const frames = await framesOf()
-    const shown = frames.filter((frame) => frame.popup !== '')
-    expect(shown.length, name).toBeGreaterThan(0)
-    expect(new Set(frames.map((frame) => frame.trigger)).size, `${name} trigger`).toBe(1)
-    expect(new Set(shown.map((frame) => frame.popup)).size, `${name} popup`).toBe(1)
-    expect(shown.filter((frame) => frame.animations > 0), `${name} animations`).toEqual([])
-    await trigger.evaluate((element) => element.removeAttribute('data-still-trigger'))
-    await page.keyboard.press('Escape')
-    await page.mouse.move(0, 0)
   }
-  const menuTrigger = page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true })
-  await still('menu', menuTrigger, page.getByRole('menu'), () => menuTrigger.click())
-  const popoverTrigger = page.getByRole('button', { name: 'Details', exact: true })
-  await still('popover', popoverTrigger, page.getByRole('dialog'), () => popoverTrigger.click())
-  const panelTrigger = page.getByRole('button', { name: /^corners / })
-  await still('menu of the trigger width', panelTrigger, page.getByRole('menu'), () => panelTrigger.click())
-  const tooltipTrigger = page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name: 'Save', exact: true })
-  await still('tooltip', tooltipTrigger, page.locator('[data-variant="tooltip"]'), () => tooltipTrigger.hover())
-  await menuTrigger.click()
-  const exportRow = page.getByRole('menu').getByRole('menuitem', { name: 'Export', exact: true })
-  await still('submenu', exportRow, page.getByRole('menu').nth(1), () => exportRow.hover())
-})
+  await trigger.scrollIntoViewIfNeeded()
+  await trigger.evaluate((element) => element.setAttribute('data-still-trigger', ''))
+  await page.evaluate(
+    ({ count, every, selector, index }) => {
+      const rect = (found: Element | undefined): string => {
+        const bounds = found?.getBoundingClientRect()
+        return bounds ? [bounds.x, bounds.y, bounds.width, bounds.height].map((value) => value.toFixed(2)).join(' ') : ''
+      }
+      const frames: { trigger: string; popup: string; animations: number }[] = []
+      const store = { frames, down: -1 }
+      Object.assign(window, { stillRun: store })
+      document.addEventListener('pointerdown', () => (store.down = frames.length), { capture: true, once: true })
+      const sample = (): void => {
+        const found = document.querySelectorAll(selector)[index]
+        const visible = found?.checkVisibility({ opacityProperty: true, visibilityProperty: true }) === true
+        frames.push({
+          trigger: rect(document.querySelector('[data-still-trigger]') ?? undefined),
+          popup: visible ? rect(found) : '',
+          animations: visible ? found?.getAnimations({ subtree: true }).length ?? 0 : 0,
+        })
+      }
+      sample()
+      const timer = setInterval(() => {
+        sample()
+        if (frames.length >= count) clearInterval(timer)
+      }, every)
+    },
+    { count: STILL_FRAMES, every: STILL_EVERY, selector: popup.selector, index: popup.index },
+  )
+  const target = await box(trigger)
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2)
+  await page.waitForTimeout(BEFORE_PRESS)
+  await page.mouse.down()
+  await page.waitForTimeout(PRESS_HOLD)
+  await page.mouse.up()
+  const run =(): Promise<StillRun> => page.evaluate(() => (window as unknown as { stillRun: StillRun }).stillRun)
+  await expect.poll(async () => (await run()).frames.length).toBe(STILL_FRAMES)
+  const result = await run()
+  await trigger.evaluate((element) => element.removeAttribute('data-still-trigger'))
+  await page.keyboard.press('Escape')
+  await page.mouse.move(0, 0)
+  return result
+}
+
+function shape(frames: readonly StillFrame[]): string {
+  return frames.map((frame) => (frame.popup === '' ? '_' : '#')).join('')
+}
+
+function expectStill(name: string, { frames }: StillRun): void {
+  const shown = frames.filter((frame) => frame.popup !== '')
+  expect(shown.length, `${name} popup shown`).toBeGreaterThan(0)
+  expect(new Set(frames.map((frame) => frame.trigger)).size, `${name} trigger`).toBe(1)
+  expect(new Set(shown.map((frame) => frame.popup)).size, `${name} popup`).toBe(1)
+  expect(shown.filter((frame) => frame.animations > 0), `${name} animations`).toEqual([])
+}
+
+for (const scale of SCALES) {
+  test.describe(`at a device scale of ${scale}`, () => {
+    test.use({ deviceScaleFactor: scale })
+
+    test('keeps a popup that the press of its trigger opens and the trigger still in every frame from the opening on', async ({ page }) => {
+      const menuTrigger = page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true })
+      const popoverTrigger = page.getByRole('button', { name: 'Details', exact: true })
+      const panelTrigger = page.getByRole('button', { name: /^corners / })
+      const cases: readonly (readonly [string, Locator, StillPopup])[] = [
+        ['menu', menuTrigger, { selector: '[role="menu"]', index: 0 }],
+        ['popover', popoverTrigger, { selector: '[role="dialog"]', index: 0 }],
+        ['menu of the trigger width', panelTrigger, { selector: '[role="menu"]', index: 0 }],
+      ]
+      for (const [name, trigger, popup] of cases) {
+        const run = await pressWatched(page, trigger, popup, null)
+        expect(shape(run.frames), name).toMatch(/^_*#+$/)
+        expectStill(name, run)
+      }
+    })
+
+    test('keeps a popup and its trigger still before the trigger is pressed and shows no popup again once it has closed on the press', async ({ page }) => {
+      const tooltipTrigger = page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name: 'Save', exact: true })
+      const menuTrigger = page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true })
+      const exportRow = page.getByRole('menu').getByRole('menuitem', { name: 'Export', exact: true })
+      const tooltip = await pressWatched(page, tooltipTrigger, { selector: '[data-variant="tooltip"]', index: 0 }, () => tooltipTrigger.hover())
+      expect(shape(tooltip.frames), 'tooltip').toMatch(/^#+_+$/)
+      expect(tooltip.down, 'tooltip frames before the press').toBeGreaterThanOrEqual(MIN_BEFORE)
+      expect(shape(tooltip.frames.slice(0, tooltip.down)), 'tooltip before the press').toMatch(/^#+$/)
+      expectStill('tooltip', tooltip)
+      await menuTrigger.click()
+      const submenu = await pressWatched(page, exportRow, { selector: '[role="menu"]', index: 1 }, () => exportRow.hover())
+      expect(shape(submenu.frames), 'submenu').toMatch(/^#+_*$/)
+      expect(submenu.down, 'submenu frames before the press').toBeGreaterThanOrEqual(MIN_BEFORE)
+      expect(shape(submenu.frames.slice(0, submenu.down)), 'submenu before the press').toMatch(/^#+$/)
+      expectStill('submenu', submenu)
+    })
+  })
+}
 
 test('shows the cursor of the platform on controls and rows, the default one on disabled parts and a text cursor on fields', async ({ page }) => {
   const options = page.getByRole('radiogroup', { name: 'With a disabled option', exact: true })

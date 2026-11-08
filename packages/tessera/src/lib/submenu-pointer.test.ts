@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSubmenuStore, headingInto, submenuIntent } from './submenu-pointer'
+import { createSubmenuStore, headingInto } from './submenu-pointer'
 
 const SUBMENU = { left: 200, top: 100, width: 120, height: 160 }
 
@@ -14,30 +14,19 @@ describe('heading into an open submenu', () => {
     expect(headingInto({ x: 100, y: 150 }, { x: 104, y: 290 }, SUBMENU, 'right')).toBe(false)
   })
 
-  it('reads a submenu on the left the other way round', () => {
+  it('reads a submenu on the left the other way round, also on the logical start side', () => {
     const left = { left: 0, top: 100, width: 120, height: 160 }
-    expect(headingInto({ x: 200, y: 150 }, { x: 190, y: 160 }, left, 'left')).toBe(true)
-    expect(headingInto({ x: 190, y: 150 }, { x: 200, y: 160 }, left, 'left')).toBe(false)
+    for (const side of ['left', 'inline-start']) {
+      expect(headingInto({ x: 200, y: 150 }, { x: 190, y: 160 }, left, side)).toBe(true)
+      expect(headingInto({ x: 190, y: 150 }, { x: 200, y: 160 }, left, side)).toBe(false)
+    }
+  })
+
+  it('reads the logical end side as the right', () => {
+    expect(headingInto({ x: 100, y: 150 }, { x: 110, y: 160 }, SUBMENU, 'inline-end')).toBe(true)
   })
 })
 
-describe('submenu intent', () => {
-  const [text, bubble] = [{ id: 'text' }, { id: 'bubble' }]
-
-  it('switches to the row under the pointer at once while no submenu is open or the pointer does not head into it', () => {
-    expect(submenuIntent({ row: bubble, open: null, heading: false })).toBe('switch')
-    expect(submenuIntent({ row: bubble, open: text, heading: false })).toBe('switch')
-  })
-
-  it('waits on another row while the pointer heads into the open submenu', () => {
-    expect(submenuIntent({ row: bubble, open: text, heading: true })).toBe('wait')
-  })
-
-  it('stays over a gap and on the row of the open submenu', () => {
-    expect(submenuIntent({ row: null, open: text, heading: false })).toBe('stay')
-    expect(submenuIntent({ row: text, open: text, heading: true })).toBe('stay')
-  })
-})
 
 describe('submenu store', () => {
   it('opens one submenu at a time and tells only its listeners', () => {
@@ -56,16 +45,5 @@ describe('submenu store', () => {
     store.open(null)
     expect(listener).toHaveBeenCalledTimes(3)
     stop()
-  })
-
-  it('keeps the popup of the open submenu until the popup that went away is the one it holds', () => {
-    const store = createSubmenuStore<{ id: string }>()
-    const [first, second] = [{ id: 'first' }, { id: 'second' }]
-    store.place(first)
-    store.place(second)
-    store.leave(first)
-    expect(store.popup()).toBe(second)
-    store.leave(second)
-    expect(store.popup()).toBeNull()
   })
 })

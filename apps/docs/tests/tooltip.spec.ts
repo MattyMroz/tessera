@@ -22,6 +22,7 @@ const SCROLL = 120
 const PIXEL = 0.5
 const OPEN_DELAY = 400
 const AT_ONCE = 100
+const SCALES = [1, 1.25, 1.5] as const
 const ONE_FLIGHT: readonly { properties: readonly string[] }[] = [{ properties: ['transform'] }]
 
 async function flights(page: Page): Promise<{ properties: readonly string[] }[]> {
@@ -110,38 +111,44 @@ test.beforeEach(async ({ page }) => {
   await hydrated(page)
 })
 
-for (const { path, from, to } of GAPS) {
-  test(`keeps a tooltip shown in every frame while the pointer crosses the gap from ${from} to ${to} on ${path}`, async ({ page }) => {
-    if (path !== PAGE) {
-      await page.goto(path)
-      await hydrated(page)
-    }
-    const source = page.getByRole('button', { name: from, exact: true }).first()
-    const target = page.getByRole('button', { name: to, exact: true }).first()
-    await source.hover()
-    const popup = page.locator('[data-variant="tooltip"]')
-    await expect(popup).toHaveText(from)
-    const left = await box(source)
-    const right = await box(target)
-    const y = centre(left).y
-    const gap = right.x - (left.x + left.width)
-    expect(gap).toBeGreaterThan(1)
-    await clearRecorded(page)
-    await recordTooltips(page)
-    await page.mouse.move(left.x + left.width - 1, y)
-    for (const share of [1 / 3, 2 / 3]) {
-      await page.mouse.move(left.x + left.width + gap * share, y)
-      await page.waitForTimeout(GAP_PAUSE)
-    }
-    await page.mouse.move(right.x + 1, y)
-    await page.mouse.move(centre(right).x, y)
-    await expect(popup.filter({ hasText: to })).toBeVisible()
-    await page.waitForTimeout(SETTLE)
+for (const scale of SCALES) {
+  test.describe(`at a device scale of ${scale}`, () => {
+    test.use({ deviceScaleFactor: scale })
 
-    const frames = await tooltipFrames(page)
-    expect(frames.filter((frame) => frame.tips.length === 0)).toEqual([])
-    expect(frames.at(-1)?.tips.map((tip) => tip.text)).toEqual([to])
-    expect((await flights(page)).every((flight) => flight.properties.every((property) => property === 'transform'))).toBe(true)
+    for (const { path, from, to } of GAPS) {
+      test(`keeps a tooltip shown in every frame while the pointer crosses the gap from ${from} to ${to} on ${path}`, async ({ page }) => {
+        if (path !== PAGE) {
+          await page.goto(path)
+          await hydrated(page)
+        }
+        const source = page.getByRole('button', { name: from, exact: true }).first()
+        const target = page.getByRole('button', { name: to, exact: true }).first()
+        await source.hover()
+        const popup = page.locator('[data-variant="tooltip"]')
+        await expect(popup).toHaveText(from)
+        const left = await box(source)
+        const right = await box(target)
+        const y = centre(left).y
+        const gap = right.x - (left.x + left.width)
+        expect(gap).toBeGreaterThan(1)
+        await clearRecorded(page)
+        await recordTooltips(page)
+        await page.mouse.move(left.x + left.width - 1, y)
+        for (const share of [1 / 3, 2 / 3]) {
+          await page.mouse.move(left.x + left.width + gap * share, y)
+          await page.waitForTimeout(GAP_PAUSE)
+        }
+        await page.mouse.move(right.x + 1, y)
+        await page.mouse.move(centre(right).x, y)
+        await expect(popup.filter({ hasText: to })).toBeVisible()
+        await page.waitForTimeout(SETTLE)
+
+        const frames = await tooltipFrames(page)
+        expect(frames.filter((frame) => frame.tips.length === 0)).toEqual([])
+        expect(frames.at(-1)?.tips.map((tip) => tip.text)).toEqual([to])
+        expect((await flights(page)).every((flight) => flight.properties.every((property) => property === 'transform'))).toBe(true)
+      })
+    }
   })
 }
 

@@ -28,7 +28,7 @@ export function Mark({ kind, mixed }: { kind: MarkKind; mixed?: boolean }) {
     <span data-slot="mark" data-recipe="indicator" data-variant={kind} aria-hidden="true">
       {kind === 'check' && (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12.5l4.5 4.5L19 7.5" pathLength={1} />
+          <path d="M5 12.25l4.5 4.5L19 7.25" pathLength={1} />
         </svg>
       )}
       {mixed === true && (

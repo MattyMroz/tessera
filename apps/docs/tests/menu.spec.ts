@@ -22,7 +22,62 @@ const SETTLE = 300
 const OUTSIDE = 80
 const MOVE_STEPS = 4
 const EDGE = 8
-const DIAGONAL_STEPS = 16
+const GLIDE_PX = 2.5
+const GLIDE_PAUSE = 16
+const SAMPLE_MS = 8
+const SHOWN = 0.5
+const MIN_FRAMES = 20
+const SUBMENU_ROW = 'Chapter as CBZ'
+
+type Point = { readonly x: number; readonly y: number }
+type RowFrame = { readonly submenus: number; readonly submenuRows: string; readonly gap: number; readonly opacity: number }
+
+async function glide(page: Page, from: Point, to: Point): Promise<void> {
+  const steps = Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / GLIDE_PX)
+  for (let step = 1; step <= steps; step += 1) {
+    await page.mouse.move(from.x + ((to.x - from.x) * step) / steps, from.y + ((to.y - from.y) * step) / steps)
+    await page.waitForTimeout(GLIDE_PAUSE)
+  }
+}
+
+async function watchRow(page: Page, name: string): Promise<() => Promise<RowFrame[]>> {
+  await page.evaluate(
+    ({ rowName, every }) => {
+      const frames: RowFrame[] = []
+      const store = window as unknown as { __rowFrames: RowFrame[]; __rowWatching: boolean }
+      store.__rowFrames = frames
+      store.__rowWatching = true
+      const sample = (): void => {
+        if (!store.__rowWatching) return
+        const [menu, ...rest] = document.querySelectorAll('[role="menu"]')
+        const target = [...(menu?.querySelectorAll('[role^="menuitem"]') ?? [])].find((item) => item.textContent.trim().startsWith(rowName))
+        const pill = menu?.querySelector(':scope > [data-recipe="indicator"]')
+        const rect = target?.getBoundingClientRect()
+        const plate = pill?.getBoundingClientRect()
+        const shown = rest.filter((part) => {
+          const holder = part.parentElement ?? part
+          const style = getComputedStyle(holder)
+          return part.getBoundingClientRect().width > 0 && style.visibility === 'visible' && Number.parseFloat(style.opacity) > 0 && style.display !== 'none'
+        })
+        frames.push({
+          submenus: shown.length,
+          submenuRows: shown.flatMap((part) => [...part.querySelectorAll('[role^="menuitem"]')].map((item) => item.textContent.trim())).join('|'),
+          gap: rect && plate ? Math.max(Math.abs(rect.x - plate.x), Math.abs(rect.y - plate.y), Math.abs(rect.width - plate.width), Math.abs(rect.height - plate.height)) : Number.POSITIVE_INFINITY,
+          opacity: pill ? Number.parseFloat(getComputedStyle(pill).opacity) : 0,
+        })
+        setTimeout(sample, every)
+      }
+      sample()
+    },
+    { rowName: name, every: SAMPLE_MS },
+  )
+  return () =>
+    page.evaluate(() => {
+      const store = window as unknown as { __rowFrames: RowFrame[]; __rowWatching: boolean }
+      store.__rowWatching = false
+      return store.__rowFrames
+    })
+}
 
 async function openMenu(page: Page): Promise<Locator> {
   await page.addInitScript(recordAnimations)
@@ -203,10 +258,15 @@ test('keeps the parent pill on the submenu trigger while the pointer crosses oth
   }
   await pauseLoops(page)
   await page.mouse.move(path.from.x, path.from.y)
-  await page.mouse.move(path.to.x, path.to.y, { steps: DIAGONAL_STEPS })
+  const stop = await watchRow(page, 'Export')
+  await glide(page, path.from, path.to)
   await expect(page.getByRole('menu')).toHaveCount(2)
   await expectPillOn(submenu, goal)
   await expectPillOn(menu, exportRow)
+  const frames = await stop()
+  expect(frames.length).toBeGreaterThan(MIN_FRAMES)
+  expect(frames.filter((frame) => !frame.submenuRows.includes(SUBMENU_ROW) || frame.submenus !== 1), 'frames without the submenu of Export or with another one').toEqual([])
+  expect(frames.filter((frame) => frame.gap > TOLERANCE || frame.opacity <= SHOWN), 'frames with the parent pill off Export').toEqual([])
   expect(await page.evaluate(() => window.parentPillChanges)).toBe(0)
 })
 

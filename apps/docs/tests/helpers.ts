@@ -801,7 +801,6 @@ export async function hover(page: Page, target: Locator): Promise<void> {
   )
   const { x, y, width, height } = await box(target)
   await page.mouse.move(x + width / 2, y + height / 2, { steps: MOVE_STEPS })
-  await page.mouse.move(x + width / 2 + 1, y + height / 2)
 }
 
 export function raisedShadow(page: Page): Promise<string> {

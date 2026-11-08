@@ -2,12 +2,12 @@
 
 import { Menu as BaseMenu } from '@base-ui/react/menu'
 import ChevronRight from 'lucide-react/icons/chevron-right'
-import { createContext, use, useLayoutEffect, useState, useSyncExternalStore, type ReactElement, type ReactNode, type RefObject } from 'react'
+import { createContext, use, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
 import { useIndicator } from '../../lib/indicator'
 import { createMenuFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
 import { createScopeAnchor, ScopeContext, type ScopeAnchor } from '../../lib/scope'
-import { createSubmenuStore, watchMenuPointer, type SubmenuStore } from '../../lib/submenu-pointer'
+import { createSubmenuStore, useMenuPointer, useSubmenu, type SubmenuStore } from '../../lib/submenu-pointer'
 import { useHost } from '../../lib/slot'
 import type { Tone } from '../../lib/tone'
 import type { Unstyled } from '../../lib/unstyled'
@@ -35,9 +35,6 @@ type Submenus = {
 }
 
 const MENU_ITEM = '[role^="menuitem"]'
-const CLOSED = (): boolean => false
-const POINTER_DECIDES: ReadonlySet<string> = new Set(['focus-out', 'sibling-open'])
-
 const SubmenusContext = createContext<Submenus | null>(null)
 const SubmenuTriggerContext = createContext<((trigger: HTMLElement | null) => void) | null>(null)
 
@@ -78,15 +75,11 @@ function Row({ mark, icon, trail, children }: RowContent & { mark?: MarkKind }) 
 
 export function MenuPopup({ children, width, scope, place, ref, ...props }: MenuPopupWidthProps & { readonly scope: ScopeAnchor; readonly place?: 'context' | 'bar' }) {
   const [submenus] = useState(createSubmenus)
-  const [menu, setMenu] = useState<Element | null>(null)
   const { container, select, pill } = useListPill(MENU_ITEM, use(FillContext), false)
-  useLayoutEffect(() => {
-    if (!menu) return
-    return watchMenuPointer(menu, { items: MENU_ITEM, submenus: submenus.open, show: (row) => select(row, null) })
-  }, [menu, submenus, select])
+  const watch = useMenuPointer(MENU_ITEM, submenus.open, select)
 
   return (
-    <BaseMenu.Popup {...props} {...LIST_POPUP} ref={composeRefs(ref, scope.copyTo, container, setMenu)} data-width={width === 'trigger' ? width : undefined} data-variant={place}>
+    <BaseMenu.Popup {...props} {...LIST_POPUP} ref={composeRefs(ref, scope.copyTo, container, watch)} data-width={width === 'trigger' ? width : undefined} data-variant={place}>
       {pill}
       <SubmenusContext value={submenus}>{children}</SubmenusContext>
     </BaseMenu.Popup>
@@ -177,29 +170,13 @@ export function MenuGroupLabel({ children, ...props }: Unstyled<BaseMenu.GroupLa
 export type MenuSubmenuProps = Omit<BaseMenu.SubmenuRoot.Props, 'open'>
 
 export function MenuSubmenu({ onOpenChange, defaultOpen, ...props }: MenuSubmenuProps) {
-  const { open: store } = useHost(SubmenusContext, 'MenuContent', 'MenuSubmenu')
   const [anchor] = useState(createScopeAnchor)
-  const [trigger, setTrigger] = useState<HTMLElement | null>(null)
-  const open = useSyncExternalStore(store.subscribe, () => trigger !== null && store.trigger() === trigger, CLOSED)
-  useLayoutEffect(() => {
-    if (trigger && defaultOpen) store.open(trigger)
-  }, [store, trigger, defaultOpen])
+  const { open, change, setTrigger } = useSubmenu(useHost(SubmenusContext, 'MenuContent', 'MenuSubmenu').open, defaultOpen, onOpenChange)
 
   return (
     <ScopeContext value={anchor}>
       <SubmenuTriggerContext value={setTrigger}>
-        <BaseMenu.SubmenuRoot
-          {...props}
-          open={open}
-          onOpenChange={(next, details) => {
-            if (!next && POINTER_DECIDES.has(details.reason)) return
-            if (trigger) {
-              if (next) store.open(trigger)
-              else store.close(trigger)
-            }
-            onOpenChange?.(next, details)
-          }}
-        />
+        <BaseMenu.SubmenuRoot {...props} open={open} onOpenChange={change} />
       </SubmenuTriggerContext>
     </ScopeContext>
   )
@@ -228,18 +205,11 @@ export function MenuSubmenuTrigger({ icon, children, ref, ...props }: MenuSubmen
 
 export function MenuSubmenuContent({ ref, ...props }: MenuPopupProps) {
   const scope = useHost(ScopeContext, 'MenuSubmenu', 'MenuSubmenuContent')
-  const submenus = useHost(SubmenusContext, 'MenuContent', 'MenuSubmenuContent')
-  const { positioner, popup } = usePopupFlight(submenus.flight)
-  const [element, setElement] = useState<HTMLElement | null>(null)
-  useLayoutEffect(() => {
-    if (!element) return
-    submenus.open.place(element)
-    return () => submenus.open.leave(element)
-  }, [submenus, element])
+  const { positioner, popup } = usePopupFlight(useHost(SubmenusContext, 'MenuContent', 'MenuSubmenuContent').flight)
   return (
     <BaseMenu.Portal>
       <BaseMenu.Positioner ref={positioner}>
-        <MenuPopup {...props} scope={scope} ref={composeRefs(ref, popup, setElement)} />
+        <MenuPopup {...props} scope={scope} ref={composeRefs(ref, popup)} />
       </BaseMenu.Positioner>
     </BaseMenu.Portal>
   )

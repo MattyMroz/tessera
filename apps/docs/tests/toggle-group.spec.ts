@@ -570,3 +570,72 @@ test('keeps the track concentric with the active pill for every corner and curve
     }
   }
 })
+
+const SCALES = [1, 1.25, 1.5] as const
+const CROSS_EDGE = 10
+const CROSS_STEP = 1
+const CROSS_PAUSE = 16
+const GAP_DWELL = 150
+const GLIDE_SAMPLE = 8
+const HOVER_SHOWN = 0.5
+const MIN_CROSS_FRAMES = 20
+
+type CrossFrame = { readonly opacity: number; readonly x: number }
+
+async function watchHoverPill(pill: Locator): Promise<() => Promise<CrossFrame[]>> {
+  await pill.evaluate((element, every) => {
+    const frames: { opacity: number; x: number }[] = []
+    const store = window as unknown as { __cross: typeof frames; __crossing: boolean }
+    store.__cross = frames
+    store.__crossing = true
+    const sample = (): void => {
+      if (!store.__crossing) return
+      frames.push({ opacity: Number.parseFloat(getComputedStyle(element).opacity), x: element.getBoundingClientRect().x })
+      setTimeout(sample, every)
+    }
+    sample()
+  }, GLIDE_SAMPLE)
+  return () =>
+    pill.evaluate(() => {
+      const store = window as unknown as { __cross: CrossFrame[]; __crossing: boolean }
+      store.__crossing = false
+      return store.__cross
+    })
+}
+
+for (const scale of SCALES) {
+  test.describe(`crossing the gap between two options at a device scale of ${scale}`, () => {
+    test.use({ deviceScaleFactor: scale })
+
+    for (const dwell of [0, GAP_DWELL]) {
+      test(`keeps the hover pill shown in every frame and takes it to the next option when the pointer goes over the gap in 1 px steps${dwell ? ` and rests ${dwell} ms in it` : ''}`, async ({ page }) => {
+        await visit(page, '/')
+        const range = group(page, 'Range (raised)')
+        await range.scrollIntoViewIfNeeded()
+        const pill = hoverPill(range)
+        const [from, to] = await Promise.all([box(range.getByRole('radio', { name: 'Week', exact: true })), box(range.getByRole('radio', { name: 'Month', exact: true }))])
+        const y = from.y + from.height / 2
+        const gapCentre = (from.x + from.width + to.x) / 2
+        await page.mouse.move(from.x + from.width / 2, y)
+        await expect(pill).toHaveAttribute('data-visible', 'true')
+        await page.waitForTimeout(SETTLE)
+        const stop = await watchHoverPill(pill)
+        let rested = dwell === 0
+        for (let x = from.x + from.width - CROSS_EDGE; x <= to.x + CROSS_EDGE; x += CROSS_STEP) {
+          await page.mouse.move(x, y)
+          await page.waitForTimeout(CROSS_PAUSE)
+          if (!rested && x >= gapCentre) {
+            await page.waitForTimeout(dwell)
+            rested = true
+          }
+        }
+        await expect.poll(async () => Math.abs((await box(pill)).x - to.x)).toBeLessThan(TOLERANCE)
+        const frames = await stop()
+        expect(frames.length).toBeGreaterThan(MIN_CROSS_FRAMES)
+        expect(frames.filter((frame) => frame.opacity <= HOVER_SHOWN), 'frames with the hover pill faded').toEqual([])
+        expect(frames.some((frame) => Math.abs(frame.x - from.x) < TOLERANCE), 'a frame on the first option').toBe(true)
+        expect(Math.abs((frames.at(-1)?.x ?? 0) - to.x)).toBeLessThan(TOLERANCE)
+      })
+    }
+  })
+}
