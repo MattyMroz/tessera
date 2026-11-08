@@ -7,6 +7,7 @@ declare global {
     tooltipOpening?: { entered?: number; opened?: number }
     tooltipLeft?: number
     tooltipStrays?: string[]
+    tooltipSlide?: string[]
   }
 }
 
@@ -377,14 +378,26 @@ test('builds one tooltip element on the top layer for a whole bar and for a lone
 })
 
 test('fades a tooltip in while it slides the appear shift from the trigger and never scales it', async ({ page }) => {
+  await page.evaluate(() => {
+    window.tooltipSlide = []
+    document.addEventListener('transitionrun', (event) => {
+      const popup = event.target
+      if (!(popup instanceof HTMLElement) || !popup.matches('[data-variant="tooltip"]') || event.propertyName !== 'translate') return
+      const effect = popup.getAnimations().find((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'translate')?.effect
+      const frames = effect instanceof KeyframeEffect ? effect.getKeyframes() : []
+      window.tooltipSlide = frames.map((frame) => String(frame['translate'] ?? ''))
+    })
+  })
   const frames = await watch(page, () => hoverAndWait(page, tipTrigger(page, 'Save'), 'Saves the chapter'))
   const tips = shownTips(frames)
   const [first, last] = [tips[0], tips.at(-1)]
   if (!first || !last) throw new Error('no tooltip frame')
   expect(first.opacity).toBeLessThan(FULL)
   expect(last.opacity).toBeGreaterThanOrEqual(FULL)
-  expect(first.y - last.y).toBeGreaterThan(PIXEL)
-  expect(first.y - last.y).toBeLessThanOrEqual(APPEAR_SHIFT + PIXEL)
+  const slide = (await page.evaluate(() => window.tooltipSlide ?? [])).map((value) => Number.parseFloat(value.split(' ')[1] ?? '0'))
+  expect(slide).toHaveLength(2)
+  expect((slide[0] ?? 0) - (slide[1] ?? 0)).toBeGreaterThan(PIXEL)
+  expect((slide[0] ?? 0) - (slide[1] ?? 0)).toBeLessThanOrEqual(APPEAR_SHIFT + PIXEL)
   expect(Math.abs(first.x - last.x)).toBeLessThanOrEqual(PIXEL)
   expect(Math.abs(first.width - last.width)).toBeLessThanOrEqual(PIXEL)
   expect(tips.filter((tip) => tip.scale !== 'none' || tip.transform !== 'none')).toEqual([])
