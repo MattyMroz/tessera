@@ -378,3 +378,100 @@ test('keeps the row pill on the row of the shown submenu in every frame while th
   expect(frames.filter((frame) => frame.owner === 'none'), 'frames without a submenu').toEqual([])
   expect(frames.filter((frame) => frame.resting !== 'moving' && frame.resting !== frame.owner), 'frames with the pill on another row than the submenu').toEqual([])
 })
+
+type TriangleFrame = { readonly resting: string; readonly submenu: string }
+
+const GLIDE_STEP = 3
+
+for (const scale of SCALES) {
+  test.describe(`heading into a submenu at a device scale of ${scale}`, () => {
+    test.use({ deviceScaleFactor: scale })
+
+    test('keeps the row pill and the submenu of the first row while the pointer glides diagonally over the rows below into the submenu', async ({ page }) => {
+      await visit(page, PAGE)
+      const bar = page.getByRole('group', { name: 'Accent A', exact: true })
+      const tools = bar.getByRole('menuitem', { name: 'Tools', exact: true })
+      await tools.scrollIntoViewIfNeeded()
+      await tools.click()
+      const menu = page.getByRole('menu').first()
+      const brush = await box(menu.getByRole('menuitem', { name: TOOL_ROWS[0], exact: true }))
+      const start = { x: brush.x + brush.width / 4, y: brush.y + brush.height / 2 }
+      await page.mouse.move(start.x, start.y)
+      await expect(menu.getByRole('menuitem', { name: TOOL_ROWS[0], exact: true })).toHaveAttribute('data-popup-open', '')
+      await page.waitForTimeout(SETTLE)
+      const goal = await box(page.getByRole('menu').nth(1).getByRole('menuitem').last())
+      const end = { x: goal.x + goal.width / 4, y: goal.y + goal.height / 2 }
+      await page.evaluate(() => {
+        const frames: TriangleFrame[] = []
+        const store = window as unknown as { __triangle: TriangleFrame[]; __gliding: boolean }
+        store.__triangle = frames
+        store.__gliding = true
+        const tick = (): void => {
+          if (!store.__gliding) return
+          const [parent, ...rest] = document.querySelectorAll('[role="menu"]')
+          const rows = [...(parent?.querySelectorAll('[role^="menuitem"]') ?? [])]
+          const top = parent?.querySelector(':scope > [data-recipe="indicator"]')?.getBoundingClientRect().y ?? Number.NaN
+          frames.push({
+            resting: rows.find((row) => Math.abs(row.getBoundingClientRect().y - top) < 1)?.textContent.trim() ?? 'moving',
+            submenu: rest.at(-1)?.querySelector('[role^="menuitem"]')?.textContent.trim().split(' ')[0] ?? 'none',
+          })
+          requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+      const steps = Math.ceil(Math.hypot(end.x - start.x, end.y - start.y) / GLIDE_STEP)
+      for (let step = 1; step <= steps; step += 1) {
+        await page.mouse.move(start.x + ((end.x - start.x) * step) / steps, start.y + ((end.y - start.y) * step) / steps)
+        await page.waitForTimeout(SWEEP_PAUSE)
+      }
+      await page.waitForTimeout(SETTLE)
+      const frames = await page.evaluate(() => {
+        const store = window as unknown as { __triangle: TriangleFrame[]; __gliding: boolean }
+        store.__gliding = false
+        return store.__triangle
+      })
+      expect(frames.filter((frame) => frame.resting !== TOOL_ROWS[0] || frame.submenu !== TOOL_ROWS[0])).toEqual([])
+    })
+  })
+}
+
+type Glide = { readonly from: number; readonly step: number; readonly pause: number; readonly switches: boolean }
+
+const GLIDES: readonly Glide[] = [
+  { from: 0.25, step: 1, pause: 0, switches: false },
+  { from: 0.25, step: 2, pause: 0, switches: false },
+  { from: 0.5, step: 1, pause: 0, switches: false },
+  { from: 0.5, step: 2, pause: 0, switches: false },
+  { from: 0.9, step: 1, pause: 0, switches: false },
+  { from: 0.5, step: 3, pause: 60, switches: false },
+  { from: 0.5, step: 3, pause: 150, switches: true },
+]
+const GLIDE_END = 20
+const PAUSE_AT = 0.4
+
+for (const glide of GLIDES) {
+  test(`${glide.switches ? 'switches to' : 'keeps'} the submenu of the first row when the pointer glides from ${glide.from} of its width in ${glide.step} px steps${glide.pause ? ` and rests ${glide.pause} ms on a row below` : ''}`, async ({ page }) => {
+    await visit(page, PAGE)
+    const bar = page.getByRole('group', { name: 'Accent A', exact: true })
+    const tools = bar.getByRole('menuitem', { name: 'Tools', exact: true })
+    await tools.scrollIntoViewIfNeeded()
+    await tools.click()
+    const menu = page.getByRole('menu').first()
+    const brush = await box(menu.getByRole('menuitem', { name: TOOL_ROWS[0], exact: true }))
+    const start = { x: brush.x + brush.width * glide.from, y: brush.y + brush.height / 2 }
+    await page.mouse.move(start.x, start.y)
+    await expect(menu.getByRole('menuitem', { name: TOOL_ROWS[0], exact: true })).toHaveAttribute('data-popup-open', '')
+    await page.waitForTimeout(SETTLE)
+    const goal = await box(page.getByRole('menu').nth(1).getByRole('menuitem').last())
+    const end = { x: goal.x + GLIDE_END, y: goal.y + goal.height / 2 }
+    const steps = Math.ceil(Math.hypot(end.x - start.x, end.y - start.y) / glide.step)
+    const seen = new Set<string>()
+    for (let step = 1; step <= steps; step += 1) {
+      await page.mouse.move(start.x + ((end.x - start.x) * step) / steps, start.y + ((end.y - start.y) * step) / steps)
+      await page.waitForTimeout(glide.pause && step === Math.round(steps * PAUSE_AT) ? glide.pause : SWEEP_PAUSE)
+      seen.add(await page.evaluate(() => document.querySelectorAll('[role="menu"]')[1]?.querySelector('[role^="menuitem"]')?.textContent.trim().split(' ')[0] ?? 'none'))
+    }
+    if (glide.switches) expect([...seen]).toContain(TOOL_ROWS[1])
+    else expect([...seen]).toEqual([TOOL_ROWS[0]])
+  })
+}

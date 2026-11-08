@@ -11,7 +11,16 @@ import { containerWidthProblems, ENGINES, instanceRegistryProblems, subtreeAxisP
 const packageRoot = resolve(import.meta.dirname, '../..')
 const src = resolve(packageRoot, 'src')
 const repo = resolve(packageRoot, '../..')
-const MEASURING_FILES = ['lib/bar-overflow.ts', 'lib/indicator.ts', 'lib/motion.ts', 'lib/popup-flight.ts', 'lib/press.ts', 'lib/select-align.ts', 'lib/title-when-cut.ts']
+const MEASURING_FILES = [
+  'lib/bar-overflow.ts',
+  'lib/indicator.ts',
+  'lib/motion.ts',
+  'lib/popup-flight.ts',
+  'lib/press.ts',
+  'lib/select-align.ts',
+  'lib/submenu-pointer.ts',
+  'lib/title-when-cut.ts',
+]
 const SINGLE_CHOICE = 'lib/single-choice.ts'
 const DOM_MEASUREMENT =
   /\b(?:getBoundingClientRect|offset(?:Left|Top|Width|Height)|ResizeObserver|getComputedStyle|scroll(?:Width|Height|Top|Left)|client(?:Width|Height))\b/
@@ -371,6 +380,7 @@ it('gives every component a section on the edges screen', () => {
 
 const TIME_CONSTANTS = [
   'SAMPLE_STEP',
+  'SUBMENU_REST',
   'TOOLTIP_OPEN_DELAY',
   'TOOLTIP_GROUP_GRACE',
   'TOOLTIP_CLOSE_DELAY',
@@ -402,6 +412,7 @@ it('accepts the listed time constants defined in lib and used by lib and compone
     'lib/flight.ts': 'export const SAMPLE_STEP = 1 / 60\nconst MAX_SAMPLES = 600',
     'lib/motion.ts': 'export const MILLISECONDS_PER_SECOND = 1000',
     'lib/popup-flight.ts': 'export function menuGrace(motion: Motion): number {\n  return motion.hoverOut\n}',
+    'lib/submenu-pointer.ts': 'export const SUBMENU_REST = 100\nrest = window.setTimeout(choose, SUBMENU_REST)',
     'lib/tooltip-group.ts':
       'export const TOOLTIP_OPEN_DELAY = 400\nexport const TOOLTIP_GROUP_GRACE: number = 400\nexport const TOOLTIP_CLOSE_DELAY = 100',
     'lib/collection.ts': "export const TYPEAHEAD_RESET = 500\nif (now - last > TYPEAHEAD_RESET) buffer = ''",
@@ -423,6 +434,7 @@ it('finds a listed time constant missing from lib and a time constant outside th
     'lib/press.ts': 'function hold() {\n  const wait = 300\n  setTimeout(lift, wait)\n}',
     'lib/scope.ts': 'const holdTime: number = 0.3e3\nanimate(frames, { duration: holdTime })',
   })).toEqual([
+    'SUBMENU_REST: no numeric constant in lib',
     'TOOLTIP_OPEN_DELAY: no numeric constant in lib',
     'TOOLTIP_GROUP_GRACE: no numeric constant in lib',
     'TOOLTIP_CLOSE_DELAY: no numeric constant in lib',

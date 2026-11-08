@@ -75,9 +75,6 @@
       ],
     },
   },
-  "patchedDependencies": {
-    "@base-ui/react@1.9.0": "patches/@base-ui%2Freact@1.9.0.patch",
-  },
   "catalog": {
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",

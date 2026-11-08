@@ -234,7 +234,7 @@ function connectIndicator(settings: IndicatorSettings): IndicatorControl {
     if (placement === 'hide' || !target || !box) {
       if (state.visible) {
         hiddenAt = frameTime()
-        fading = settings.hover && !off
+        fading = ride.getAttribute('data-variant') === 'hover' && !off
       }
       ride.setAttribute('data-visible', 'false')
       state = { ...state, visible: false }
