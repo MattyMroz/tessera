@@ -22,7 +22,7 @@ import {
 } from '@mattymroz/tessera/components/menu/menu'
 import { Popover, PopoverActions, PopoverClose, PopoverPopup, PopoverTitle, PopoverTrigger } from '@mattymroz/tessera/components/popover/popover'
 import { ToggleGroup, ToggleGroupItem } from '@mattymroz/tessera/components/toggle-group/toggle-group'
-import { Tooltip, TooltipBar, TooltipProvider } from '@mattymroz/tessera/components/tooltip/tooltip'
+import { Tooltip, TooltipBar } from '@mattymroz/tessera/components/tooltip/tooltip'
 import Eraser from 'lucide-react/icons/eraser'
 import MessageSquare from 'lucide-react/icons/message-square'
 import MousePointer2 from 'lucide-react/icons/mouse-pointer-2'
@@ -151,7 +151,7 @@ function ChapterSettings() {
 
 export default function Page() {
   return (
-    <TooltipProvider>
+    <>
       <h1>Overlays in overlays</h1>
       <section aria-label="Page" className="flex flex-col items-start gap-inset">
         <Controls />
@@ -180,6 +180,6 @@ export default function Page() {
           <ChapterSettings />
         </Controls>
       </section>
-    </TooltipProvider>
+    </>
   )
 }

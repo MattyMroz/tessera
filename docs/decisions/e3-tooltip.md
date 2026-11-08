@@ -6,6 +6,8 @@ stage: E3, poprawki tooltipa (zgłoszenia właściciela z 02.11)
 
 # Tooltip: szczelina między przyciskami, start po przewinięciu, klik
 
+Zastąpione 2026-11-08: tooltip nie stoi już na Base UI ani na `popup-flight.ts` (własny `lib/tooltip.ts`, `docs/decisions/e3-choices.md`, „Tooltip od nowa”). Zostają czasy (400 / 400 / 100 ms) i szczelina paska trzymana bez limitu.
+
 Kto: wykonawca poprawki tooltipa na zlecenie prowadzącego, 2026-11-02, gałąź `fix/e3-tooltip`. Wzorzec zachowania: Base UI 1.9 (kod w `node_modules/@base-ui/react`), Radix Tooltip 1.2.16 (kod w `MangaShift/node_modules`), WAI-ARIA APG Tooltip i desktop MangaShift (`MangaShift/packages/ui/src/hover/tooltip-store.ts`); v2 tylko jako podpowiedź.
 
 ## 1. Tooltip znika w szczelinie między przyciskami

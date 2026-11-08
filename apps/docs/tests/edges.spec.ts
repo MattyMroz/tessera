@@ -868,12 +868,13 @@ test.describe('in the scope of a subtree', () => {
     expect((await recorded(page)).filter((animation) => animation.recipe === 'indicator')).toEqual([])
   })
 
-  test('flies the one tooltip of a bar only to a trigger whose subtree has motion', async ({ page }) => {
+  test('slides the one tooltip of a bar only to a trigger whose subtree has motion', async ({ page }) => {
     await page.addInitScript(recordAnimations)
     await open(page)
     const still = region(page, 'Motion off')
     const tooltip = page.locator(TOOLTIP)
-    const flights = async (): Promise<number> => (await recorded(page)).filter((animation) => animation.variant === 'tooltip').length
+    const flights = async (): Promise<number> =>
+      (await recorded(page)).filter((animation) => animation.variant === 'tooltip' && animation.properties.includes('translate')).length
     const settled = async (name: string): Promise<boolean> => {
       const [tip, trigger] = await Promise.all([box(tooltip), box(still.getByRole('button', { name, exact: true }))])
       return Math.abs(tip.x + tip.width / 2 - (trigger.x + trigger.width / 2)) <= TOLERANCE

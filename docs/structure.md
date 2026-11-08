@@ -73,7 +73,8 @@ tessera/
 │       │   │                      # motion.ts (odczyt silnika ruchu: Motion, parseMotion, readMotion, milliseconds; plik pomiaru Q7),
 │       │   │                      # flight.ts (czysta geometria lotu pigułki: krzywa bezier i elastic, planFlight dla pogoni `follow` i wyboru `choice`, course, visibleAt, ściany),
 │       │   │                      # indicator.ts (sterownik DOM pigułki i useIndicator: cel, pomiar, ściany; plik pomiaru Q7),
-│       │   │                      # popup-flight.ts (przelot okienek, FLIGHT_GRACE, plik pomiaru Q7), tooltip-group.ts (TOOLTIP_GROUP_GRACE),
+│       │   │                      # popup-flight.ts (przelot okienek, FLIGHT_GRACE, plik pomiaru Q7), tooltip.ts (grupa tooltipa: czasy
+│       │   │                      # TOOLTIP_OPEN_DELAY, TOOLTIP_GROUP_GRACE, TOOLTIP_CLOSE_DELAY, placeTip, pozycja i szerokość dymka; plik pomiaru Q7),
 │       │   │                      # bar-overflow.ts (menu paska, które się nie mieszczą, pod „…”: visibleCount i watchBarOverflow;
 │       │   │                      # plik pomiaru Q7), menubar-hotkey.ts (Alt, F10 i Tab fokusują pasek, spec F15),
 │       │   │                      # press.ts (jeden nasłuch wciśnięcia na dokument, watchPresses z licznikiem odwołań;

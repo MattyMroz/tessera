@@ -49,6 +49,8 @@
     --ts-motion-press-rest: 0.99999;
     --ts-motion-press-stretch: 1;
     --ts-motion-press-hold: var(--ts-motion-duration-press-in);
+    --ts-motion-swap-blur: blur(2px);
+    --ts-motion-appear-shift: 4px;
     --ts-motion-flip: 0.5turn;
   }
 
@@ -64,6 +66,7 @@
     --ts-motion-press-scale: 1;
     --ts-motion-press-rest: 1;
     --ts-motion-press-stretch: 0;
+    --ts-motion-appear-shift: 0px;
     --ts-motion-sweep: none;
     --ts-motion-pulse: none;
   }
@@ -90,6 +93,7 @@
       --ts-motion-press-scale: 1;
       --ts-motion-press-rest: 1;
       --ts-motion-press-stretch: 0;
+      --ts-motion-appear-shift: 0px;
       --ts-motion-sweep: none;
       --ts-motion-pulse: none;
     }

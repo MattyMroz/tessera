@@ -31,7 +31,7 @@ import {
   PopoverTrigger,
 } from '@mattymroz/tessera/components/popover/popover'
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupVariant } from '@mattymroz/tessera/components/toggle-group/toggle-group'
-import { Tooltip, TooltipBar, TooltipProvider } from '@mattymroz/tessera/components/tooltip/tooltip'
+import { Tooltip, TooltipBar } from '@mattymroz/tessera/components/tooltip/tooltip'
 import { THEME_CONFIG, type Choices } from '@mattymroz/tessera/lib/theme'
 import Plus from 'lucide-react/icons/plus'
 import { useState, type ReactNode } from 'react'
@@ -70,7 +70,7 @@ function Region({ title, children }: { title: string; children: ReactNode }) {
 
 function Scene() {
   return (
-    <TooltipProvider>
+    <>
       <Region title="Buttons">
         <div className="flex flex-wrap items-center gap-inset">
           {BUTTONS.map((index) => (
@@ -202,7 +202,7 @@ function Scene() {
           </MenuContent>
         </Menu>
       </Region>
-    </TooltipProvider>
+    </>
   )
 }
 

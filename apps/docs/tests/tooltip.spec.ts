@@ -1,15 +1,30 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { box, clearRecorded, failures, hydrated, recordAnimations, recorded, startTrace } from './helpers'
+import { box, choose, clearRecorded, failures, hydrated, recordAnimations, recorded, startTrace, TOOLTIP_EXCEPTIONS } from './helpers'
 
 declare global {
   interface Window {
     tooltipFrames?: TooltipFrame[]
     tooltipOpening?: { entered?: number; opened?: number }
+    tooltipLeft?: number
   }
 }
 
-type ShownTip = { readonly text: string; readonly x: number; readonly y: number }
-type TooltipFrame = { readonly tips: readonly ShownTip[] }
+type ShownLabel = { readonly text: string; readonly leaving: boolean; readonly opacity: number; readonly filter: string }
+type Point = { readonly x: number; readonly y: number }
+type ShownTip = {
+  readonly text: string
+  readonly x: number
+  readonly y: number
+  readonly width: number
+  readonly opacity: number
+  readonly open: boolean
+  readonly scale: string
+  readonly transform: string
+  readonly side: string
+  readonly labels: readonly ShownLabel[]
+  readonly arrow: Point | null
+}
+type TooltipFrame = { readonly time: number; readonly tips: readonly ShownTip[] }
 
 const PAGE = '/components'
 const OVERLAYS = '/screens/overlays'
@@ -20,15 +35,28 @@ const JITTER_STEPS = 10
 const OUTSIDE_X = 4
 const SCROLL = 120
 const PIXEL = 0.5
+const WHOLE_PIXEL_SNAP = 1.5
+const FADE_LEAST = 60
 const OPEN_DELAY = 400
+const CLOSE_DELAY = 100
+const GRACE = 400
 const AT_ONCE = 100
+const APPEAR_SHIFT = 4
 const SCALES = [1, 1.25, 1.5] as const
-const ONE_FLIGHT: readonly { properties: readonly string[] }[] = [{ properties: ['transform'] }]
+const BAR_MOVES = ['translate', 'width', 'opacity', 'filter']
+const LONE_MOVES = ['translate', 'opacity']
+const GAP_HOLD = 400
+const EDGE_ROOM = 2
+const BRIGHT = 0.8
+const DIM = 0.3
+const FULL = 0.99
 
 async function flights(page: Page): Promise<{ properties: readonly string[] }[]> {
-  return (await recorded(page))
-    .filter((animation) => animation.variant === 'tooltip')
-    .map(({ properties }) => ({ properties }))
+  return (await recorded(page)).filter((animation) => animation.tooltip).map(({ properties }) => ({ properties }))
+}
+
+function flown(list: readonly { properties: readonly string[] }[]): Set<string> {
+  return new Set(list.flatMap(({ properties }) => properties))
 }
 
 async function recordTooltips(page: Page): Promise<void> {
@@ -36,20 +64,34 @@ async function recordTooltips(page: Page): Promise<void> {
     const frames: TooltipFrame[] = []
     window.tooltipFrames = frames
     const shown = (popup: HTMLElement): boolean => {
-      const positioner = popup.parentElement
-      if (!positioner || !popup.hasAttribute('data-open') || popup.hasAttribute('data-closed')) return false
-      return [popup, positioner].every((element) => {
-        const style = getComputedStyle(element)
-        return style.visibility === 'visible' && Number(style.opacity) > 0
-      })
+      const style = getComputedStyle(popup)
+      return popup.matches(':popover-open') && style.visibility === 'visible' && Number(style.opacity) > 0
     }
-    const tick = (): void => {
-      if (window.tooltipFrames !== frames) return
-      const tips = [...document.querySelectorAll<HTMLElement>('[data-variant="tooltip"]')].filter(shown).map((popup) => {
-        const { x, y } = popup.getBoundingClientRect()
-        return { text: popup.textContent, x, y }
+    const read = (popup: HTMLElement): ShownTip => {
+      const rect = popup.getBoundingClientRect()
+      const style = getComputedStyle(popup)
+      const labels = [...popup.querySelectorAll<HTMLElement>('[data-slot="label"]')].map((label) => {
+        const seen = getComputedStyle(label)
+        return { text: label.textContent ?? '', leaving: label.hasAttribute('data-leaving'), opacity: Number(seen.opacity), filter: seen.filter }
       })
-      frames.push({ tips })
+      const arrow = popup.querySelector('[data-slot="arrow"]')?.getBoundingClientRect()
+      return {
+        text: labels.find((label) => !label.leaving)?.text ?? '',
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        opacity: Number(style.opacity),
+        open: popup.hasAttribute('data-open'),
+        scale: style.scale,
+        transform: style.transform,
+        side: popup.getAttribute('data-side') ?? '',
+        labels,
+        arrow: arrow ? { x: arrow.x + arrow.width / 2, y: arrow.y + arrow.height / 2 } : null,
+      }
+    }
+    const tick = (time: number): void => {
+      if (window.tooltipFrames !== frames) return
+      frames.push({ time, tips: [...document.querySelectorAll<HTMLElement>('[data-variant="tooltip"]')].filter(shown).map(read) })
       requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
@@ -60,13 +102,32 @@ function tooltipFrames(page: Page): Promise<TooltipFrame[]> {
   return page.evaluate(() => window.tooltipFrames ?? [])
 }
 
+async function watch(page: Page, action: () => Promise<unknown>): Promise<TooltipFrame[]> {
+  await recordTooltips(page)
+  await action()
+  await page.waitForTimeout(SETTLE)
+  return tooltipFrames(page)
+}
+
 function centre(rect: { x: number; y: number; width: number; height: number }): { x: number; y: number } {
   return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
 }
 
+function openOf(frame: TooltipFrame): ShownTip[] {
+  return frame.tips.filter((tip) => tip.open)
+}
+
+function shownTips(frames: readonly TooltipFrame[]): ShownTip[] {
+  return frames.flatMap((frame) => frame.tips)
+}
+
+function ofText(frames: readonly TooltipFrame[], text: string): ShownTip[] {
+  return shownTips(frames).filter((tip) => tip.text === text)
+}
+
 async function moveOffTriggers(page: Page, x: number, y: number): Promise<void> {
   const trigger = await page.evaluate(
-    ([left, top]) => document.elementFromPoint(left, top)?.closest('[data-base-ui-tooltip-trigger]')?.outerHTML ?? null,
+    ([left, top]) => document.elementFromPoint(left, top)?.closest('[data-tooltip-trigger]')?.outerHTML ?? null,
     [x, y] as const,
   )
   expect(trigger).toBeNull()
@@ -74,10 +135,10 @@ async function moveOffTriggers(page: Page, x: number, y: number): Promise<void> 
 }
 
 async function openingTime(page: Page, trigger: Locator, text: string): Promise<number> {
-  await trigger.evaluate((element, label) => {
-    const opening: { entered?: number; opened?: number } = {}
+  const { x, y } = centre(await box(trigger))
+  await trigger.evaluate((_element, label) => {
+    const opening: { entered?: number; opened?: number } = { entered: performance.now() }
     window.tooltipOpening = opening
-    element.addEventListener('pointerenter', () => (opening.entered ??= performance.now()), { once: true })
     const observer = new MutationObserver(() => {
       const open = [...document.querySelectorAll('[data-variant="tooltip"][data-open]')].some((popup) => popup.textContent === label)
       if (!open || opening.entered === undefined) return
@@ -86,10 +147,25 @@ async function openingTime(page: Page, trigger: Locator, text: string): Promise<
     })
     observer.observe(document.body, { subtree: true, childList: true, attributes: true })
   }, text)
-  const { x, y } = centre(await box(trigger))
   await page.mouse.move(x, y)
   await expect(page.locator('[data-variant="tooltip"][data-open]', { hasText: text })).toHaveCount(1)
   return page.evaluate(() => (window.tooltipOpening?.opened ?? Number.NaN) - (window.tooltipOpening?.entered ?? Number.NaN))
+}
+
+function focusTime(trigger: Locator): Promise<number> {
+  return trigger.evaluate(
+    (element) =>
+      new Promise<number>((resolve) => {
+        const start = performance.now()
+        const poll = (): void => {
+          if (document.querySelector('[data-variant="tooltip"][data-open]')) return resolve(performance.now() - start)
+          if (performance.now() - start > 1000) return resolve(Number.NaN)
+          requestAnimationFrame(poll)
+        }
+        if (element instanceof HTMLElement) element.focus()
+        poll()
+      }),
+  )
 }
 
 async function shownAgainAfterClosing(page: Page): Promise<number> {
@@ -99,10 +175,72 @@ async function shownAgainAfterClosing(page: Page): Promise<number> {
   return frames.slice(closed).filter((frame) => frame.tips.length > 0).length
 }
 
+function tipTrigger(page: Page, name: string): Locator {
+  return page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name, exact: true })
+}
+
+function popupOf(page: Page, text: string): Locator {
+  return page.locator('[data-variant="tooltip"][data-open]', { hasText: text })
+}
+
+async function openTip(page: Page, trigger: Locator, text: string): Promise<Locator> {
+  await trigger.scrollIntoViewIfNeeded()
+  const { x, y } = centre(await box(trigger))
+  await page.mouse.move(x, y)
+  const popup = popupOf(page, text)
+  await expect(popup).toHaveCount(1)
+  await page.waitForTimeout(SETTLE)
+  return popup
+}
+
+async function hoverAndWait(page: Page, trigger: Locator, text: string): Promise<void> {
+  await trigger.hover()
+  await expect(popupOf(page, text)).toHaveCount(1)
+}
+
+function lightnessOf(popup: Locator, property: 'backgroundColor' | 'color'): Promise<number> {
+  return popup.evaluate((element, key) => {
+    const probe = document.createElement('div')
+    probe.style.color = getComputedStyle(element)[key]
+    probe.style.color = `oklab(from ${probe.style.color} l a b)`
+    document.body.append(probe)
+    const value = getComputedStyle(probe).color
+    probe.remove()
+    return Number.parseFloat(value.replace(/^oklab\(/, ''))
+  }, property)
+}
+
+type Course = { readonly inside: number; readonly step: number; readonly stray: number; readonly end: number }
+
+function course(frames: readonly TooltipFrame[], start: number, read: (tip: ShownTip) => number): Course {
+  const values = [start, ...frames.flatMap((frame) => openOf(frame).slice(0, 1).map(read))]
+  const end = values.at(-1) ?? Number.NaN
+  const [low, high] = [Math.min(start, end), Math.max(start, end)]
+  return {
+    end,
+    inside: values.filter((value) => Math.abs(value - start) > PIXEL && Math.abs(value - end) > PIXEL).length,
+    step: Math.max(...values.slice(1).map((value, index) => Math.abs(value - (values[index] ?? value)))),
+    stray: values.filter((value) => value < low - PIXEL || value > high + PIXEL).length,
+  }
+}
+
+async function crossBar(page: Page, from: string, to: string) {
+  const popup = await openTip(page, tipTrigger(page, from), from)
+  const handle = await popup.elementHandle()
+  const start = await box(popup)
+  const target = tipTrigger(page, to)
+  const frames = await watch(page, async () => {
+    await clearRecorded(page)
+    const { x, y } = centre(await box(target))
+    await page.mouse.move(x, y)
+  })
+  return { popup, handle, start, frames, target: await box(target), flights: await flights(page) }
+}
+
 const GAPS = [
-  { path: PAGE, from: 'Pan', to: 'Draw bubble' },
-  { path: PAGE, from: 'Undo', to: 'Redo' },
-  { path: OVERLAYS, from: 'Pan', to: 'Draw bubble' },
+  { path: PAGE, from: 'Pan', to: 'Draw bubble', bar: true },
+  { path: PAGE, from: 'Undo', to: 'Redo', bar: false },
+  { path: OVERLAYS, from: 'Pan', to: 'Draw bubble', bar: true },
 ] as const
 
 test.beforeEach(async ({ page }) => {
@@ -115,7 +253,7 @@ for (const scale of SCALES) {
   test.describe(`at a device scale of ${scale}`, () => {
     test.use({ deviceScaleFactor: scale })
 
-    for (const { path, from, to } of GAPS) {
+    for (const { path, from, to, bar } of GAPS) {
       test(`keeps a tooltip shown in every frame while the pointer crosses the gap from ${from} to ${to} on ${path}`, async ({ page }) => {
         if (path !== PAGE) {
           await page.goto(path)
@@ -144,9 +282,12 @@ for (const scale of SCALES) {
         await page.waitForTimeout(SETTLE)
 
         const frames = await tooltipFrames(page)
-        expect(frames.filter((frame) => frame.tips.length === 0)).toEqual([])
+        expect(frames.filter((frame) => openOf(frame).length === 0)).toEqual([])
         expect(frames.at(-1)?.tips.map((tip) => tip.text)).toEqual([to])
-        expect((await flights(page)).every((flight) => flight.properties.every((property) => property === 'transform'))).toBe(true)
+        const moved = flown(await flights(page))
+        for (const property of moved) expect(bar ? BAR_MOVES : LONE_MOVES, property).toContain(property)
+        if (bar) expect(moved.has('translate')).toBe(true)
+        else expect(moved.has('width')).toBe(false)
       })
     }
   })
@@ -166,7 +307,7 @@ test('closes the tooltip of a bar when the pointer leaves the bar through a gap'
 
 for (const name of ['Pan', 'Save']) {
   test(`keeps the tooltip of ${name} closed after a click until the pointer leaves and comes back`, async ({ page }) => {
-    const trigger = page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name, exact: true })
+    const trigger = tipTrigger(page, name)
     await trigger.hover()
     const popup = page.locator('[data-variant="tooltip"]')
     await expect(popup).toHaveCount(1)
@@ -188,7 +329,7 @@ for (const name of ['Pan', 'Save']) {
 }
 
 test('opens the first tooltip the open delay after the pointer enters its trigger', async ({ page }) => {
-  const save = page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name: 'Save', exact: true })
+  const save = tipTrigger(page, 'Save')
   await save.scrollIntoViewIfNeeded()
   await moveOffTriggers(page, OUTSIDE_X, centre(await box(save)).y)
   const time = await openingTime(page, save, 'Saves the chapter')
@@ -204,6 +345,79 @@ test('opens the tooltip of a neighbour in a bar at once right after a click', as
   await page.mouse.up()
   expect(await openingTime(page, page.getByRole('button', { name: 'Draw bubble' }), 'Draw bubble')).toBeLessThan(AT_ONCE)
 })
+
+test('builds one tooltip element on the top layer for a whole bar and for a lone trigger', async ({ page }) => {
+  const save = tipTrigger(page, 'Save')
+  const lone = await openTip(page, save, 'Saves the chapter')
+  const facts = await lone.evaluate((popup) => ({
+    popover: popup.getAttribute('popover'),
+    top: popup.matches(':popover-open'),
+    role: popup.getAttribute('role'),
+    parent: popup.parentElement === document.body,
+    side: popup.getAttribute('data-side'),
+    widthMatches: Math.abs(popup.getBoundingClientRect().width - Number.parseFloat(popup.style.getPropertyValue('--ts-i-tip-width'))) <= 0.5,
+    positioned: popup.style.getPropertyValue('--ts-i-tip-x') !== '' && popup.style.getPropertyValue('--ts-i-tip-y') !== '',
+    id: popup.id,
+  }))
+  expect(facts).toMatchObject({ popover: 'manual', top: true, role: 'tooltip', parent: true, side: 'top', widthMatches: true, positioned: true })
+  await expect(save).toHaveAttribute('aria-describedby', facts.id)
+  await page.mouse.move(0, 0)
+  await expect(page.locator('[data-variant="tooltip"]')).toHaveCount(0)
+
+  expect(await page.locator('[data-tooltip-trigger]').count()).toBeGreaterThan(0)
+  expect(await page.locator('[data-base-ui-tooltip-trigger]').count()).toBe(0)
+  const popups = page.locator('[data-variant="tooltip"]')
+  for (const name of ['Select', 'Pan', 'Draw bubble']) {
+    await tipTrigger(page, name).hover()
+    await expect(popupOf(page, name)).toHaveCount(1)
+    await expect(popups).toHaveCount(1)
+  }
+})
+
+test('fades a tooltip in while it slides the appear shift from the trigger and never scales it', async ({ page }) => {
+  const frames = await watch(page, () => hoverAndWait(page, tipTrigger(page, 'Save'), 'Saves the chapter'))
+  const tips = shownTips(frames)
+  const [first, last] = [tips[0], tips.at(-1)]
+  if (!first || !last) throw new Error('no tooltip frame')
+  expect(first.opacity).toBeLessThan(FULL)
+  expect(last.opacity).toBeGreaterThanOrEqual(FULL)
+  expect(first.y - last.y).toBeGreaterThan(PIXEL)
+  expect(first.y - last.y).toBeLessThanOrEqual(APPEAR_SHIFT + PIXEL)
+  expect(Math.abs(first.x - last.x)).toBeLessThanOrEqual(PIXEL)
+  expect(Math.abs(first.width - last.width)).toBeLessThanOrEqual(PIXEL)
+  expect(tips.filter((tip) => tip.scale !== 'none' || tip.transform !== 'none')).toEqual([])
+  const rising = tips.map((tip) => tip.opacity)
+  expect(rising).toEqual([...rising].sort((a, b) => a - b))
+  const fadeFrames = frames.filter((frame) => frame.tips.some((tip) => tip.opacity < FULL))
+  const [from, to] = [fadeFrames[0]?.time ?? Number.NaN, (fadeFrames.at(-1)?.time ?? Number.NaN) + 1]
+  expect(to - from).toBeGreaterThan(FADE_LEAST)
+  expect(to - from).toBeLessThan(400)
+})
+
+for (const target of ['Save', 'Pan'] as const) {
+  test(`closes the tooltip of ${target} the close delay after the pointer leaves, fading it out before it leaves the top layer`, async ({ page }) => {
+    const trigger = tipTrigger(page, target)
+    const text = target === 'Save' ? 'Saves the chapter' : 'Pan'
+    const popup = await openTip(page, trigger, text)
+    const rect = await box(trigger)
+    const exit = target === 'Save' ? { x: OUTSIDE_X, y: centre(rect).y } : { x: centre(rect).x, y: rect.y + rect.height * 2 }
+    await trigger.evaluate((element) => element.addEventListener('pointerleave', () => (window.tooltipLeft = performance.now()), { once: true }))
+    const frames = await watch(page, () => moveOffTriggers(page, exit.x, exit.y))
+    const left = await page.evaluate(() => window.tooltipLeft ?? Number.NaN)
+    const after = frames.filter((frame) => frame.time >= left)
+    const closing = after.find((frame) => openOf(frame).length === 0)
+    const gone = after.find((frame) => frame.tips.length === 0)
+    expect((closing?.time ?? Number.NaN) - left).toBeGreaterThanOrEqual(CLOSE_DELAY - AT_ONCE / 5)
+    expect((closing?.time ?? Number.NaN) - left).toBeLessThan(CLOSE_DELAY + AT_ONCE * 2)
+    const fading = after.filter((frame) => frame.tips.length > 0 && openOf(frame).length === 0).flatMap((frame) => frame.tips.map((tip) => tip.opacity))
+    expect(fading.length).toBeGreaterThan(0)
+    expect(fading).toEqual([...fading].sort((a, b) => b - a))
+    expect((gone?.time ?? Number.NaN) - (closing?.time ?? Number.NaN)).toBeGreaterThan(0)
+    expect((gone?.time ?? Number.NaN) - (closing?.time ?? Number.NaN)).toBeLessThan(AT_ONCE * 2)
+    await expect(popup).toHaveCount(0)
+    await expect(page.locator('[data-variant="tooltip"]')).toHaveCount(0)
+  })
+}
 
 for (const scroll of ['wheel', 'scrollBy'] as const) {
   test(`opens a tooltip of a bar on its place right after the page scrolls by ${scroll}`, async ({ page }) => {
@@ -228,118 +442,197 @@ for (const scroll of ['wheel', 'scrollBy'] as const) {
     const placed = await box(popup)
     const first = (await tooltipFrames(page)).find((frame) => frame.tips.length > 0)?.tips[0]
     expect(Math.abs((first?.x ?? Number.NaN) - placed.x)).toBeLessThanOrEqual(PIXEL)
-    expect(Math.abs((first?.y ?? Number.NaN) - placed.y)).toBeLessThanOrEqual(PIXEL)
-    expect(await flights(page)).toEqual([])
+    expect(Math.abs((first?.y ?? Number.NaN) - placed.y)).toBeLessThanOrEqual(APPEAR_SHIFT + PIXEL)
+    for (const property of flown(await flights(page))) expect(LONE_MOVES, property).toContain(property)
   })
 }
 
-test('keeps a tooltip of a bar on its trigger while the page scrolls and flies on to the next trigger from where it is seen', async ({ page }) => {
-  const pan: Locator = page.getByRole('button', { name: 'Pan' })
-  await pan.scrollIntoViewIfNeeded()
-  await pan.focus()
-  const popup = page.locator('[data-variant="tooltip"]')
-  await expect(popup).toHaveText('Pan')
-  const offset = async (): Promise<{ x: number; y: number }> => {
-    const [tip, trigger] = [await box(popup), await box(pan)]
-    return { x: tip.x - trigger.x, y: tip.y - trigger.y }
+for (const scrolled of ['page', 'panel'] as const) {
+  test(`closes a tooltip when a ${scrolled} scrolls and opens the next one beside its own trigger`, async ({ page, browserName }) => {
+    const pan: Locator = tipTrigger(page, 'Pan')
+    await pan.scrollIntoViewIfNeeded()
+    await pan.focus()
+    const popup = page.locator('[data-variant="tooltip"]')
+    await expect(popup).toHaveText('Pan')
+    const offset = async (trigger: Locator): Promise<number> => (await box(popup)).y - (await box(trigger)).y
+    const attached = await offset(pan)
+    if (scrolled === 'page') {
+      await page.evaluate((by) => window.scrollBy(0, by), SCROLL)
+    } else {
+      const panel = await page.evaluateHandle(() => {
+        const element = document.createElement('div')
+        element.style.cssText = 'position:fixed;top:0;left:0;width:50px;height:50px;overflow:auto'
+        const inner = document.createElement('div')
+        inner.style.height = '500px'
+        element.append(inner)
+        document.body.append(element)
+        return element
+      })
+      await panel.evaluate((element) => (element.scrollTop = 40))
+    }
+    await expect(popup).toHaveCount(0)
+    await page.waitForTimeout(SETTLE)
+    await expect(popup).toHaveCount(0)
+
+    const draw = tipTrigger(page, 'Draw bubble')
+    await page.keyboard.press('Tab')
+    await expect(draw).toBeFocused()
+    await expect(popupOf(page, 'Draw bubble')).toHaveCount(1)
+    await page.waitForTimeout(SETTLE)
+    expect(Math.abs((await offset(draw)) - attached)).toBeLessThanOrEqual(browserName === 'webkit' ? WHOLE_PIXEL_SNAP : PIXEL)
+  })
+}
+
+test('moves one tooltip of a bar to the next trigger with its width and position and never hides it on the way', async ({ page }) => {
+  const { handle, start, frames, target, flights: moves } = await crossBar(page, 'Pan', 'Draw bubble')
+
+  const current = await page.locator('[data-variant="tooltip"]').elementHandle()
+  expect(await current?.evaluate((element, previous) => element === previous, handle)).toBe(true)
+  expect(frames.filter((frame) => openOf(frame).length !== 1 || (openOf(frame)[0]?.opacity ?? 0) < FULL)).toEqual([])
+  expect(flown(moves)).toEqual(new Set(['translate', 'width', 'opacity', 'filter']))
+  const [from, to] = [centre(start).x, ofText(frames, 'Draw bubble').at(-1)]
+  if (!to) throw new Error('no tooltip frame')
+  const middle = course(frames, from, (tip) => tip.x + tip.width / 2)
+  const width = course(frames, start.width, (tip) => tip.width)
+  expect(Math.abs(middle.end - from)).toBeGreaterThan(OUTSIDE_X)
+  expect(Math.abs(width.end - start.width)).toBeGreaterThan(OUTSIDE_X)
+  for (const run of [middle, width]) {
+    expect(run.inside).toBeGreaterThanOrEqual(1)
+    expect(run.stray).toBe(0)
   }
-  const attached = await offset()
-  await clearRecorded(page)
-  await page.evaluate((by) => window.scrollBy(0, by), SCROLL)
-  await page.waitForTimeout(SETTLE)
-  expect(await offset()).toEqual(attached)
-  expect(await flights(page)).toEqual([])
-
-  const seen = await box(popup)
-  await recordTooltips(page)
-  await page.keyboard.press('Tab')
-  await expect(popup).toHaveText('Draw bubble')
-  await page.waitForTimeout(SETTLE)
-  const first = (await tooltipFrames(page)).find((frame) => frame.tips.some((tip) => tip.text === 'Draw bubble'))?.tips[0]
-  expect(Math.abs((first?.y ?? Number.NaN) - seen.y)).toBeLessThanOrEqual(PIXEL)
-  expect(await flights(page)).toEqual(ONE_FLIGHT)
+  expect(middle.step).toBeLessThanOrEqual(Math.abs(middle.end - from) * 0.75)
+  expect(width.step).toBeLessThanOrEqual(Math.abs(width.end - start.width) * 0.75)
+  expect(Math.abs((to.arrow?.x ?? Number.NaN) - centre(target).x)).toBeLessThanOrEqual(PIXEL)
+  const arrows = frames.flatMap((frame) => openOf(frame).map((tip) => tip.arrow?.x ?? Number.NaN))
+  expect(arrows.filter((x) => x < Math.min(from, centre(target).x) - 1 || x > Math.max(from, centre(target).x) + 1)).toEqual([])
 })
 
-test('flies one tooltip popup of a bar between triggers only by transform', async ({ page, browserName }) => {
-  const select = page.getByRole('button', { name: 'Select' })
-  const pan = page.getByRole('button', { name: 'Pan' })
-  await select.hover()
-  const popup = page.locator('[data-variant="tooltip"]')
-  await expect(popup).toHaveText('Select')
-  const before = await popup.elementHandle()
-
-  await clearRecorded(page)
-  const trace = browserName === 'chromium' ? await startTrace(page) : undefined
-  const start = await box(popup)
-  await pan.hover()
-  await expect(popup).toHaveText('Pan')
-  const positioner = await popup.evaluate((element) => element.parentElement?.getAnimations().length ?? -1)
-  await page.waitForTimeout(SETTLE)
-  const events = (await trace?.stop()) ?? []
-
-  expect(await popup.evaluate((element, previous) => element === previous, before)).toBe(true)
-  expect(await flights(page)).toEqual(ONE_FLIGHT)
-  expect(positioner).toBe(0)
-  expect((await box(popup)).x).not.toBeCloseTo(start.x, 0)
-  if (browserName === 'chromium') expect(failures(events)).toEqual([])
+test('cross-fades the label of a bar tooltip through two labels with a blur and leaves one label', async ({ page }) => {
+  const { frames } = await crossBar(page, 'Pan', 'Draw bubble')
+  const two = frames.filter((frame) => openOf(frame)[0]?.labels.length === 2)
+  expect(two.length).toBeGreaterThan(0)
+  const labels = two.flatMap((frame) => openOf(frame).flatMap((tip) => tip.labels))
+  const [leaving, entering] = [labels.filter((label) => label.leaving), labels.filter((label) => !label.leaving)]
+  expect(new Set(leaving.map((label) => label.text))).toEqual(new Set(['Pan']))
+  expect(new Set(entering.map((label) => label.text))).toEqual(new Set(['Draw bubble']))
+  expect(leaving.some((label) => label.opacity > 0 && label.opacity < FULL)).toBe(true)
+  expect(entering.some((label) => label.opacity > 0 && label.opacity < FULL)).toBe(true)
+  expect(leaving.some((label) => label.filter.includes('blur(')) && entering.some((label) => label.filter.includes('blur('))).toBe(true)
+  const lasted = (two.at(-1)?.time ?? Number.NaN) - (two[0]?.time ?? Number.NaN)
+  expect(lasted).toBeGreaterThan(40)
+  expect(lasted).toBeLessThan(300)
+  const settled = openOf(frames.at(-1) ?? { time: 0, tips: [] })[0]
+  expect(settled?.labels).toEqual([{ text: 'Draw bubble', leaving: false, opacity: 1, filter: 'none' }])
 })
 
-test('opens a lone tooltip in place next to another lone tooltip, also one held open by the keyboard focus', async ({ page }) => {
+test('opens a lone tooltip in place and at once next to another lone tooltip, which closes as a separate element', async ({ page }) => {
   const popup = page.locator('[data-variant="tooltip"]')
   await page.getByRole('button', { name: 'Undo' }).hover()
   await expect(popup).toHaveText('Undo')
+  const undo = await popup.elementHandle()
   await clearRecorded(page)
-  await page.getByRole('button', { name: 'Redo' }).hover()
-  await expect(popup.filter({ hasText: 'Redo' })).toBeVisible()
-  await page.waitForTimeout(SETTLE)
-  expect(await flights(page)).toEqual([])
+  const frames = await watch(page, async () => {
+    await page.getByRole('button', { name: 'Redo' }).hover()
+    await expect(popupOf(page, 'Redo')).toHaveCount(1)
+  })
+  const redo = ofText(frames, 'Redo')
+  const [first, last] = [redo[0], redo.at(-1)]
+  if (!first || !last) throw new Error('no tooltip frame')
+  expect(first.open).toBe(true)
+  expect(first.opacity).toBeGreaterThanOrEqual(FULL)
+  expect(Math.abs(first.x - last.x)).toBeLessThanOrEqual(PIXEL)
+  expect(Math.abs(first.y - last.y)).toBeLessThanOrEqual(PIXEL)
+  expect(await undo?.evaluate((element) => element.isConnected)).toBe(false)
+  expect(frames.at(-1)?.tips.map((tip) => tip.text)).toEqual(['Redo'])
+  const moved = flown(await flights(page))
+  expect(moved.has('width')).toBe(false)
+  expect(moved.has('filter')).toBe(false)
 
   await page.mouse.move(0, 0)
   await expect(popup).toHaveCount(0)
   await page.waitForTimeout(SETTLE)
-  await page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name: 'Save' }).focus()
+  await tipTrigger(page, 'Save').focus()
   await expect(popup).toHaveText('Saves the chapter')
-  await clearRecorded(page)
-  await page.getByRole('button', { name: 'Paste' }).hover()
-  await expect(popup.filter({ hasText: 'Paste the copied bubble' })).toBeVisible()
-  await page.waitForTimeout(SETTLE)
-  expect(await flights(page)).toEqual([])
+  const afterFocus = await watch(page, async () => {
+    await page.getByRole('button', { name: 'Paste' }).hover()
+    await expect(popupOf(page, 'Paste the copied bubble')).toHaveCount(1)
+  })
+  const paste = ofText(afterFocus, 'Paste the copied bubble')
+  expect(paste[0]?.opacity).toBeGreaterThanOrEqual(FULL)
+  expect(Math.abs((paste[0]?.y ?? Number.NaN) - (paste.at(-1)?.y ?? Number.NaN))).toBeLessThanOrEqual(PIXEL)
 })
 
-const GAP_HOLD = 400
-const EDGE_ROOM = 2
-const BRIGHT = 0.8
-const DIM = 0.3
+test('opens a tooltip at once within the grace window after the previous one closed and after the open delay once the window has passed', async ({ page }) => {
+  const [undo, redo, copy] = [tipTrigger(page, 'Undo'), tipTrigger(page, 'Redo'), tipTrigger(page, 'Copy')]
+  await undo.scrollIntoViewIfNeeded()
+  const { y } = centre(await box(undo))
+  const popup = page.locator('[data-variant="tooltip"]')
+  await hoverAndWait(page, undo, 'Undo')
+  await moveOffTriggers(page, OUTSIDE_X, y)
+  await expect(popup).toHaveCount(0)
+  await page.waitForTimeout(GRACE / 4)
+  expect(await openingTime(page, redo, 'Redo')).toBeLessThan(AT_ONCE)
 
-function tipTrigger(page: Page, name: string): Locator {
-  return page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name, exact: true })
-}
+  await moveOffTriggers(page, OUTSIDE_X, y)
+  await expect(popup).toHaveCount(0)
+  await page.waitForTimeout(GRACE + CLOSE_DELAY)
+  const late = await openingTime(page, copy, 'Copy')
+  expect(late).toBeGreaterThanOrEqual(OPEN_DELAY - AT_ONCE / 2)
+})
 
-function popupOf(page: Page, text: string): Locator {
-  return page.locator('[data-variant="tooltip"][data-open]', { hasText: text })
-}
+test('shows the tooltip of a focused trigger at once and closes it on blur and on Escape', async ({ page }) => {
+  const save = tipTrigger(page, 'Save')
+  const popup = page.locator('[data-variant="tooltip"]')
+  await save.evaluate((element) => element.scrollIntoView({ block: 'center' }))
+  await page.waitForTimeout(AT_ONCE)
+  expect(await focusTime(save)).toBeLessThan(OPEN_DELAY / 2)
+  await expect(popup).toHaveText('Saves the chapter')
+  await save.evaluate((element) => element instanceof HTMLElement && element.blur())
+  await expect(popup).toHaveCount(0)
 
-async function openTip(page: Page, trigger: Locator, text: string): Promise<Locator> {
-  await trigger.scrollIntoViewIfNeeded()
-  const { x, y } = centre(await box(trigger))
+  await save.focus()
+  await expect(popup).toHaveText('Saves the chapter')
+  await page.keyboard.press('Escape')
+  await expect(popup).toHaveCount(0)
+  await expect(save).toBeFocused()
+})
+
+test('does not open a tooltip for a trigger that a click focused', async ({ page }) => {
+  const save = tipTrigger(page, 'Save')
+  await save.scrollIntoViewIfNeeded()
+  const { x, y } = centre(await box(save))
+  await moveOffTriggers(page, OUTSIDE_X, y)
   await page.mouse.move(x, y)
-  const popup = popupOf(page, text)
-  await expect(popup).toHaveCount(1)
-  await page.waitForTimeout(SETTLE)
-  return popup
-}
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.waitForTimeout(OPEN_DELAY + SETTLE / 2)
+  await expect(page.locator('[data-variant="tooltip"]')).toHaveCount(0)
+})
 
-function lightnessOf(popup: Locator, property: 'backgroundColor' | 'color'): Promise<number> {
-  return popup.evaluate((element, key) => {
-    const probe = document.createElement('div')
-    probe.style.color = getComputedStyle(element)[key]
-    probe.style.color = `oklab(from ${probe.style.color} l a b)`
-    document.body.append(probe)
-    const value = getComputedStyle(probe).color
-    probe.remove()
-    return Number.parseFloat(value.replace(/^oklab\(/, ''))
-  }, property)
-}
+test('opens a tooltip with the fade of the reduced motion and without the slide, and with nothing at all when the motion is off', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const reduced = shownTips(await watch(page, () => hoverAndWait(page, tipTrigger(page, 'Save'), 'Saves the chapter')))
+  expect(reduced[0]?.opacity).toBeLessThan(FULL)
+  expect(Math.abs((reduced[0]?.y ?? Number.NaN) - (reduced.at(-1)?.y ?? Number.NaN))).toBeLessThanOrEqual(PIXEL)
+  const crossed = await crossBar(page, 'Pan', 'Draw bubble')
+  expect(course(crossed.frames, centre(crossed.start).x, (tip) => tip.x + tip.width / 2).inside).toBe(0)
+  expect(flown(crossed.flights).has('translate')).toBe(false)
+  expect(flown(crossed.flights).has('width')).toBe(false)
+
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.mouse.move(0, 0)
+  await expect(page.locator('[data-variant="tooltip"]')).toHaveCount(0)
+  await choose(page, 'motion', 'off')
+  const off = shownTips(await watch(page, () => hoverAndWait(page, tipTrigger(page, 'Save'), 'Saves the chapter')))
+  expect(off[0]?.opacity).toBeGreaterThanOrEqual(FULL)
+  expect(Math.abs((off[0]?.y ?? Number.NaN) - (off.at(-1)?.y ?? Number.NaN))).toBeLessThanOrEqual(PIXEL)
+  await page.mouse.move(0, 0)
+  await expect(page.locator('[data-variant="tooltip"]')).toHaveCount(0)
+  const moved = await crossBar(page, 'Pan', 'Draw bubble')
+  expect(course(moved.frames, centre(moved.start).x, (tip) => tip.x + tip.width / 2).inside).toBe(0)
+  expect(course(moved.frames, moved.start.width, (tip) => tip.width).inside).toBe(0)
+  expect(moved.flights).toEqual([])
+})
 
 for (const mode of ['light', 'dark'] as const) {
   test(`inverts the tooltip against the ${mode} mode`, async ({ page }) => {
@@ -354,6 +647,7 @@ for (const mode of ['light', 'dark'] as const) {
 test('opens a lone tooltip above its trigger with an arrow pointing at the middle of the trigger', async ({ page }) => {
   const trigger = tipTrigger(page, 'Save')
   const popup = await openTip(page, trigger, 'Saves the chapter')
+  await expect(popup).toHaveAttribute('data-side', 'top')
   const [tip, body, target] = await Promise.all([box(popup.locator('[data-slot="arrow"]')), box(popup), box(trigger)])
   expect(body.y + body.height).toBeLessThan(target.y)
   expect(Math.abs(centre(tip).x - centre(target).x)).toBeLessThanOrEqual(PIXEL)
@@ -371,20 +665,31 @@ test('opens a lone tooltip below its trigger when there is no room above', async
   await trigger.scrollIntoViewIfNeeded()
   await trigger.evaluate((element, room) => window.scrollBy(0, element.getBoundingClientRect().top - room), EDGE_ROOM)
   const popup = await openTip(page, trigger, 'Saves the chapter')
+  await expect(popup).toHaveAttribute('data-side', 'bottom')
   const [tip, body, target] = await Promise.all([box(popup.locator('[data-slot="arrow"]')), box(popup), box(trigger)])
   expect(body.y).toBeGreaterThan(target.y + target.height)
   expect(tip.y).toBeLessThan(body.y)
 })
 
-test('opens the tooltip of a horizontal bar above it', async ({ page }) => {
-  const popup = await openTip(page, page.getByRole('button', { name: 'Pan', exact: true }).first(), 'Pan')
-  const [body, target] = await Promise.all([box(popup), box(page.getByRole('button', { name: 'Pan', exact: true }).first())])
+test('opens the tooltip of a horizontal bar above it and below it when there is no room above', async ({ page }) => {
+  const pan = tipTrigger(page, 'Pan')
+  const popup = await openTip(page, pan, 'Pan')
+  await expect(popup).toHaveAttribute('data-side', 'top')
+  const [body, target] = await Promise.all([box(popup), box(pan)])
   expect(body.y + body.height).toBeLessThan(target.y)
+  await page.mouse.move(0, 0)
+  await expect(popup).toHaveCount(0)
+  await pan.evaluate((element, room) => window.scrollBy(0, element.getBoundingClientRect().top - room), EDGE_ROOM)
+  const flipped = await openTip(page, pan, 'Pan')
+  await expect(flipped).toHaveAttribute('data-side', 'bottom')
+  const [under, moved] = await Promise.all([box(flipped), box(pan)])
+  expect(under.y).toBeGreaterThan(moved.y + moved.height)
 })
 
 test('opens the tooltip of a vertical bar on its right and on its left when there is no room on the right', async ({ page }) => {
   const trigger = tipTrigger(page, 'Layers')
   const popup = await openTip(page, trigger, 'Show layers')
+  await expect(popup).toHaveAttribute('data-side', 'right')
   const [body, target] = await Promise.all([box(popup), box(trigger)])
   expect(body.x).toBeGreaterThan(target.x + target.width)
   await page.mouse.move(0, 0)
@@ -398,6 +703,7 @@ test('opens the tooltip of a vertical bar on its right and on its left when ther
     bar.style.zIndex = `${room * room * room * room}`
   }, EDGE_ROOM)
   const flipped = await openTip(page, trigger, 'Show layers')
+  await expect(flipped).toHaveAttribute('data-side', 'left')
   const [left, moved] = await Promise.all([box(flipped), box(trigger)])
   expect(left.x + left.width).toBeLessThan(moved.x)
 })
@@ -411,8 +717,27 @@ test('keeps the tooltip of a bar on its trigger while the pointer rests in the g
   await page.mouse.move((left.x + left.width + right.x) / 2, centre(left).y)
   await page.waitForTimeout(GAP_HOLD)
   const frames = await tooltipFrames(page)
-  expect(frames.filter((frame) => frame.tips.length === 0)).toEqual([])
+  expect(frames.filter((frame) => openOf(frame).length === 0)).toEqual([])
   await expect(popup).toHaveCount(1)
   await moveOffTriggers(page, (left.x + left.width + right.x) / 2, left.y + left.height * 2)
   await expect(popup).toHaveCount(0)
+})
+
+test('lets nothing but the width of the tooltip and the blur of its label fall off the compositor while it opens, moves and closes', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'the compositor trace needs CDP')
+  await page.goto(OVERLAYS)
+  await hydrated(page)
+  const island = page.getByRole('region', { name: 'Island', exact: true })
+  const popup = page.locator('[data-variant="tooltip"]')
+  const trace = await startTrace(page)
+  for (const name of ['Select', 'Pan', 'Draw bubble']) {
+    await island.getByRole('button', { name, exact: true }).hover()
+    await expect(popup).toHaveText(name)
+  }
+  await page.mouse.move(0, 0)
+  await expect(popup).toHaveCount(0)
+  const events = await trace.stop()
+  expect(events.some((event) => event.name === 'Animation')).toBe(true)
+  expect(failures(events, TOOLTIP_EXCEPTIONS)).toEqual([])
+  expect(failures(events).length).toBeGreaterThan(0)
 })

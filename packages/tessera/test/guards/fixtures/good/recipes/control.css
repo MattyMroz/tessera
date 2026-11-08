@@ -119,7 +119,7 @@
     transition: background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
   }
 
-  [data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before {
+  [data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before {
     transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out), background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover);
   }
 

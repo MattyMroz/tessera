@@ -1,5 +1,5 @@
 const LABEL = ':scope > [data-slot="label"]'
-const TOOLTIP_TRIGGER = 'data-base-ui-tooltip-trigger'
+const TOOLTIP_TRIGGER = 'data-tooltip-trigger'
 const CHECKS = ['pointerenter', 'focusin'] as const
 
 export function titleWhenCut(element: HTMLElement): () => void {

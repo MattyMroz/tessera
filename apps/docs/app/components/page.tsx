@@ -1,4 +1,3 @@
-import { TooltipProvider } from '@mattymroz/tessera/components/tooltip/tooltip'
 import { AlertSection } from './sections/alert'
 import { AlertDialogSection } from './sections/alert-dialog'
 import { BadgeSection } from './sections/badge'
@@ -24,7 +23,7 @@ import { TooltipSection } from './sections/tooltip'
 
 export default function Page() {
   return (
-    <TooltipProvider>
+    <>
       <h1>Components</h1>
       <ButtonSection />
       <ButtonGroupSection />
@@ -48,6 +47,6 @@ export default function Page() {
       <FieldSection />
       <TextareaSection />
       <AlertDialogSection />
-    </TooltipProvider>
+    </>
   )
 }

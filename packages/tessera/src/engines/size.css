@@ -16,6 +16,36 @@
   initial-value: 0px;
 }
 
+@property --ts-i-tip-x {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-tip-y {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-tip-width {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-tip-arrow {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ts-i-tip-room {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 @layer theme {
   :root,
   [data-size='lg'] {

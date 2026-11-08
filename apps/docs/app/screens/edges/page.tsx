@@ -2,7 +2,7 @@ import { Button } from '@mattymroz/tessera/components/button/button'
 import { Input } from '@mattymroz/tessera/components/input/input'
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@mattymroz/tessera/components/menu/menu'
 import { ToggleGroup, ToggleGroupItem } from '@mattymroz/tessera/components/toggle-group/toggle-group'
-import { Tooltip, TooltipBar, TooltipProvider } from '@mattymroz/tessera/components/tooltip/tooltip'
+import { Tooltip, TooltipBar } from '@mattymroz/tessera/components/tooltip/tooltip'
 import { THEME_CONFIG } from '@mattymroz/tessera/lib/theme'
 import Eraser from 'lucide-react/icons/eraser'
 import MessageSquare from 'lucide-react/icons/message-square'
@@ -116,7 +116,7 @@ function FileMenu({ label }: { label: string }) {
 
 export default function Page() {
   return (
-    <TooltipProvider>
+    <>
       <h1>Edges</h1>
 
       <ButtonEdge />
@@ -314,6 +314,6 @@ export default function Page() {
           <FileMenu label="Groups menu" />
         </div>
       </Foundation>
-    </TooltipProvider>
+    </>
   )
 }

@@ -20,6 +20,7 @@ const MEASURING_FILES = [
   'lib/select-align.ts',
   'lib/submenu-pointer.ts',
   'lib/title-when-cut.ts',
+  'lib/tooltip.ts',
 ]
 const SINGLE_CHOICE = 'lib/single-choice.ts'
 const DOM_MEASUREMENT =
@@ -340,6 +341,11 @@ it('finds every instance key missing from the size engine registry, registered w
     '--ts-i-value: inherits true',
     '--ts-i-inline-size: inherits missing',
     '--ts-i-block-size: missing',
+    '--ts-i-tip-x: missing',
+    '--ts-i-tip-y: missing',
+    '--ts-i-tip-width: missing',
+    '--ts-i-tip-arrow: missing',
+    '--ts-i-tip-room: missing',
     '--ts-i-extra: not in INSTANCE_KEYS',
   ])
 })
@@ -413,13 +419,11 @@ it('accepts the listed time constants defined in lib and used by lib and compone
     'lib/motion.ts': 'export const MILLISECONDS_PER_SECOND = 1000',
     'lib/popup-flight.ts': 'export function menuGrace(motion: Motion): number {\n  return motion.hoverOut\n}',
     'lib/submenu-pointer.ts': 'export const SUBMENU_REST = 100\nrest = window.setTimeout(choose, SUBMENU_REST)',
-    'lib/tooltip-group.ts':
-      'export const TOOLTIP_OPEN_DELAY = 400\nexport const TOOLTIP_GROUP_GRACE: number = 400\nexport const TOOLTIP_CLOSE_DELAY = 100',
+    'lib/tooltip.ts':
+      'export const TOOLTIP_OPEN_DELAY = 400\nexport const TOOLTIP_GROUP_GRACE: number = 400\nexport const TOOLTIP_CLOSE_DELAY = 100\nopening = window.setTimeout(open, TOOLTIP_OPEN_DELAY)\nclosing = window.setTimeout(hide, TOOLTIP_CLOSE_DELAY)',
     'lib/collection.ts': "export const TYPEAHEAD_RESET = 500\nif (now - last > TYPEAHEAD_RESET) buffer = ''",
     'lib/press.ts': 'timer = setTimeout(lift, delay)',
     'components/menu/menu.tsx': 'createPopupFlight({ grace: menuGrace })',
-    'components/tooltip/tooltip.tsx':
-      '<BaseTooltip.Provider timeout={TOOLTIP_GROUP_GRACE}>{children}</BaseTooltip.Provider>\nconst TIMING = { delay: TOOLTIP_OPEN_DELAY, closeDelay: TOOLTIP_CLOSE_DELAY }',
   })).toEqual([])
 })
 

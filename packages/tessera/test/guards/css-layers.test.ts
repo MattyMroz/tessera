@@ -168,7 +168,7 @@ it('rejects literals other than 0, 1, -1 and 100%, non-compositor motion, vendor
       'unused value exception',
     ],
     [
-      "[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before",
+      "[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-tooltip-trigger]):not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before",
       'unused value exception',
     ],
     ["[data-slot='choice']:has(> [data-recipe='control'])", 'unused value exception'],
@@ -197,9 +197,11 @@ it('rejects color-mix outside oklab, system colors outside forced colors, unlist
     ['@media (forced-colors: active)', 'at-rule not allowed'],
     ["[data-recipe='surface']", 'rule outside @layer components'],
     ["[data-side]:has(> [data-recipe='surface'][data-level='overlay'])", 'unused selector exception'],
-    ["[data-side]:has(> [data-recipe='surface'][data-variant='tooltip'])", 'unused selector exception'],
     ["[data-recipe='surface'] > [data-slot='icon'] > svg", 'unused selector exception'],
     [":root:has(> [data-recipe='surface'][data-variant='page'])", 'unused selector exception'],
+    ["[data-recipe='surface'][data-variant='tooltip']", 'unused value exception'],
+    ["[data-recipe='surface'][data-variant='tooltip'][data-open]", 'unused value exception'],
+    ["[data-recipe='surface'][data-variant='tooltip'] [data-slot='label']", 'unused value exception'],
   ])
 })
 

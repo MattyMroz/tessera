@@ -3,8 +3,16 @@
     z-index: var(--ts-depth-layer-popup);
   }
 
-  [data-side]:has(> [data-recipe='surface'][data-variant='tooltip']) {
-    z-index: var(--ts-depth-layer-tooltip);
+  [data-recipe='surface'][data-variant='tooltip'] {
+    transition: opacity var(--ts-motion-duration-press-in) var(--ts-motion-ease-out), translate var(--ts-motion-duration-follow) var(--ts-motion-ease-out), width var(--ts-motion-duration-follow) var(--ts-motion-ease-out);
+
+    &[data-open] {
+      transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-out), translate var(--ts-motion-duration-follow) var(--ts-motion-ease-out), width var(--ts-motion-duration-follow) var(--ts-motion-ease-out);
+    }
+
+    & [data-slot='label'] {
+      transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-out), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-out);
+    }
   }
 
   :root:has(> [data-recipe='surface'][data-variant='page']) {

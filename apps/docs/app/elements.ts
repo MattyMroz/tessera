@@ -57,5 +57,5 @@ export const LAB_ELEMENTS: readonly {
   { id: 'text', name: 'Text', status: 'not-ready', Section: TextSection },
   { id: 'textarea', name: 'Textarea', status: 'not-ready', Section: TextareaSection },
   { id: 'toggle-group', name: 'Toggle group', status: 'not-ready', Section: ToggleGroupSection },
-  { id: 'tooltip', name: 'Tooltip', status: 'not-ready', Section: TooltipSection },
+  { id: 'tooltip', name: 'Tooltip', status: 'accepted', Section: TooltipSection },
 ]

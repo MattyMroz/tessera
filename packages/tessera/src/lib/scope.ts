@@ -8,7 +8,7 @@ export type ScopeAnchor = {
 
 const SCOPE_ATTRIBUTES: readonly string[] = THEME_CONFIG.subtreeAxes.map((axis) => `data-${axis}`)
 
-function inheritScope(trigger: Element, popup: Element): void {
+export function copyScope(trigger: Element, popup: Element): void {
   const root = trigger.ownerDocument.documentElement
   for (const attribute of SCOPE_ATTRIBUTES) {
     const source = trigger.parentElement?.closest(`[${attribute}]`)
@@ -25,7 +25,7 @@ export function createScopeAnchor(): ScopeAnchor {
       current = trigger
     },
     copyTo: (popup) => {
-      if (current && popup) inheritScope(current, popup)
+      if (current && popup) copyScope(current, popup)
     },
   }
 }

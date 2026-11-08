@@ -141,10 +141,7 @@ const INDICATOR_HOST = ":has(> [data-recipe='indicator'])"
 const INDICATOR_REPLACES_CONTROL_INK = "[data-recipe='indicator'] ~ [data-recipe='control']::before"
 const INDICATOR_CHOICE_LABEL = "[data-recipe='indicator'] ~ [data-recipe='control'][aria-checked='true']:not(:disabled, [data-disabled])"
 const PAGE_SCROLLER = ":root:has(> [data-recipe='surface'][data-variant='page'])"
-const POSITIONER_LAYERS = [
-  "[data-side]:has(> [data-recipe='surface'][data-level='overlay'])",
-  "[data-side]:has(> [data-recipe='surface'][data-variant='tooltip'])",
-]
+const POSITIONER_LAYERS = ["[data-side]:has(> [data-recipe='surface'][data-level='overlay'])"]
 const RECIPE_SELECTOR_EXCEPTIONS: Readonly<Record<string, readonly string[]>> = {
   control: [ICON_GLYPH, BUSY_GLYPH, DOT_GLYPH, MARK_GLYPH, LISTBOX_CHEVRON, LISTBOX_CHEVRON_OPEN, CHOICE_HOST],
   indicator: [INDICATOR_HOST, INDICATOR_REPLACES_CONTROL_INK, INDICATOR_CHOICE_LABEL, MARK_DRAWING, MARK_CHECKED, MARK_MIXED],
@@ -170,7 +167,7 @@ const VENDOR_VARIABLES: Readonly<Record<string, string>> = {
 const HOVER_EXIT_FADE = 'background-color var(--ts-motion-duration-hover-out) var(--ts-motion-ease-hover)'
 const HOVER_EXIT_REST = ":not(:hover, [data-pressing], [aria-expanded='true'], [data-popup-open], [aria-pressed='true'], [aria-selected='true'])::before"
 const HOVER_EXIT_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role]), [aria-haspopup='listbox'], [data-variant='field'])${HOVER_EXIT_REST}`
-const HOVER_EXIT_ANCHOR_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger])${HOVER_EXIT_REST}`
+const HOVER_EXIT_ANCHOR_PLATE = `[data-recipe='control']:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *):is([aria-haspopup], [aria-expanded], [data-popup-open], [data-tooltip-trigger])${HOVER_EXIT_REST}`
 const HOVER_EXIT: Readonly<Record<string, string>> = {
   [HOVER_EXIT_PLATE]: `transition: ${HOVER_EXIT_FADE}`,
   [HOVER_EXIT_ANCHOR_PLATE]: `transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out), ${HOVER_EXIT_FADE}`,
@@ -179,9 +176,16 @@ const HOVER_EXIT: Readonly<Record<string, string>> = {
 const MARK_DRAW: Readonly<Record<string, string>> = {
   [MARK_DRAWING]: 'transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw)',
 }
+const TIP = "[data-recipe='surface'][data-variant='tooltip']"
+const TIP_GLIDE = 'translate var(--ts-motion-duration-follow) var(--ts-motion-ease-out), width var(--ts-motion-duration-follow) var(--ts-motion-ease-out)'
+const TIP_MOTION: Readonly<Record<string, string>> = {
+  [TIP]: `transition: opacity var(--ts-motion-duration-press-in) var(--ts-motion-ease-out), ${TIP_GLIDE}`,
+  [`${TIP}[data-open]`]: `transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-out), ${TIP_GLIDE}`,
+  [`${TIP} [data-slot='label']`]: 'transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-out), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-out)',
+}
 const SOURCE_LISTS: Lists = {
   selectors: RECIPE_SELECTOR_EXCEPTIONS,
-  values: { row: ARIA_LEVEL_INDENT, control: { ...HOVER_EXIT, [CHOICE_HOST]: 'contain: layout' }, indicator: MARK_DRAW },
+  values: { row: ARIA_LEVEL_INDENT, control: { ...HOVER_EXIT, [CHOICE_HOST]: 'contain: layout' }, indicator: MARK_DRAW, surface: TIP_MOTION },
   vendor: VENDOR_VARIABLES,
 }
 

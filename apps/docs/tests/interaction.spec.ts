@@ -206,7 +206,7 @@ for (const mode of MOTION_MODES) {
       }
     })
 
-    test('equal the scene time for a dialog and its backdrop and none for a menu, a popover and a tooltip', async ({ page }) => {
+    test('equal the scene time for a dialog and its backdrop, none for a menu and a popover and the hover exit time for a tooltip', async ({ page }) => {
       await visit(page, OVERLAYS)
       await mode.prepare(page)
       await region(page, 'Card').getByRole('button', { name: 'Chapter settings' }).click()
@@ -241,7 +241,8 @@ for (const mode of MOTION_MODES) {
       await region(page, 'Island').getByRole('button', { name: 'Select', exact: true }).hover()
       await expect(page.locator('[data-variant="tooltip"]')).toBeVisible()
       await page.waitForTimeout(SETTLE)
-      expect((await popupTimings(page, '[data-variant="tooltip"]')).map((seen) => seen.duration)).toEqual([0])
+      const tooltip = await popupTimings(page, '[data-variant="tooltip"]')
+      expect(tooltip.map((seen) => [seen.property, seen.duration])).toEqual([['opacity', mode.times[0]]])
     })
 
     test('fly the pills for the follow and the choice time and the tooltip for the follow time', async ({ page }) => {
@@ -280,9 +281,34 @@ for (const mode of MOTION_MODES) {
       await island.getByRole('button', { name: 'Pan', exact: true }).hover()
       await expect(page.locator('[data-variant="tooltip"]')).toHaveText('Pan')
       await page.waitForTimeout(SETTLE)
-      const tooltips = (await recorded(page)).filter((animation) => animation.variant === 'tooltip' && animation.duration !== null)
-      if (follow === 0) expect(tooltips).toEqual([])
-      else expect(tooltips.map((animation) => [animation.duration, animation.easing])).toEqual([[follow, 'ease-out']])
+      const tooltips = (await recorded(page)).filter((animation) => animation.tooltip)
+      const flown = new Set(tooltips.flatMap((animation) => animation.properties))
+      if (follow === 0) {
+        expect(tooltips).toEqual([])
+      } else {
+        expect(flown).toEqual(new Set(['translate', 'width', 'opacity', 'filter']))
+        const timings = await page.locator('[data-variant="tooltip"]').evaluate((popup) => {
+          const probe = document.createElement('div')
+          document.body.append(probe)
+          probe.style.transitionTimingFunction = getComputedStyle(popup).getPropertyValue('--ts-motion-ease-out').trim()
+          const ease = getComputedStyle(probe).transitionTimingFunction
+          probe.remove()
+          const split = (list: string): string[] => list.split(/,(?![^(]*\))/).map((item) => item.trim())
+          const style = getComputedStyle(popup)
+          const label = getComputedStyle(popup.querySelector('[data-slot="label"]') as Element)
+          const rows = (target: CSSStyleDeclaration): [string, number, string][] => {
+            const [names, durations, curves] = [split(target.transitionProperty), split(target.transitionDuration), split(target.transitionTimingFunction)]
+            return names.map((name, index): [string, number, string] => [name, Number.parseFloat(durations[index] ?? '') * (durations[index]?.endsWith('ms') ? 1 : 1000), curves[index] ?? ''])
+          }
+          return { ease, popup: rows(style), label: rows(label) }
+        })
+        const fade = timings.popup.find(([name]) => name === 'opacity')
+        const moves = timings.popup.filter(([name]) => name !== 'opacity')
+        expect([fade?.[0], fade?.[1]]).toEqual(['opacity', mode.times[0]])
+        for (const [name, duration, curve] of [...moves, ...timings.label]) expect([name, duration, curve], name).toEqual([name, follow, timings.ease])
+        expect(moves.map(([name]) => name).sort()).toEqual(['translate', 'width'])
+        expect(timings.label.map(([name]) => name).sort()).toEqual(['filter', 'opacity'])
+      }
     })
   })
 }

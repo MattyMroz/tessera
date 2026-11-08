@@ -1,31 +1,18 @@
 'use client'
 
-import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
-import { createContext, use, useId, useRef, useState, type PointerEvent, type ReactElement, type ReactNode, type RefCallback } from 'react'
-import { composeRefs } from '../../lib/compose-refs'
-import { readMotion } from '../../lib/motion'
-import { createPopupFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
-import { createScopeAnchor, type ScopeAnchor } from '../../lib/scope'
-import { TOOLTIP_CLOSE_DELAY, TOOLTIP_GROUP_GRACE, TOOLTIP_OPEN_DELAY } from '../../lib/tooltip-group'
+import { useRender } from '@base-ui/react/use-render'
+import { createContext, use, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { createTipGroup, type TipGroup, type TipShown, type TipSide } from '../../lib/tooltip'
 
 const DEFAULT_SIDE: TooltipSide = 'top'
 const BAR_SIDE: Readonly<Record<TooltipBarOrientation, TooltipSide>> = { horizontal: 'top', vertical: 'right' }
-const TOOLTIP_POPUP = "[data-variant='tooltip']"
-const TRIGGER_TIMING ={ delay: TOOLTIP_OPEN_DELAY, closeDelay: TOOLTIP_CLOSE_DELAY } as const
 
-type BarTip = { readonly trigger: string; readonly copyScope: ScopeAnchor['copyTo']; readonly content: ReactNode }
+const BarContext = createContext<TipGroup | null>(null)
 
-type Bar = { readonly handle: BaseTooltip.Handle<BarTip>; readonly flight: PopupFlight<HTMLElement> }
-
-const BarContext = createContext<Bar | null>(null)
-
-export type TooltipSide = 'top' | 'bottom' | 'left' | 'right'
+export type TooltipSide = TipSide
 
 export type TooltipBarOrientation = 'horizontal' | 'vertical'
-
-export type TooltipProviderProps = {
-  readonly children: ReactNode
-}
 
 export type TooltipProps = {
   readonly content: ReactNode
@@ -41,113 +28,91 @@ export type TooltipBarProps = {
   readonly children: ReactNode
 }
 
-type TooltipPopupProps = {
-  readonly side: TooltipSide
+type BubbleProps = {
+  readonly group: TipGroup
   readonly arrow: boolean
-  readonly copyScope: ScopeAnchor['copyTo'] | undefined
-  readonly positioner?: RefCallback<HTMLElement>
-  readonly popup?: RefCallback<HTMLElement>
-  readonly children: ReactNode
 }
 
-type BarPopupProps = Omit<TooltipPopupProps, 'positioner' | 'popup'> & {
-  readonly trigger: string | undefined
-  readonly flight: PopupFlight<HTMLElement>
+const NOTHING: TipShown = { content: null, previous: null, turn: 0 }
+
+function nothing(): TipShown {
+  return NOTHING
 }
 
-function createBar(): Bar {
-  return {
-    handle: BaseTooltip.createHandle<BarTip>(),
-    flight: createPopupFlight<HTMLElement>({ grace: () => TOOLTIP_GROUP_GRACE, motion: readMotion }),
-  }
-}
+function Bubble({ group, arrow }: BubbleProps) {
+  const shown = useSyncExternalStore(group.subscribe, group.shown, nothing)
+  const id = useId()
+  const { placed, attach } = group
 
-function TooltipPopup({ side, arrow, copyScope, positioner, popup, children }: TooltipPopupProps) {
-  return (
-    <BaseTooltip.Portal>
-      <BaseTooltip.Positioner ref={positioner} side={side}>
-        <BaseTooltip.Popup
-          ref={composeRefs(popup, copyScope)}
-          data-recipe="surface"
-          data-surface=""
-          data-inset="inset"
-          data-level="overlay"
-          data-variant="tooltip"
-          data-material="solid"
-        >
-          {arrow ? <BaseTooltip.Arrow data-slot="arrow" /> : null}
-          {children}
-        </BaseTooltip.Popup>
-      </BaseTooltip.Positioner>
-    </BaseTooltip.Portal>
+  useLayoutEffect(placed, [shown, placed])
+
+  if (shown.turn === 0) return null
+  return createPortal(
+    <div
+      ref={attach}
+      id={id}
+      popover="manual"
+      role="tooltip"
+      data-recipe="surface"
+      data-surface=""
+      data-inset="inset"
+      data-level="overlay"
+      data-variant="tooltip"
+      data-material="solid"
+    >
+      {arrow ? <span data-slot="arrow" /> : null}
+      <span data-slot="clip">
+        {shown.previous === null ? null : (
+          <span key={shown.turn - 1} data-slot="label" data-leaving="">
+            {shown.previous}
+          </span>
+        )}
+        <span key={shown.turn} data-slot="label" data-entering={shown.previous === null ? undefined : ''}>
+          {shown.content}
+        </span>
+      </span>
+    </div>,
+    document.body,
   )
 }
 
-function BarPopup({ flight, trigger, ...props }: BarPopupProps) {
-  const { positioner, popup } = usePopupFlight(flight, trigger)
-  return <TooltipPopup {...props} positioner={positioner} popup={popup} />
-}
+function useTrigger(group: TipGroup, content: ReactNode, children: ReactElement): ReactElement {
+  const trigger = useRef<HTMLElement | null>(null)
+  const { describe } = group
 
-export function TooltipProvider({ children }: TooltipProviderProps) {
-  return <BaseTooltip.Provider timeout={TOOLTIP_GROUP_GRACE}>{children}</BaseTooltip.Provider>
+  useLayoutEffect(() => {
+    if (trigger.current) describe(trigger.current, content)
+  })
+
+  return useRender({ render: children, ref: trigger, props: group.trigger })
 }
 
 export function Tooltip({ content, side, arrow, children }: TooltipProps) {
   const bar = use(BarContext)
-  const trigger = useId()
-  const [{ register, copyTo }] = useState(createScopeAnchor)
-  if (bar) {
-    return (
-      <BaseTooltip.Trigger
-        ref={register}
-        handle={bar.handle}
-        payload={{ trigger, copyScope: copyTo, content }}
-        {...TRIGGER_TIMING}
-        render={children}
-      />
-    )
-  }
-
+  const wanted = side ?? DEFAULT_SIDE
+  const [own] = useState(() => createTipGroup({ side: () => wanted, heldByGroup: false }))
+  const element = useTrigger(bar ?? own, content, children)
+  if (bar) return element
   return (
-    <BaseTooltip.Root>
-      <BaseTooltip.Trigger ref={register} {...TRIGGER_TIMING} render={children} />
-      <TooltipPopup side={side ?? DEFAULT_SIDE} arrow={arrow ?? true} copyScope={copyTo}>
-        {content}
-      </TooltipPopup>
-    </BaseTooltip.Root>
+    <>
+      {element}
+      <Bubble group={own} arrow={arrow ?? true} />
+    </>
   )
 }
 
 export function TooltipBar({ orientation, side, arrow, children }: TooltipBarProps) {
-  const [bar] = useState(createBar)
   const axis = orientation ?? 'horizontal'
-  const group = useRef<HTMLDivElement>(null)
-  const leaving = useRef<number | undefined>(undefined)
-
-  const holdInGap = (open: boolean, details: BaseTooltip.Root.ChangeEventDetails): void => {
-    if (!open && details.reason === 'trigger-hover' && group.current?.matches(':hover')) details.cancel()
-  }
-  const stay = (): void => window.clearTimeout(leaving.current)
-  const leave = (event: PointerEvent<HTMLDivElement>): void => {
-    stay()
-    const onPopup = event.relatedTarget instanceof Element && event.relatedTarget.closest(TOOLTIP_POPUP) !== null
-    const focused = group.current?.querySelector(':focus-visible') ?? null
-    if (onPopup || focused) return
-    leaving.current = window.setTimeout(() => bar.handle.close(), TOOLTIP_CLOSE_DELAY)
-  }
+  const wanted = side ?? BAR_SIDE[axis]
+  const [group] = useState(() => createTipGroup({ side: () => wanted, heldByGroup: true }))
+  const { enterGroup, leaveGroup } = group
 
   return (
-    <BarContext value={bar}>
-      <div ref={group} data-component="tooltip-bar" data-orientation={axis} onPointerEnter={stay} onPointerLeave={leave}>
+    <BarContext value={group}>
+      <div data-component="tooltip-bar" data-orientation={axis} onPointerEnter={enterGroup} onPointerLeave={leaveGroup}>
         {children}
       </div>
-      <BaseTooltip.Root handle={bar.handle} onOpenChange={holdInGap}>
-        {({ payload }) => (
-          <BarPopup side={side ?? BAR_SIDE[axis]} arrow={arrow ?? true} trigger={payload?.trigger} copyScope={payload?.copyScope} flight={bar.flight}>
-            {payload?.content}
-          </BarPopup>
-        )}
-      </BaseTooltip.Root>
+      <Bubble group={group} arrow={arrow ?? true} />
     </BarContext>
   )
 }

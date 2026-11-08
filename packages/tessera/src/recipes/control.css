@@ -76,7 +76,7 @@
     }
 
     &:where(button:not([role]), [role='button'], [data-slot='box'], a[href]:not([role])):not(:disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true'], [data-variant='field'], [aria-haspopup='listbox'], [data-surface='joined'] > *) {
-      &:not([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]) {
+      &:not([aria-haspopup], [aria-expanded], [data-popup-open], [data-tooltip-trigger]) {
         scale: var(--ts-motion-press-rest);
         transition: scale var(--ts-motion-duration-press-out) var(--ts-motion-ease-press-out);
 
@@ -87,7 +87,7 @@
         }
       }
 
-      &:is([aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]) {
+      &:is([aria-haspopup], [aria-expanded], [data-popup-open], [data-tooltip-trigger]) {
         & > [data-slot='icon'],
         & > [data-slot='label'],
         &::before {

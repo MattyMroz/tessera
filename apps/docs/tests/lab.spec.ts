@@ -21,6 +21,7 @@ import {
   startTrace,
   stateStep,
   TONE_ROLES,
+  TOOLTIP_EXCEPTIONS,
   visit,
   watchLayers,
   type LayerCount,
@@ -466,7 +467,7 @@ test('draws the outer and the inset focus samples with the focus recipe', async 
   expect(await ring(inset)).toMatch(/^none /)
 })
 
-test('moves only transform and opacity through the overlays screen', async ({ page, browserName }) => {
+test('moves only transform and opacity through the overlays screen, but for the width and the blur of a tooltip', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'the trace comes from the Chrome DevTools protocol')
   await page.addInitScript(recordAnimations)
   await visit(page, OVERLAYS)
@@ -506,7 +507,7 @@ test('moves only transform and opacity through the overlays screen', async ({ pa
 
   expect(offCompositor(await recorded(page))).toEqual([])
   expect(events.some((event) => event.name === 'Animation')).toBe(true)
-  expect(failures(events)).toEqual([])
+  expect(failures(events, TOOLTIP_EXCEPTIONS)).toEqual([])
 })
 
 test('moves nothing on the overlays screen with the motion off', async ({ page }) => {

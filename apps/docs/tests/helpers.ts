@@ -17,6 +17,7 @@ export type RecordedAnimation = {
   readonly variant: string | null
   readonly recipe: string | null
   readonly plate: boolean
+  readonly tooltip: boolean
   readonly duration: number | null
   readonly easing: string | null
   readonly properties: readonly string[]
@@ -268,10 +269,14 @@ export async function motionWork(page: Page, action: () => Promise<unknown>): Pr
   return { animations, work, events }
 }
 
-export function failures(events: readonly TraceEvent[]): TraceEvent[] {
-  return events.filter((event) => {
+export function failures(events: readonly TraceEvent[], allowed: readonly string[] = []): TraceEvent[] {
+  const properties = new Map<string, string>()
+  return events.toSorted((a, b) => (a.ts ?? 0) - (b.ts ?? 0)).filter((event) => {
     const data = event.args?.data
-    return Boolean(data?.compositeFailed) || (data?.unsupportedProperties?.length ?? 0) > 0
+    const id = event.id2?.local ?? event.id ?? ''
+    if (event.ph === 'b' && data?.displayName !== undefined) properties.set(id, data.displayName)
+    const failed = Boolean(data?.compositeFailed) || (data?.unsupportedProperties?.length ?? 0) > 0
+    return failed && !allowed.includes(properties.get(id) ?? '')
   })
 }
 
@@ -387,7 +392,7 @@ async function countOf(page: Page, captured: readonly CapturedLayer[]): Promise<
 }
 
 const BLOCKED = ":disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true']"
-const ANCHOR = "[aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]"
+const ANCHOR = "[aria-haspopup], [aria-expanded], [data-popup-open], [data-tooltip-trigger]"
 const BUTTON_KIND = "[data-recipe='control']:is(button:not([role]), button[role='combobox'], [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role])):not([data-variant='field'])"
 const PILL_KIND = ":has(> [data-recipe='indicator']) > [data-recipe='control']:is([role='radio'], [role='tab'], [role='menuitem']), [data-recipe='row'][role='menuitem']"
 
@@ -693,6 +698,7 @@ export function recordAnimations(): void {
       variant: element.getAttribute('data-variant'),
       recipe: element.closest('[data-recipe="indicator"]') ? 'indicator' : null,
       plate,
+      tooltip: element.closest('[data-variant="tooltip"]') !== null,
       duration,
       easing,
       properties,
@@ -792,9 +798,16 @@ export async function clearRecorded(page: Page): Promise<void> {
 
 export const HOVER_EXIT_PROPERTY = 'background-color'
 
+export const TOOLTIP_EXCEPTIONS: readonly string[] = ['width', 'filter']
+
 export function offCompositor(animations: readonly RecordedAnimation[]): string[] {
   return animations.flatMap((animation) =>
-    animation.properties.filter((name) => !COMPOSITOR_PROPERTIES.includes(name) && !(animation.plate && name === HOVER_EXIT_PROPERTY)),
+    animation.properties.filter(
+      (name) =>
+        !COMPOSITOR_PROPERTIES.includes(name) &&
+        !(animation.plate && name === HOVER_EXIT_PROPERTY) &&
+        !(animation.tooltip && TOOLTIP_EXCEPTIONS.includes(name)),
+    ),
   )
 }
 
