@@ -74,6 +74,13 @@ CSS: v3 8504 B gz (z mostem `tailwind.css`: 8548 B) wobec v2 80 707 B (`MangaShi
 
 Zapas `toggle-group` to 88 B. Po rundzie B (2026-11-01) `toggle-group` ma 3008 B, zapas 64 B. Rozmiar jest powtarzalny: przy globie w `entry` tsdown dostawał pliki w zmiennej kolejności, od której zależy kolejność importów zewnętrznych (`react`, `react/jsx-runtime`) w `dist`, więc ten sam kod dawał 3071 albo 3074 B; `tsdown.config.ts` podaje teraz wejścia jako posortowaną listę i pięć kolejnych buildów daje identyczny `dist`. Plan przenosi `collection` do Tabs i Tree (D64, D65), więc moduł stanie się wspólny i wyjdzie z sumy.
 
+### B6: `menubar` (2026-11-08)
+
+`components/menu/menubar.js` z `lib/bar-overflow.js` miał 3586 B przy progu 3072 B; po zmianie ma 2991 B (próg bez zmian).
+
+- Co zadecydował prowadzący z upoważnienia, do potwierdzenia przez właściciela: `'use no memo'` w `BarMenu`. Bez dyrektywy po wszystkich skróceniach kodu zostawało 3193 B, a samą dyrektywą schodzi do 2991 B (−202 B: gzip źle kompresuje wynik kompilatora, bo tablica pamięci podręcznej ma osobne warunki dla każdego propsa i elementu). Koszt: `BarMenu` nie zapamiętuje elementów potomnych. `Menubar` i `MenubarMenu` dalej przekazują mu zapamiętany element, więc `BarMenu` renderuje się, gdy zmieni się jego `overflow`, etykieta albo dzieci (nie zmierzono liczby renderów). Odrzucone: podniesienie progu (zakazane), przeniesienie obsługi Tab do `lib/menubar-hotkey.ts` (wypadłoby z pomiaru, a nie jest wspólne dla komponentów).
+- Skrócenia bez zmiany zachowania: `BarMenu` składa `Menu` i `MenuContent` zamiast własnego `Root`, kontekstu zasięgu, portalu, pozycjonera i popupu (`MenuContent` dostał `positioner` i `place`); pigułka hover paska z `useListPill(…, 'x')` zamiast własnego `useIndicator` i `Pill`; `More` to `BarMenu` w `Menubar`; jeden `hold(trigger, open)` zamiast `hold` i `release`; jeden obserwator `ResizeObserver` bez `MutationObserver`, bo animację odtwarza mikrozadanie po `onCount`; zapis „widoczne przed” tylko dla pokazanych elementów (`Map<element, left>` zamiast `Seen`).
+
 ## T1–T5 (`bun run perf`)
 
 Metoda (`apps/docs/perf/stress.perf.ts`):

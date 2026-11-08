@@ -2,7 +2,7 @@
 
 import { Menu as BaseMenu } from '@base-ui/react/menu'
 import ChevronRight from 'lucide-react/icons/chevron-right'
-import { createContext, use, useState, type ReactElement, type ReactNode, type RefObject } from 'react'
+import { createContext, use, useState, type ReactElement, type ReactNode, type Ref, type RefObject } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
 import { useIndicator } from '../../lib/indicator'
 import { createMenuFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
@@ -27,7 +27,7 @@ type MenuPopupProps = Unstyled<BaseMenu.Popup.Props>
 
 type MenuPopupWidthProps = MenuPopupProps & { width?: MenuWidth }
 
-export type MenuContentProps = MenuPopupWidthProps & { anchor?: RefObject<Element | null> }
+export type MenuContentProps = MenuPopupWidthProps & { anchor?: RefObject<Element | null>; positioner?: Ref<HTMLDivElement>; place?: 'context' | 'bar' }
 
 type Submenus = {
   readonly open: SubmenuStore<HTMLElement>
@@ -53,8 +53,8 @@ export const LIST_POPUP = {
 
 export const FillContext = createContext<true | null>(null)
 
-export function useListPill(items: string, fill: true | null = null, hover = true) {
-  const { container, ride, squash, select } = useIndicator({ axis: 'y', items, hover, follow: !hover, focus: true })
+export function useListPill(items: string, fill: true | null = null, hover = true, axis: 'x' | 'y' = 'y') {
+  const { container, ride, squash, select } = useIndicator({ axis, items, hover, follow: !hover, focus: true })
   return { container, select, pill: <Pill variant="hover" fill={fill} ride={ride} squash={squash} /> }
 }
 
@@ -104,11 +104,11 @@ export function MenuTrigger(props: ButtonProps) {
   return <BaseMenu.Trigger ref={register} render={<Button {...props} />} />
 }
 
-export function MenuContent({ anchor, ...props }: MenuContentProps) {
+export function MenuContent({ anchor, positioner, ...props }: MenuContentProps) {
   const scope = useHost(ScopeContext, 'Menu', 'MenuContent')
   return (
     <BaseMenu.Portal>
-      <BaseMenu.Positioner align="start" anchor={anchor}>
+      <BaseMenu.Positioner align="start" anchor={anchor} ref={positioner}>
         <MenuPopup {...props} scope={scope} />
       </BaseMenu.Positioner>
     </BaseMenu.Portal>

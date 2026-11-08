@@ -1,6 +1,5 @@
 'use client'
 
-import { Menu as BaseMenu } from '@base-ui/react/menu'
 import { Menubar as BaseMenubar } from '@base-ui/react/menubar'
 import Ellipsis from 'lucide-react/icons/ellipsis'
 import {
@@ -20,11 +19,10 @@ import { watchBarOverflow } from '../../lib/bar-overflow'
 import { composeRefs } from '../../lib/compose-refs'
 import { useIndicator } from '../../lib/indicator'
 import { createMenuFlight, usePopupFlight, type PopupFlight } from '../../lib/popup-flight'
-import { createScopeAnchor, ScopeContext } from '../../lib/scope'
 import { useHost } from '../../lib/slot'
 import type { Choices } from '../../lib/theme'
 import { Pill } from '../toggle-group/toggle-group'
-import { MenuPopup, MenuSubmenu, MenuSubmenuContent, MenuSubmenuTrigger, MenuTrigger, FillContext } from './menu'
+import { FillContext, Menu, MenuContent, MenuSubmenu, MenuSubmenuContent, MenuSubmenuTrigger, MenuTrigger, useListPill } from './menu'
 
 const TRIGGER = '[role="menuitem"]'
 const SHOWN = `:scope > ${TRIGGER}:not(:disabled)`
@@ -33,12 +31,11 @@ type Entry = { readonly trigger: HTMLElement; readonly label: ReactNode; readonl
 
 type Bar = {
   readonly flight: PopupFlight<HTMLElement>
-  readonly hold: (trigger: HTMLElement | null) => void
-  readonly release: (trigger: HTMLElement | null) => void
+  readonly hold: (trigger: HTMLElement | null, open: boolean) => void
   readonly subscribe: (listener: () => void) => () => void
-  readonly membership: () => number
   readonly register: (id: string, entry: Entry) => () => void
   readonly triggers: () => HTMLElement[]
+  readonly membership: () => number
   readonly overflowed: () => readonly [string, Entry][]
   readonly showCount: (count: number) => void
 }
@@ -58,15 +55,14 @@ function createBar(setHeld: Dispatch<SetStateAction<HTMLElement | null>>): Bar {
   }
   return {
     flight: createMenuFlight(),
-    hold: setHeld,
-    release: (trigger) => setHeld((current) => (current === trigger ? null : current)),
+    hold: (trigger, open) => setHeld((current) => (open ? trigger : current === trigger ? null : current)),
     subscribe: (listener) => {
       listeners.add(listener)
       return () => listeners.delete(listener)
     },
     membership: () => membership,
     register: (id, entry) => {
-      if (entries.get(id)?.trigger !== entry.trigger) membership += 1
+      membership += 1
       entries.set(id, entry)
       notify()
       return () => {
@@ -97,7 +93,9 @@ export function Menubar({ moreLabel, size, variant, children }: MenubarProps) {
   const more = useRef<HTMLButtonElement>(null)
   const [held, setHeld] = useState<HTMLElement | null>(null)
   const [bar] = useState(() => createBar(setHeld))
-  const hover = useIndicator({ axis: 'x', items: TRIGGER, hover: true, focus: true })
+  const hidden = useSyncExternalStore(bar.subscribe, bar.overflowed, bar.overflowed)
+  const members = useSyncExternalStore(bar.subscribe, bar.membership, bar.membership)
+  const hover = useListPill(TRIGGER, null, true, 'x')
   const open = useIndicator({ axis: 'x', items: TRIGGER, follow: true })
   const accent = variant === 'accent'
 
@@ -109,21 +107,8 @@ export function Menubar({ moreLabel, size, variant, children }: MenubarProps) {
   useLayoutEffect(() => {
     const button = more.current
     if (element.current === null || button === null) return
-    let seen = Number.NaN
-    let stop = () => {}
-    const watch = () => {
-      if (element.current === null || bar.membership() === seen) return
-      seen = bar.membership()
-      stop()
-      stop = watchBarOverflow({ bar: element.current, more: button, triggers: bar.triggers }, bar.showCount)
-    }
-    watch()
-    const unsubscribe = bar.subscribe(watch)
-    return () => {
-      unsubscribe()
-      stop()
-    }
-  }, [bar])
+    return watchBarOverflow({ bar: element.current, more: button, triggers: bar.triggers }, bar.showCount)
+  }, [bar, members])
 
   return (
     <BaseMenubar
@@ -134,50 +119,46 @@ export function Menubar({ moreLabel, size, variant, children }: MenubarProps) {
       data-surface="bar"
       data-size={size}
     >
-      <Pill variant="hover" ride={hover.ride} squash={hover.squash} />
+      {hover.pill}
       {accent && <Pill variant="active" ride={open.ride} squash={open.squash} />}
       <BarContext value={bar}>
         <FillContext value={accent || null}>
           {children}
-          <More label={moreLabel} button={more} />
+          <BarMenu bar={bar} trigger={more} label={moreLabel} icon={<Ellipsis />} overflow={hidden.length === 0}>
+            {hidden.map(([id, entry]) => (
+              <MenuSubmenu key={id}>
+                <MenuSubmenuTrigger>{entry.label}</MenuSubmenuTrigger>
+                <MenuSubmenuContent>{entry.rows}</MenuSubmenuContent>
+              </MenuSubmenu>
+            ))}
+          </BarMenu>
         </FillContext>
       </BarContext>
     </BaseMenubar>
   )
 }
 
-function BarMenu({ trigger, label, icon, overflow, children }: { trigger: RefObject<HTMLButtonElement | null>; label: ReactNode; icon?: ReactNode; overflow: boolean; children: ReactNode }) {
-  const bar = useHost(BarContext, 'Menubar', 'MenubarMenu')
-  const [anchor] = useState(createScopeAnchor)
+function BarMenu({ bar, trigger, label, icon, overflow, children }: { bar: Bar; trigger: RefObject<HTMLButtonElement | null>; label: string; icon?: ReactNode; overflow: boolean; children: ReactNode }) {
+  'use no memo'
   const { positioner, popup } = usePopupFlight(bar.flight)
-  const onOpenChange = (open: boolean) => {
-    if (open) bar.hold(trigger.current)
-    else bar.release(trigger.current)
-  }
+  const onOpenChange = (open: boolean) => bar.hold(trigger.current, open)
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Tab' || event.altKey || event.ctrlKey || event.metaKey) return
     event.preventDefault()
     const shown = [...(trigger.current?.parentElement?.querySelectorAll<HTMLElement>(SHOWN) ?? [])]
-    const next = shown[shown.findIndex((item) => item === trigger.current) + (event.shiftKey ? -1 : 1)]
-    const target = next ?? event.target
-    if (next !== undefined) next.focus()
-    queueMicrotask(() => target.dispatchEvent(new globalThis.KeyboardEvent('keydown', { key: next === undefined ? 'Escape' : 'ArrowDown', bubbles: true })))
+    const next = shown[shown.indexOf(trigger.current as HTMLElement) + (event.shiftKey ? -1 : 1)]
+    next?.focus()
+    queueMicrotask(() => (next ?? event.target).dispatchEvent(new globalThis.KeyboardEvent('keydown', { key: next ? 'ArrowDown' : 'Escape', bubbles: true })))
   }
   return (
-    <ScopeContext value={anchor}>
-      <BaseMenu.Root onOpenChange={onOpenChange}>
-        <MenuTrigger ref={trigger} variant="ghost" icon={icon} disabled={overflow} data-overflow={overflow ? '' : undefined} {...(icon === undefined ? {} : { 'aria-label': String(label) })}>
-          {icon === undefined ? label : undefined}
-        </MenuTrigger>
-        <BaseMenu.Portal>
-          <BaseMenu.Positioner ref={positioner} align="start">
-            <MenuPopup scope={anchor} place="bar" ref={popup} onKeyDown={onKeyDown}>
-              {children}
-            </MenuPopup>
-          </BaseMenu.Positioner>
-        </BaseMenu.Portal>
-      </BaseMenu.Root>
-    </ScopeContext>
+    <Menu onOpenChange={onOpenChange}>
+      <MenuTrigger ref={trigger} variant="ghost" icon={icon} disabled={overflow} data-overflow={overflow || undefined} aria-label={icon === undefined ? undefined : label}>
+        {icon === undefined ? label : undefined}
+      </MenuTrigger>
+      <MenuContent positioner={positioner} place="bar" ref={popup} onKeyDown={onKeyDown}>
+        {children}
+      </MenuContent>
+    </Menu>
   )
 }
 
@@ -190,7 +171,7 @@ export function MenubarMenu({ label, children }: MenubarMenuProps) {
   const id = useId()
   const bar = useHost(BarContext, 'Menubar', 'MenubarMenu')
   const trigger = useRef<HTMLButtonElement>(null)
-  const overflowed = useSyncExternalStore(bar.subscribe, bar.overflowed, bar.overflowed)
+  const hidden = useSyncExternalStore(bar.subscribe, bar.overflowed, bar.overflowed)
 
   useLayoutEffect(() => {
     if (trigger.current === null) return
@@ -198,23 +179,8 @@ export function MenubarMenu({ label, children }: MenubarMenuProps) {
   }, [bar, id, label, children])
 
   return (
-    <BarMenu trigger={trigger} label={label} overflow={overflowed.some(([key]) => key === id)}>
+    <BarMenu bar={bar} trigger={trigger} label={label} overflow={hidden.some(([key]) => key === id)}>
       {children}
-    </BarMenu>
-  )
-}
-
-function More({ label, button }: { label: string; button: RefObject<HTMLButtonElement | null> }) {
-  const bar = useHost(BarContext, 'Menubar', 'More')
-  const hidden = useSyncExternalStore(bar.subscribe, bar.overflowed, bar.overflowed)
-  return (
-    <BarMenu trigger={button} label={label} icon={<Ellipsis />} overflow={hidden.length === 0}>
-      {hidden.map(([id, entry]) => (
-        <MenuSubmenu key={id}>
-          <MenuSubmenuTrigger>{entry.label}</MenuSubmenuTrigger>
-          <MenuSubmenuContent>{entry.rows}</MenuSubmenuContent>
-        </MenuSubmenu>
-      ))}
     </BarMenu>
   )
 }
