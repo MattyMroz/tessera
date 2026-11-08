@@ -89,6 +89,12 @@ Zapas `toggle-group` to 88 B. Po rundzie B (2026-11-01) `toggle-group` ma 3008 B
 - Dlaczego: przyrost to zachowanie, którego wymaga wybrany wariant T6 (`docs/decisions/e3-choices.md`): etykieta, która jeszcze wjeżdża, dostaje nowy tekst w miejscu (bez pustego dymka przy szybkim ruchu), ściśnięcie tekstu do szerokości dymka (`--ts-i-tip-squish`), pomiar szerokości bez bieżącej skali, Tab bez zamykania dymka między przyciskami jednej grupy, zamykanie przy Enter i Spacji.
 - Odrzucone: cięcie innych części tooltipa (właściciel wybrał podniesienie progu).
 
+### Znany błąd: regres T2, T3 i N8 od 2026-11-02 (otwarte)
+
+`bun run perf` 2026-11-09 wobec `last.json` (2026-11-02, `0a84693`): T2 hover 72,5 ms (było 12,4), T2 press 115 ms (54), T3 1x 49 ms (15), N8 row hover 65 ms (7,9), N8 row layers 7 (1). Na `ca35a38` (przed tooltipem T6) te same liczby (T2 hover 76, N8 64, T3 49, warstwy 7), więc tooltip T6 nie jest przyczyną. Bisekcja przerwana: regres jest już w `297e1ba` (skala spoczynkowa kontrolek), pierwsza połowa listy 36 commitów niezbadana. Próba z wyłączoną skalą spoczynkową (`scale: none` na kontrolkach) nie zmieniła kosztu najechania na zwykły przycisk (ok. 110–120 ms głównego wątku przy CPU ×4, ślad), więc ta hipoteza nie tłumaczy regresu. Pomiary dzielą maszynę z innymi sesjami (rozrzut do 30 %). Następny krok: dokończyć bisekcję w `.worktrees/perf-ca35` (commity od `122f769` do `297e1ba`).
+
+Koszt tooltipa w pasku (ślad, CPU ×4, jedno przejście, mediana z 3): 266 ms głównego wątku w oknie 400 ms, zwykły przycisk 110–140 ms; płynna `width` i blur razem ok. 55 ms (bez obu 210 ms). `placed()` czyta DOM raz przed zapisami, `--ts-i-tip-room` zapisuje tylko przy zmianie.
+
 ## T1–T5 (`bun run perf`)
 
 Metoda (`apps/docs/perf/stress.perf.ts`):

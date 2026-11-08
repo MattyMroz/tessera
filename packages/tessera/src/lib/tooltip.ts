@@ -26,6 +26,7 @@ const LABEL = "[data-slot='label']:not([data-leaving])"
 const LEAVING = "[data-slot='label'][data-leaving]"
 const ENTERING = 'data-entering'
 const SQUISH = 'data-squish'
+const ROOM = '--ts-i-tip-room'
 const OPEN = 'data-open'
 const SNAP = 'data-snap'
 const INSTANT = 'data-instant'
@@ -249,13 +250,18 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       const style = getComputedStyle(element)
       const clip = label.parentElement
       if (!clip) return
-      const chrome = element.getBoundingClientRect().width - clip.getBoundingClientRect().width
+      const shown = clip.getBoundingClientRect().width
+      const chrome = element.getBoundingClientRect().width - shown
       const gap = pixels(style.marginBottom)
-      writeInstance(label, { '--ts-i-tip-room': `${window.innerWidth - gap * 2 - chrome}px` })
+      const height = pixels(style.height)
+      const leaving = element.querySelector<HTMLElement>(LEAVING)
+      const out = leaving ? unscaled(leaving) : 0
+      const anchor = trigger.getBoundingClientRect()
+      const room = `${window.innerWidth - gap * 2 - chrome}px`
+      if (label.style.getPropertyValue(ROOM) !== room) writeInstance(label, { [ROOM]: room })
       const next = unscaled(label)
       const width = (Math.ceil((next + chrome) * LAYOUT_UNITS) + 1) / LAYOUT_UNITS
-      const height = pixels(style.height)
-      const place = placeTip(trigger.getBoundingClientRect(), { width, height }, gap, { width: window.innerWidth, height: window.innerHeight }, options.side())
+      const place = placeTip(anchor, { width, height }, gap, { width: window.innerWidth, height: window.innerHeight }, options.side())
       element.toggleAttribute(SNAP, entry !== 'move')
       element.toggleAttribute(INSTANT, entry === 'instant')
       if (entry === 'instant') element.setAttribute(OPEN, '')
@@ -266,9 +272,8 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
         '--ts-i-tip-width': `${width}px`,
         '--ts-i-tip-arrow': `${place.arrow}px`,
       })
-      const leaving = element.querySelector<HTMLElement>(LEAVING)
-      writeInstance(label, { '--ts-i-tip-squish': Math.min(1, clip.getBoundingClientRect().width / next) })
-      if (leaving) writeInstance(leaving, { '--ts-i-tip-squish': Math.min(1, next / unscaled(leaving)) })
+      writeInstance(label, { '--ts-i-tip-squish': entry === 'move' ? Math.min(1, shown / next) : 1 })
+      if (leaving) writeInstance(leaving, { '--ts-i-tip-squish': Math.min(1, next / out) })
       label.setAttribute(SQUISH, '')
       void element.offsetWidth
       label.removeAttribute(SQUISH)
