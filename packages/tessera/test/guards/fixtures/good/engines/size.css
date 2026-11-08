@@ -46,6 +46,12 @@
   initial-value: 0px;
 }
 
+@property --ts-i-tip-squish {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
 @layer theme {
   :root,
   [data-size] {

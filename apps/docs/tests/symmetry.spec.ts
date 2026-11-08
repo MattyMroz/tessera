@@ -283,7 +283,7 @@ test.describe('optical symmetry', () => {
       await closed(page, confirm)
       await region(page, 'Tooltip').getByRole('button', { name: 'Save', exact: true }).hover()
       const tooltip = page.locator('[data-variant="tooltip"]')
-      await expect(tooltip).toBeVisible()
+      await expect(tooltip).toHaveCSS('opacity', '1')
       const tip = await opticalGaps(tooltip)
       expectEven(tip, `${label} tooltip`)
       expect(Math.abs(tip.left - controlSide(tip)), `${label} tooltip side ${tip.left}`).toBeLessThanOrEqual(TOLERANCE)

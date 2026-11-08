@@ -25,6 +25,7 @@ const FLIP: Readonly<Record<TipSide, TipSide>> = { top: 'bottom', bottom: 'top',
 const LABEL = "[data-slot='label']:not([data-leaving])"
 const LEAVING = "[data-slot='label'][data-leaving]"
 const ENTERING = 'data-entering'
+const SQUISH = 'data-squish'
 const OPEN = 'data-open'
 const SNAP = 'data-snap'
 const INSTANT = 'data-instant'
@@ -32,7 +33,17 @@ const DESCRIBED = 'aria-describedby'
 const TOUCH = 'touch'
 const LAYOUT_UNITS = 64
 const ESCAPE = 'Escape'
+const ENTER = 'Enter'
+const SPACE = ' '
 const HIDDEN: TipShown = { content: null, previous: null, turn: 0 }
+
+function unscaled(label: Element): number {
+  return label.getBoundingClientRect().width / (Number.parseFloat(getComputedStyle(label).scale) || 1)
+}
+
+function entering(label: Element | null | undefined): boolean {
+  return label?.getAnimations()[0] !== undefined
+}
 
 function centre(start: number, size: number): number {
   return start + size / 2
@@ -76,7 +87,7 @@ function pixels(value: string): number {
   return Number.isFinite(amount) ? amount : 0
 }
 
-type TriggerEvent = { readonly currentTarget: HTMLElement; readonly pointerType?: string; readonly key?: string }
+type TriggerEvent = { readonly currentTarget: HTMLElement; readonly pointerType?: string; readonly key?: string; readonly relatedTarget?: EventTarget | null }
 
 export type TipTriggerProps = {
   readonly 'data-tooltip-trigger': ''
@@ -84,7 +95,7 @@ export type TipTriggerProps = {
   readonly onPointerLeave: (event: TriggerEvent) => void
   readonly onPointerDown: (event: TriggerEvent) => void
   readonly onFocus: (event: TriggerEvent) => void
-  readonly onBlur: () => void
+  readonly onBlur: (event: TriggerEvent) => void
   readonly onKeyDown: (event: TriggerEvent) => void
 }
 
@@ -132,12 +143,15 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
     clearTimers()
     if (current && current !== group) current.hide()
     if (target && target !== trigger) target.removeAttribute(DESCRIBED)
+    const move = next === 'move'
+    const rising = move && entering(bubble?.querySelector(LABEL))
     target = trigger
     entry = next
     fading += 1
     current = group
     document.addEventListener('scroll', onScroll, { capture: true, passive: true, once: true })
-    state = { content: contents.get(trigger) ?? null, previous: next === 'move' ? state.content : null, turn: state.turn + 1 }
+    const content = contents.get(trigger) ?? null
+    state = rising ? { ...state, content } : { content, previous: move ? state.content : null, turn: state.turn + 1 }
     notify()
   }
 
@@ -191,9 +205,14 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       onFocus({ currentTarget }) {
         if (currentTarget.matches(':focus-visible')) begin(currentTarget, true)
       },
-      onBlur: () => group.hide(),
-      onKeyDown({ key }) {
-        if (key === ESCAPE) group.hide()
+      onBlur({ currentTarget, relatedTarget }) {
+        if (pressed === currentTarget) pressed = null
+        if (!(relatedTarget instanceof HTMLElement && contents.has(relatedTarget))) group.hide()
+      },
+      onKeyDown({ currentTarget, key }) {
+        const activates = key === ENTER || key === SPACE
+        if (activates) pressed = currentTarget
+        if (activates || key === ESCAPE) group.hide()
       },
     },
     enterGroup() {
@@ -233,7 +252,8 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       const chrome = element.getBoundingClientRect().width - clip.getBoundingClientRect().width
       const gap = pixels(style.marginBottom)
       writeInstance(label, { '--ts-i-tip-room': `${window.innerWidth - gap * 2 - chrome}px` })
-      const width = (Math.ceil((label.getBoundingClientRect().width + chrome) * LAYOUT_UNITS) + 1) / LAYOUT_UNITS
+      const next = unscaled(label)
+      const width = (Math.ceil((next + chrome) * LAYOUT_UNITS) + 1) / LAYOUT_UNITS
       const height = pixels(style.height)
       const place = placeTip(trigger.getBoundingClientRect(), { width, height }, gap, { width: window.innerWidth, height: window.innerHeight }, options.side())
       element.toggleAttribute(SNAP, entry !== 'move')
@@ -246,14 +266,18 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
         '--ts-i-tip-width': `${width}px`,
         '--ts-i-tip-arrow': `${place.arrow}px`,
       })
+      const leaving = element.querySelector<HTMLElement>(LEAVING)
+      writeInstance(label, { '--ts-i-tip-squish': Math.min(1, clip.getBoundingClientRect().width / next) })
+      if (leaving) writeInstance(leaving, { '--ts-i-tip-squish': Math.min(1, next / unscaled(leaving)) })
+      label.setAttribute(SQUISH, '')
       void element.offsetWidth
+      label.removeAttribute(SQUISH)
       element.removeAttribute(SNAP)
       element.removeAttribute(INSTANT)
       element.setAttribute(OPEN, '')
       label.removeAttribute(ENTERING)
       trigger.setAttribute(DESCRIBED, element.id)
       entry = 'move'
-      const leaving = element.querySelector(LEAVING)
       if (!leaving) return
       const { turn } = state
       void Promise.allSettled(leaving.getAnimations().map((animation) => animation.finished)).then(() => {

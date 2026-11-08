@@ -7,6 +7,7 @@ export const INSTANCE_KEYS = {
   '--ts-i-tip-width': '<length>',
   '--ts-i-tip-arrow': '<length>',
   '--ts-i-tip-room': '<length>',
+  '--ts-i-tip-squish': '<number>',
 } as const
 
 export type InstanceKey = keyof typeof INSTANCE_KEYS

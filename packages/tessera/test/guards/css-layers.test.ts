@@ -201,8 +201,7 @@ it('rejects color-mix outside oklab, system colors outside forced colors, unlist
     [":root:has(> [data-recipe='surface'][data-variant='page'])", 'unused selector exception'],
     ["[data-recipe='surface'][data-variant='tooltip']", 'unused value exception'],
     ["[data-recipe='surface'][data-variant='tooltip'][data-open]", 'unused value exception'],
-    ["[data-recipe='surface'][data-variant='tooltip'] [data-slot='label']", 'unused value exception'],
-  ])
+    ["[data-recipe='surface'][data-variant='tooltip'] [data-slot='label']", 'unused value exception'],  ])
 })
 
 it('accepts a literal --_level only under the listed aria-level rules, keeps every other literal level out of arithmetic and the clip condition out of every recipe but control', () => {

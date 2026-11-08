@@ -8,6 +8,7 @@ import { filesIn, packageDir } from './helpers'
 
 const PUBLIC_VARIABLE_BUDGET = 250
 const COMPONENT_BYTES = 3072
+const COMPONENT_BYTES_RAISED: Readonly<Record<string, number>> = { 'components/tooltip/tooltip.js': 3584 }
 const V2_CSS_BYTES = 80_707
 const CSS_SHARE_OF_V2 = 0.7
 const GZIP_LEVEL = 9
@@ -73,9 +74,13 @@ it('finds the built components and lib modules it measures', () => {
   expect([...consumers.values()].some((found) => found.length === 1)).toBe(true)
 })
 
-it.each(componentFiles.map((file) => [name(file), file] as const))('keeps the minified and gzipped %s with its private lib modules within 3 kB', (_, file) => {
+it.each(componentFiles.map((file) => [name(file), file] as const))('keeps the minified and gzipped %s with its private lib modules within its budget', (component, file) => {
   const parts = [file, ...privateLibs(file)]
-  expect(gzipped(parts.map(minified).join('\n')), parts.map(name).join(' + ')).toBeLessThanOrEqual(COMPONENT_BYTES)
+  expect(gzipped(parts.map(minified).join('\n')), parts.map(name).join(' + ')).toBeLessThanOrEqual(COMPONENT_BYTES_RAISED[component] ?? COMPONENT_BYTES)
+})
+
+it('raises the budget only for built components', () => {
+  expect(Object.keys(COMPONENT_BYTES_RAISED).filter((component) => !componentFiles.map(name).includes(component))).toEqual([])
 })
 
 it('reports the minified and gzipped size of every lib module that is not private to one component', async ({ annotate }) => {

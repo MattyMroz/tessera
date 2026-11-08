@@ -5,7 +5,10 @@ import Eraser from 'lucide-react/icons/eraser'
 import MessageSquare from 'lucide-react/icons/message-square'
 import MousePointer2 from 'lucide-react/icons/mouse-pointer-2'
 import Move from 'lucide-react/icons/move'
+import RotateCw from 'lucide-react/icons/rotate-cw'
+import Type from 'lucide-react/icons/type'
 import Volume2 from 'lucide-react/icons/volume-2'
+import ZoomIn from 'lucide-react/icons/zoom-in'
 import { Group } from './group'
 
 const TOOLS = [
@@ -14,10 +17,20 @@ const TOOLS = [
   { label: 'Draw bubble', Icon: MessageSquare },
   { label: 'Erase text', Icon: Eraser },
   { label: 'Read aloud', Icon: Volume2 },
+  { label: 'Zoom in', Icon: ZoomIn },
+  { label: 'Rotate the page', Icon: RotateCw },
+  { label: 'Add text', Icon: Type },
 ] as const
 
 const GROUP = ['Undo', 'Redo', 'Copy', 'Paste the copied bubble'] as const
-const COLUMN = ['Pages', 'Layers', 'History'] as const
+const COLUMN = [
+  { label: 'Pages', content: 'Show pages' },
+  { label: 'Layers', content: 'Show layers' },
+  { label: 'History', content: 'Show history' },
+  { label: 'Search', content: 'Search' },
+  { label: 'Comments', content: 'Show all the comments' },
+  { label: 'Export', content: 'Export as PDF' },
+] as const
 
 export function TooltipSection() {
   return (
@@ -73,9 +86,9 @@ export function TooltipSection() {
       <Group title="In a vertical bar">
         <div data-recipe="surface" data-level="base" data-surface="" data-inset="inset" className="self-start">
           <TooltipBar orientation="vertical">
-            {COLUMN.map((label) => (
-              <Tooltip key={label} content={`Show ${label.toLowerCase()}`}>
-                <Button>{label}</Button>
+            {COLUMN.map((item) => (
+              <Tooltip key={item.label} content={item.content}>
+                <Button>{item.label}</Button>
               </Tooltip>
             ))}
           </TooltipBar>

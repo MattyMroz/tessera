@@ -562,12 +562,13 @@ test.describe('with a mouse', () => {
     await page.mouse.up()
   })
 
-  test('wraps a long tooltip at the narrow measure', async ({ page }) => {
+  test('keeps a long tooltip on one line at the narrow measure and ends it with an ellipsis', async ({ page }) => {
     await open(page)
     await region(page, 'Tooltip').getByTestId('full').getByRole('button', { name: 'Help', exact: true }).hover()
     const tooltip = page.locator('[data-variant="tooltip"]')
     await expect(tooltip).toHaveText(LONG)
-    const { width, measure, height, line } = await tooltip.evaluate((element) => {
+    const { width, measure, height, line, cut, ending } = await tooltip.evaluate((element) => {
+      const label = element.querySelector<HTMLElement>('[data-slot="label"]')
       const probe = document.createElement('span')
       probe.style.display = 'block'
       probe.style.width = 'var(--ts-type-measure-narrow)'
@@ -575,14 +576,18 @@ test.describe('with a mouse', () => {
       const found = {
         width: element.getBoundingClientRect().width,
         measure: probe.getBoundingClientRect().width,
-        height: element.getBoundingClientRect().height,
+        height: label?.getBoundingClientRect().height ?? 0,
         line: Number.parseFloat(getComputedStyle(element).lineHeight),
+        cut: (label?.scrollWidth ?? 0) > (label?.clientWidth ?? 0),
+        ending: label ? getComputedStyle(label).textOverflow : '',
       }
       probe.remove()
       return found
     })
     expect(width).toBeLessThanOrEqual(measure + TOLERANCE)
-    expect(height).toBeGreaterThan(line * 2)
+    expect(height).toBeLessThan(line)
+    expect(cut).toBe(true)
+    expect(ending).toBe('ellipsis')
   })
 })
 

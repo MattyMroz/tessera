@@ -4,14 +4,14 @@
   }
 
   [data-recipe='surface'][data-variant='tooltip'] {
-    transition: opacity var(--ts-motion-duration-press-in) var(--ts-motion-ease-out), translate var(--ts-motion-duration-follow) var(--ts-motion-ease-out), width var(--ts-motion-duration-follow) var(--ts-motion-ease-out);
+    transition: opacity var(--ts-motion-duration-press-in) var(--ts-motion-ease-out), translate var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), width var(--ts-motion-duration-follow) var(--ts-motion-ease-hover);
 
     &[data-open] {
-      transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-out), translate var(--ts-motion-duration-follow) var(--ts-motion-ease-out), width var(--ts-motion-duration-follow) var(--ts-motion-ease-out);
+      transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-out), translate var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), width var(--ts-motion-duration-follow) var(--ts-motion-ease-hover);
     }
 
     & [data-slot='label'] {
-      transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-out), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-out);
+      transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), scale var(--ts-motion-duration-follow) var(--ts-motion-ease-hover);
     }
   }
 

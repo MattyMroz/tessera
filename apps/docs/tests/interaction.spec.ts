@@ -286,11 +286,11 @@ for (const mode of MOTION_MODES) {
       if (follow === 0) {
         expect(tooltips).toEqual([])
       } else {
-        expect(flown).toEqual(new Set(['translate', 'width', 'opacity', 'filter']))
+        expect(flown).toEqual(new Set(['translate', 'width', 'opacity', 'filter', 'scale']))
         const timings = await page.locator('[data-variant="tooltip"]').evaluate((popup) => {
           const probe = document.createElement('div')
           document.body.append(probe)
-          probe.style.transitionTimingFunction = getComputedStyle(popup).getPropertyValue('--ts-motion-ease-out').trim()
+          probe.style.transitionTimingFunction = getComputedStyle(popup).getPropertyValue('--ts-motion-ease-hover').trim()
           const ease = getComputedStyle(probe).transitionTimingFunction
           probe.remove()
           const split = (list: string): string[] => list.split(/,(?![^(]*\))/).map((item) => item.trim())
@@ -307,7 +307,7 @@ for (const mode of MOTION_MODES) {
         expect([fade?.[0], fade?.[1]]).toEqual(['opacity', mode.times[0]])
         for (const [name, duration, curve] of [...moves, ...timings.label]) expect([name, duration, curve], name).toEqual([name, follow, timings.ease])
         expect(moves.map(([name]) => name).sort()).toEqual(['translate', 'width'])
-        expect(timings.label.map(([name]) => name).sort()).toEqual(['filter', 'opacity'])
+        expect(timings.label.map(([name]) => name).sort()).toEqual(['filter', 'opacity', 'scale'])
       }
     })
   })

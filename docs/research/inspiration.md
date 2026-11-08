@@ -14,6 +14,44 @@ Filmy oglądane jako arkusze klatek (6x6, z czasem), bez dźwięku; czasy ruchu 
 
 Opisane: 470 pozycji · wysokie 55 · średnie 60 · niskie 132 · bez wartości 223.
 
+## Tooltip
+
+Właściciel 2026-11-08: wzorce tooltipa, przesuwania i przejścia tekstu; opisy klatek po pobraniu (`tmp/ref/insp/x/`).
+
+### ★ !!! [@23grach · 2118005504228069731](https://x.com/23grach/status/2118005504228069731?a=mqylW9vYTwUUS7fGS3A&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** wzorzec docelowy: „tak powinien slajd wyglądać, to jest to, do czego dążymy”; „tam jest odpowiednia animacja przejścia tekstu”; przejście klawiaturą też ma jechać.
+
+### ★ [@23grach · 2117364344057135272](https://x.com/23grach/status/2117364344057135272?a=ULzLpsnQqOKBoGTA3N4&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** do zbadania razem z wzorcem docelowym tego samego autora.
+
+### ★ [@23grach · 2117361661442920551](https://x.com/23grach/status/2117361661442920551?a=QcATEO5dbs_7vXY9qLE&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** przycisk, który zmienia zawartość po kliknięciu; pytania właściciela: czy tooltip zamyka się po kliknięciu, czy jego tekst zmienia się ze stanem przycisku i z jaką animacją, czy tooltip może mieć więcej niż jeden napis.
+
+### ★ [@gabriell_lab · 2084276632353690061](https://x.com/gabriell_lab/status/2084276632353690061?a=N_y_iLO5xv7IDcyrlWQ&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** przesuwany tooltip z animacją tekstu; właściciel nie jest pewien, czy tekst powinien tak wyglądać.
+
+### ★ [@godlydotdesign · 2117308753892499494](https://x.com/godlydotdesign/status/2117308753892499494?a=qYQtzLdcxsu8yhO-2YU&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** wariant animacji tekstu tooltipa do porównania.
+
+### ★ [@seyii\_\_\_ · 1964681581685288998](https://x.com/seyii___/status/1964681581685288998?a=0cIEBSp0qe5eGiIdPVo&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** wariant animacji tekstu tooltipa do porównania.
+
+### ★ [@ln_dev7 · 1907830559994204300](https://x.com/ln_dev7/status/1907830559994204300?a=zEqyY0DybIgWMLMRjmw&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** wariant animacji tooltipa; właściciel nie wie, czy jest poprawny.
+
+## Szewron (trójkącik)
+
+### ★ [@23grach · 2080652219792122322](https://x.com/23grach/status/2080652219792122322?a=R7HQy2_MHU4fVctS_KQ&s=20) · właściciel 2026-11-08
+
+- **Dla Tessery:** obrót trójkącika w sekcji pytań i odpowiedzi; właściciel: „ta animacja jest lepsza” od obrotu szewronu w obecnym Selekcie. Do elementu Select i przyszłej sekcji rozwijanej.
+
 ## Usuwanie konta
 
 ### ★ !!! [@kshvbgde](https://x.com/kshvbgde/status/2117502283894362219?a=FeZQWaT82HQW2PpzClk&s=20) · właściciel 2026-11-03

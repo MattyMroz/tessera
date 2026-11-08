@@ -177,12 +177,11 @@ const MARK_DRAW: Readonly<Record<string, string>> = {
   [MARK_DRAWING]: 'transition: stroke-dashoffset var(--ts-motion-duration-draw-out) var(--ts-motion-ease-draw)',
 }
 const TIP = "[data-recipe='surface'][data-variant='tooltip']"
-const TIP_GLIDE = 'translate var(--ts-motion-duration-follow) var(--ts-motion-ease-out), width var(--ts-motion-duration-follow) var(--ts-motion-ease-out)'
+const TIP_GLIDE = 'translate var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), width var(--ts-motion-duration-follow) var(--ts-motion-ease-hover)'
 const TIP_MOTION: Readonly<Record<string, string>> = {
   [TIP]: `transition: opacity var(--ts-motion-duration-press-in) var(--ts-motion-ease-out), ${TIP_GLIDE}`,
   [`${TIP}[data-open]`]: `transition: opacity var(--ts-motion-duration-hover-out) var(--ts-motion-ease-out), ${TIP_GLIDE}`,
-  [`${TIP} [data-slot='label']`]: 'transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-out), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-out)',
-}
+  [`${TIP} [data-slot='label']`]: 'transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), scale var(--ts-motion-duration-follow) var(--ts-motion-ease-hover)',}
 const SOURCE_LISTS: Lists = {
   selectors: RECIPE_SELECTOR_EXCEPTIONS,
   values: { row: ARIA_LEVEL_INDENT, control: { ...HOVER_EXIT, [CHOICE_HOST]: 'contain: layout' }, indicator: MARK_DRAW, surface: TIP_MOTION },

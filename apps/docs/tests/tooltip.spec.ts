@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-type ShownLabel = { readonly text: string; readonly leaving: boolean; readonly opacity: number; readonly filter: string }
+type ShownLabel = { readonly text: string; readonly leaving: boolean; readonly opacity: number; readonly filter: string; readonly spill: number }
 type Point = { readonly x: number; readonly y: number }
 type ShownTip = {
   readonly text: string
@@ -44,7 +44,7 @@ const GRACE = 400
 const AT_ONCE = 100
 const APPEAR_SHIFT = 4
 const SCALES = [1, 1.25, 1.5] as const
-const BAR_MOVES = ['translate', 'width', 'opacity', 'filter']
+const BAR_MOVES = ['translate', 'width', 'opacity', 'filter', 'scale']
 const LONE_MOVES = ['translate', 'opacity']
 const GAP_HOLD = 400
 const EDGE_ROOM = 2
@@ -73,7 +73,8 @@ async function recordTooltips(page: Page): Promise<void> {
       const style = getComputedStyle(popup)
       const labels = [...popup.querySelectorAll<HTMLElement>('[data-slot="label"]')].map((label) => {
         const seen = getComputedStyle(label)
-        return { text: label.textContent ?? '', leaving: label.hasAttribute('data-leaving'), opacity: Number(seen.opacity), filter: seen.filter }
+        const spill = label.getBoundingClientRect().width - (label.parentElement?.getBoundingClientRect().width ?? 0)
+        return { text: label.textContent ?? '', leaving: label.hasAttribute('data-leaving'), opacity: Number(seen.opacity), filter: seen.filter, spill }
       })
       const arrow = popup.querySelector('[data-slot="arrow"]')?.getBoundingClientRect()
       return {
@@ -452,10 +453,12 @@ for (const scrolled of ['page', 'panel'] as const) {
   test(`closes a tooltip when a ${scrolled} scrolls and opens the next one beside its own trigger`, async ({ page, browserName }) => {
     const pan: Locator = tipTrigger(page, 'Pan')
     await pan.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(SETTLE)
     await pan.focus()
     const popup = page.locator('[data-variant="tooltip"]')
     await expect(popup).toHaveText('Pan')
     const offset = async (trigger: Locator): Promise<number> => (await box(popup)).y - (await box(trigger)).y
+    await page.waitForTimeout(SETTLE)
     const attached = await offset(pan)
     if (scrolled === 'page') {
       await page.evaluate((by) => window.scrollBy(0, by), SCROLL)
@@ -490,7 +493,7 @@ test('moves one tooltip of a bar to the next trigger with its width and position
   const current = await page.locator('[data-variant="tooltip"]').elementHandle()
   expect(await current?.evaluate((element, previous) => element === previous, handle)).toBe(true)
   expect(frames.filter((frame) => openOf(frame).length !== 1 || (openOf(frame)[0]?.opacity ?? 0) < FULL)).toEqual([])
-  expect(flown(moves)).toEqual(new Set(['translate', 'width', 'opacity', 'filter']))
+  expect(flown(moves)).toEqual(new Set(['translate', 'width', 'opacity', 'filter', 'scale']))
   const [from, to] = [centre(start).x, ofText(frames, 'Draw bubble').at(-1)]
   if (!to) throw new Error('no tooltip frame')
   const middle = course(frames, from, (tip) => tip.x + tip.width / 2)
@@ -523,7 +526,7 @@ test('cross-fades the label of a bar tooltip through two labels with a blur and 
   expect(lasted).toBeGreaterThan(40)
   expect(lasted).toBeLessThan(300)
   const settled = openOf(frames.at(-1) ?? { time: 0, tips: [] })[0]
-  expect(settled?.labels).toEqual([{ text: 'Draw bubble', leaving: false, opacity: 1, filter: 'none' }])
+  expect(settled?.labels.map(({ text, leaving, opacity, filter }) => ({ text, leaving, opacity, filter }))).toEqual([{ text: 'Draw bubble', leaving: false, opacity: 1, filter: 'none' }])
 })
 
 test('opens a lone tooltip in place and at once next to another lone tooltip, which closes as a separate element', async ({ page }) => {
@@ -812,4 +815,65 @@ test('keeps the arrow on the middle of its trigger in every frame the bubble doe
     await page.waitForTimeout(wait)
   }
   expect(await page.evaluate(() => window.tooltipStrays ?? [])).toEqual([])
+})
+
+const SLIDES = [
+  ['Pan', 'Pan', 'Rotate the page', 'Rotate the page', 6],
+  ['Rotate the page', 'Rotate the page', 'Pan', 'Pan', 6],
+  ['Select', 'Select', 'Add text', 'Add text', 3],
+  ['Add text', 'Add text', 'Select', 'Select', 3],
+  ['Pages', 'Show pages', 'Export', 'Export as PDF', 3],
+  ['Export', 'Export as PDF', 'Pages', 'Show pages', 6],
+] as const
+const SEEN = 0.05
+const READABLE = 0.45
+const RETARGET_SPILL = 2
+
+test('keeps the text of a bar tooltip inside the bubble and readable in every frame while the pointer slides slowly and fast', async ({ page }) => {
+  for (const [from, fromText, to, toText, steps] of SLIDES) {
+    await openTip(page, tipTrigger(page, from), fromText)
+    const end = centre(await box(tipTrigger(page, to)))
+    const open = (await watch(page, () => page.mouse.move(end.x, end.y, { steps }))).flatMap(openOf)
+    const route = `${from} → ${to}`
+    expect(open.length, route).toBeGreaterThan(0)
+    expect(open.flatMap((tip) => tip.labels.filter((label) => label.opacity > SEEN && label.spill > RETARGET_SPILL)), route).toEqual([])
+    expect(open.filter((tip) => Math.max(...tip.labels.map((label) => label.opacity)) < READABLE).map((tip) => tip.labels), route).toEqual([])
+    expect(open.at(-1)?.labels.map((label) => label.text), route).toEqual([toText])
+  }
+  const rest = await popupOf(page, 'Show pages').evaluate((popup) => ({
+    scale: getComputedStyle(popup.querySelector('[data-slot="label"]') as Element).scale,
+    still: getComputedStyle(popup).getPropertyValue('--ts-motion-press-rest').trim(),
+  }))
+  expect(Number(rest.scale)).toBe(Number(rest.still))
+})
+
+test('slides the tooltip of a bar to the next trigger on Tab without closing it, and closes it on Enter and Space until the focus leaves', async ({ page }) => {
+  await tipTrigger(page, 'Pan').scrollIntoViewIfNeeded()
+  await page.waitForTimeout(SETTLE)
+  await tipTrigger(page, 'Pan').focus()
+  await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Tab')
+  await expect(popupOf(page, 'Pan')).toHaveCount(1)
+  await page.waitForTimeout(SETTLE)
+  const frames = await watch(page, () => page.keyboard.press('Tab'))
+  expect(frames.filter((frame) => openOf(frame).length !== 1)).toEqual([])
+  expect(new Set(frames.map((frame) => openOf(frame)[0]?.x)).size).toBeGreaterThan(1)
+  expect(frames.at(-1)?.tips.map((tip) => tip.text)).toEqual(['Draw bubble'])
+  for (const key of ['Enter', 'Space']) {
+    await page.keyboard.press(key)
+    await expect(page.locator('[data-variant="tooltip"][data-open]'), key).toHaveCount(0)
+    await page.keyboard.press('Tab')
+    await expect(popupOf(page, 'Erase text'), key).toHaveCount(1)
+    await page.keyboard.press('Shift+Tab')
+    await expect(popupOf(page, 'Draw bubble'), key).toHaveCount(1)
+  }
+})
+
+test('opens the tooltip of the vertical bar every time the pointer comes from the horizontal one', async ({ page }) => {
+  for (const [from, to, text] of [['Add text', 'Pages', 'Show pages'], ['Select', 'Comments', 'Show all the comments'], ['Read aloud', 'History', 'Show history']] as const) {
+    await openTip(page, tipTrigger(page, from), from)
+    const end = centre(await box(tipTrigger(page, to)))
+    await page.mouse.move(end.x, end.y, { steps: JITTER_STEPS })
+    await expect(popupOf(page, text), `${from} → ${to}`).toHaveCount(1)
+  }
 })

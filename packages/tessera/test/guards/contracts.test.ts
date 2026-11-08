@@ -346,6 +346,7 @@ it('finds every instance key missing from the size engine registry, registered w
     '--ts-i-tip-width: missing',
     '--ts-i-tip-arrow: missing',
     '--ts-i-tip-room: missing',
+    '--ts-i-tip-squish: missing',
     '--ts-i-extra: not in INSTANCE_KEYS',
   ])
 })
