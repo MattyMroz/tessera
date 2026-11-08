@@ -24,6 +24,7 @@
 @import '../components/checkbox/checkbox.css';
 @import '../components/radio/radio.css';
 @import '../components/switch/switch.css';
+@import '../components/select/select.css';
 @import '../components/menu/context-menu.css';
 @import '../components/menu/menubar.css';
 @import '../components/tooltip/tooltip-bar.css';

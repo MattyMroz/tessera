@@ -21,14 +21,17 @@ import { ButtonEdge } from './sections/button'
 import { ButtonGroupEdge } from './sections/button-group'
 import { CardEdge } from './sections/card'
 import { CheckboxEdge } from './sections/checkbox'
+import { ContextMenuEdge } from './sections/context-menu'
 import { DialogEdge } from './sections/dialog'
 import { FieldEdge } from './sections/field'
 import { HeadingEdge } from './sections/heading'
 import { InputEdge } from './sections/input'
 import { KbdEdge } from './sections/kbd'
 import { MenuEdge } from './sections/menu'
+import { MenubarEdge } from './sections/menubar'
 import { PopoverEdge } from './sections/popover'
 import { RadioEdge } from './sections/radio'
+import { SelectEdge } from './sections/select'
 import { SwitchEdge } from './sections/switch'
 import { TextEdge } from './sections/text'
 import { TextareaEdge } from './sections/textarea'
@@ -124,6 +127,9 @@ export default function Page() {
       <SwitchEdge />
       <RadioEdge />
       <MenuEdge />
+      <ContextMenuEdge />
+      <MenubarEdge />
+      <SelectEdge />
       <TooltipEdge />
       <PopoverEdge />
       <DialogEdge />

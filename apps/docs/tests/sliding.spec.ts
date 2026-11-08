@@ -274,7 +274,7 @@ for (const scale of SCALES) {
       await tools.click()
       const menu = page.getByRole('menu').first()
       const first = await box(menu.getByRole('menuitem', { name: TOOL_ROWS[0], exact: true }))
-      const last = await box(menu.getByRole('menuitem', { name: TOOL_ROWS[TOOL_ROWS.length - 1], exact: true }))
+      const last = await box(menu.getByRole('menuitem', { name: TOOL_ROWS.at(-1) ?? TOOL_ROWS[0], exact: true }))
       const x = first.x + first.width / 2
       await page.mouse.move(x, first.y + first.height / 2)
       await expect(menu.getByRole('menuitem', { name: TOOL_ROWS[0], exact: true })).toHaveAttribute('data-popup-open', '')

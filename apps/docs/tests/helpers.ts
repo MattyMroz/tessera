@@ -388,8 +388,8 @@ async function countOf(page: Page, captured: readonly CapturedLayer[]): Promise<
 
 const BLOCKED = ":disabled, [data-disabled], [aria-disabled='true'], [aria-busy='true']"
 const ANCHOR = "[aria-haspopup], [aria-expanded], [data-popup-open], [data-base-ui-tooltip-trigger]"
-const BUTTON_KIND = "[data-recipe='control']:is(button:not([role]), [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role])):not([data-variant='field'])"
-const PILL_KIND = ":has(> [data-recipe='indicator']) > [data-recipe='control']:is([role='radio'], [role='tab']), [data-recipe='row'][role='menuitem']"
+const BUTTON_KIND = "[data-recipe='control']:is(button:not([role]), button[role='combobox'], [role='button'], [data-slot='box'], [data-slot='track'], a[href]:not([role])):not([data-variant='field'])"
+const PILL_KIND = ":has(> [data-recipe='indicator']) > [data-recipe='control']:is([role='radio'], [role='tab'], [role='menuitem']), [data-recipe='row'][role='menuitem']"
 
 export const FORM_PROXY = "input[aria-hidden='true'][tabindex='-1']"
 
@@ -598,6 +598,13 @@ export function timingReport(page: Page): Promise<TimingReport> {
           pill.setAttribute('data-visible', 'true')
           count('pill entry')
           expectStill('hover pill entry', seenAt(pill), 'opacity')
+        } else if (variant === 'dot') {
+          count('pill choice')
+          if (pill.parentElement?.matches("[aria-checked='true'], [aria-selected='true']")) {
+            expectTiming('chosen dot pill', pill, seenAt(pill), 'scale', 'duration-choice', 'ease-elastic')
+          } else {
+            expectStill('unchosen dot pill', seenAt(pill))
+          }
         } else {
           for (const state of ['false', 'true']) {
             pill.setAttribute('data-visible', state)

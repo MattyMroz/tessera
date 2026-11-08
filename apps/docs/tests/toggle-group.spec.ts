@@ -8,6 +8,7 @@ import {
   failures,
   installCommitProbe,
   lightness,
+  MOTION_HOLD,
   offCompositor,
   pixels,
   raisedShadow,
@@ -105,7 +106,7 @@ test('enters a group whose chosen option is disabled on the first enabled option
   await expect(open.getByRole('radio', { name: 'Day' })).toBeFocused()
   await expect(open.locator('[aria-checked="true"]')).toHaveCount(0)
   await page.keyboard.press('Tab')
-  await expect(group(page, 'One character').getByRole('radio', { name: '1' })).toBeFocused()
+  await expect(open.locator(':focus')).toHaveCount(0)
   await page.keyboard.press('Shift+Tab')
   await expect(open.getByRole('radio', { name: 'Day' })).toBeFocused()
 })
@@ -137,11 +138,11 @@ test('shows the focus ring on the option a typed letter moves to after a click',
   expect(await range.getByRole('radio', { name: 'Month' }).evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid')
 })
 
-test('slides the pill of the mode group of the theme panel, though the theme change holds the plates', async ({ page }) => {
-  const mode = page.getByRole('radiogroup', { name: 'mode', exact: true })
-  await mode.getByRole('radio', { name: 'light', exact: true }).click()
-  await page.waitForTimeout(500)
-  await mode.evaluate((element) => {
+test('slides the pill of a group while the document holds the plates of a theme change', async ({ page }) => {
+  const range = group(page, 'Range (md)')
+  await range.getByRole('radio', { name: 'Week' }).click()
+  await page.waitForTimeout(SETTLE)
+  await range.evaluate((element, hold) => {
     const animate = Element.prototype.animate
     const durations: number[] = []
     element.setAttribute('data-durations', '')
@@ -150,9 +151,10 @@ test('slides the pill of the mode group of the theme panel, though the theme cha
       element.setAttribute('data-durations', durations.join(' '))
       return animate.call(this, keyframes, options)
     }
-  })
-  await mode.getByRole('radio', { name: 'system', exact: true }).click()
-  await expect(mode).toHaveAttribute('data-durations', /[1-9]/)
+    document.documentElement.setAttribute(hold, '')
+  }, MOTION_HOLD)
+  await range.getByRole('radio', { name: 'Month', exact: true }).click()
+  await expect(range).toHaveAttribute('data-durations', /[1-9]/)
 })
 
 test('reads the motion of a group again at every slide, so a subtree switched to motion off stops sliding', async ({ page }) => {

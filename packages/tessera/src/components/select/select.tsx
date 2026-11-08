@@ -31,7 +31,9 @@ export function Select({ modal, size, ...props }: SelectProps) {
   const [value, setValue] = useState<HTMLSpanElement | null>(null)
   return (
     <HostContext value={{ size, value, setValue }}>
-      <BaseSelect.Root {...props} modal={modal ?? false} />
+      <span data-component="select" data-slot="choice">
+        <BaseSelect.Root {...props} modal={modal ?? false} />
+      </span>
     </HostContext>
   )
 }

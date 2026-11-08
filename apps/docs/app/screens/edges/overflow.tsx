@@ -19,7 +19,9 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@mattymroz/tess
 import { Input } from '@mattymroz/tessera/components/input/input'
 import { Textarea } from '@mattymroz/tessera/components/input/textarea'
 import { Kbd } from '@mattymroz/tessera/components/kbd/kbd'
+import { ContextMenu, ContextMenuArea, ContextMenuContent } from '@mattymroz/tessera/components/menu/context-menu'
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@mattymroz/tessera/components/menu/menu'
+import { Menubar, MenubarMenu } from '@mattymroz/tessera/components/menu/menubar'
 import {
   Popover,
   PopoverActions,
@@ -31,6 +33,7 @@ import {
   PopoverTrigger,
 } from '@mattymroz/tessera/components/popover/popover'
 import { Radio, RadioGroup } from '@mattymroz/tessera/components/radio/radio'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@mattymroz/tessera/components/select/select'
 import { Switch } from '@mattymroz/tessera/components/switch/switch'
 import { Heading } from '@mattymroz/tessera/components/text/heading'
 import { Text } from '@mattymroz/tessera/components/text/text'
@@ -106,6 +109,42 @@ const COMPONENTS: readonly (readonly [string, Render])[] = [
           <MenuItem trail={text}>{text}</MenuItem>
         </MenuContent>
       </Menu>
+    ),
+  ],
+  [
+    'context-menu',
+    (text) => (
+      <ContextMenu>
+        <ContextMenuArea>
+          <Text as="p">{text}</Text>
+        </ContextMenuArea>
+        <ContextMenuContent>
+          <MenuItem trail={text}>{text}</MenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    ),
+  ],
+  [
+    'menubar',
+    (text) => (
+      <Menubar moreLabel="More menus">
+        <MenubarMenu label={text}>
+          <MenuItem trail={text}>{text}</MenuItem>
+        </MenubarMenu>
+      </Menubar>
+    ),
+  ],
+  [
+    'select',
+    (text) => (
+      <Select defaultValue="first">
+        <SelectTrigger variant="outline" aria-label="Long choice" placeholder="Pick" labels={{ first: text }} />
+        <SelectContent>
+          <SelectItem value="first" trail={text}>
+            {text}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     ),
   ],
   [

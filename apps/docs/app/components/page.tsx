@@ -6,13 +6,16 @@ import { ButtonSection } from './sections/button'
 import { ButtonGroupSection } from './sections/button-group'
 import { CardSection } from './sections/card'
 import { CheckboxSection } from './sections/checkbox'
+import { ContextMenuSection } from './sections/context-menu'
 import { DialogSection } from './sections/dialog'
 import { FieldSection } from './sections/field'
 import { InputSection } from './sections/input'
 import { KbdSection } from './sections/kbd'
 import { MenuSection } from './sections/menu'
+import { MenubarSection } from './sections/menubar'
 import { PopoverSection } from './sections/popover'
 import { RadioSection } from './sections/radio'
+import { SelectSection } from './sections/select'
 import { SwitchSection } from './sections/switch'
 import { TextSection } from './sections/text'
 import { TextareaSection } from './sections/textarea'
@@ -31,6 +34,9 @@ export default function Page() {
       <RadioSection />
       <SwitchSection />
       <MenuSection />
+      <ContextMenuSection />
+      <MenubarSection />
+      <SelectSection />
       <PopoverSection />
       <DialogSection />
       <TooltipSection />

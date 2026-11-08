@@ -10,6 +10,7 @@ import {
   colorOf,
   failures,
   hover,
+  MOTION_HOLD,
   offCompositor,
   raisedShadow,
   recordAnimations,
@@ -816,11 +817,19 @@ test('starts no colour animation on any plate when the mode changes, and fades a
   await page.addInitScript(recordAnimations)
   await visit(page, COMPONENTS)
   await page.mouse.move(0, 0)
-  await clearRecorded(page)
-  await choose(page, 'mode', 'dark')
-  await choose(page, 'mode', 'light')
-  await choose(page, 'mode', 'dark')
-  expect((await recorded(page)).filter((animation) => animation.properties.includes('background-color'))).toEqual([])
+  for (const mode of ['dark', 'light', 'dark']) {
+    await page.getByRole('button', { name: /^mode / }).click()
+    const option = page.getByRole('menuitemcheckbox', { name: mode, exact: true })
+    await option.hover()
+    await settle(page)
+    await clearRecorded(page)
+    await option.click()
+    await expect(page.locator('html')).toHaveAttribute('data-mode', mode)
+    await expect(page.locator('html')).not.toHaveAttribute(MOTION_HOLD)
+    expect((await recorded(page)).filter((animation) => animation.properties.includes('background-color'))).toEqual([])
+    await page.mouse.move(0, 0)
+    await settle(page)
+  }
   const solid = region(page, 'Button').getByRole('button', { name: 'solid', exact: true })
   await solid.hover()
   await page.mouse.move(0, 0)

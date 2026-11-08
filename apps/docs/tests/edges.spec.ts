@@ -218,8 +218,9 @@ test.describe('at 1280 px', () => {
               const control = label.closest('[data-recipe]') ?? label
               const problems: string[] = []
               if (control.getBoundingClientRect().right > frame.right + tolerance) problems.push(`${name}: the control leaves the container`)
-              if (label.scrollWidth <= label.clientWidth) problems.push(`${name}: the label is not shortened`)
-              if (getComputedStyle(label).textOverflow !== 'ellipsis') problems.push(`${name}: no ellipsis`)
+              const clipped = label.querySelector('[data-slot="swap-in"]') ?? label
+              if (clipped.scrollWidth <= clipped.clientWidth) problems.push(`${name}: the label is not shortened`)
+              if (getComputedStyle(clipped).textOverflow !== 'ellipsis') problems.push(`${name}: no ellipsis`)
               return problems
             })
         })
@@ -316,7 +317,7 @@ test.describe('at a 320 px window', () => {
   test('stacks the page navigation, the page and the theme panel so the page takes the full width', async ({ page }) => {
     await open(page)
     const [navigation, main, panel] = await Promise.all([
-      box(page.getByRole('navigation', { name: 'Pages' })),
+      box(page.getByRole('navigation', { name: 'Elements' })),
       box(page.getByRole('main')),
       box(page.getByRole('complementary', { name: 'Theme' })),
     ])
@@ -344,14 +345,14 @@ test.describe('at a 320 px window', () => {
       if ((await opener.count()) === 0) continue
       if ((await opener.getAttribute('data-edge-open')) === 'hover') await opener.hover()
       else await opener.click()
-      const popup = page.locator(POPUP).last()
+      const popup = page.locator(POPUP).filter({ visible: true }).last()
       await expect(popup).toBeVisible()
       const { x, width } = await box(popup)
       const window = await page.evaluate(() => document.documentElement.clientWidth)
       if (x < -TOLERANCE || x + width > window + TOLERANCE) problems.push(`${name}: popup spans ${Math.round(x)}..${Math.round(x + width)} px`)
       await page.keyboard.press('Escape')
       await page.mouse.move(0, 0)
-      await expect(page.locator(POPUP)).toHaveCount(0)
+      await expect(page.locator(POPUP).filter({ visible: true })).toHaveCount(0)
     }
     expect(problems).toEqual([])
   })

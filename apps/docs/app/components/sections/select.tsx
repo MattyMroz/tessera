@@ -27,7 +27,7 @@ const CLOUD = ['opus', 'gpt', 'haiku'] as const
 function FontSelect({ align, mark = 'check', size }: { align: SelectAlign; mark?: MarkKind; size?: (typeof THEME_CONFIG.axes.size)[number] }) {
   return (
     <Select defaultValue="roboto" {...(size === undefined ? {} : { size })}>
-      <SelectTrigger variant="soft" placeholder="Font" labels={FONTS} />
+      <SelectTrigger variant="soft" aria-label="Font" placeholder="Font" labels={FONTS} />
       <SelectContent align={align} mark={mark}>
         {Object.entries(FONTS).map(([value, label]) => (
           <SelectItem key={value} value={value}>
@@ -42,7 +42,7 @@ function FontSelect({ align, mark = 'check', size }: { align: SelectAlign; mark?
 function ModelSelect({ align, value }: { align: SelectAlign; value: keyof typeof MODELS }) {
   return (
     <Select defaultValue={value} size="sm">
-      <SelectTrigger variant="outline" placeholder="Model" labels={MODELS} />
+      <SelectTrigger variant="outline" aria-label="Model" placeholder="Model" labels={MODELS} />
       <SelectContent align={align}>
         <SelectGroup>
           <SelectGroupLabel>Cloud</SelectGroupLabel>
