@@ -30,6 +30,7 @@ const SNAP = 'data-snap'
 const INSTANT = 'data-instant'
 const DESCRIBED = 'aria-describedby'
 const TOUCH = 'touch'
+const LAYOUT_UNITS = 64
 const ESCAPE = 'Escape'
 const HIDDEN: TipShown = { content: null, previous: null, turn: 0 }
 
@@ -227,10 +228,12 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       if (!label) return
       element.dataset.side ??= options.side()
       const style = getComputedStyle(element)
-      const chrome = pixels(style.paddingLeft) + pixels(style.paddingRight) + pixels(style.borderLeftWidth) + pixels(style.borderRightWidth)
+      const clip = label.parentElement
+      if (!clip) return
+      const chrome = element.getBoundingClientRect().width - clip.getBoundingClientRect().width
       const gap = pixels(style.marginBottom)
       writeInstance(label, { '--ts-i-tip-room': `${window.innerWidth - gap * 2 - chrome}px` })
-      const width = pixels(getComputedStyle(label).width) + chrome
+      const width = (Math.ceil((label.getBoundingClientRect().width + chrome) * LAYOUT_UNITS) + 1) / LAYOUT_UNITS
       const height = pixels(style.height)
       const place = placeTip(trigger.getBoundingClientRect(), { width, height }, gap, { width: window.innerWidth, height: window.innerHeight }, options.side())
       element.toggleAttribute(SNAP, entry !== 'move')

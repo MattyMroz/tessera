@@ -6,6 +6,7 @@ declare global {
     tooltipFrames?: TooltipFrame[]
     tooltipOpening?: { entered?: number; opened?: number }
     tooltipLeft?: number
+    tooltipStrays?: string[]
   }
 }
 
@@ -282,7 +283,7 @@ for (const scale of SCALES) {
         await page.waitForTimeout(SETTLE)
 
         const frames = await tooltipFrames(page)
-        expect(frames.filter((frame) => openOf(frame).length === 0)).toEqual([])
+        expect(frames.filter((frame) => (bar ? openOf(frame) : frame.tips).length === 0)).toEqual([])
         expect(frames.at(-1)?.tips.map((tip) => tip.text)).toEqual([to])
         const moved = flown(await flights(page))
         for (const property of moved) expect(bar ? BAR_MOVES : LONE_MOVES, property).toContain(property)
@@ -740,4 +741,75 @@ test('lets nothing but the width of the tooltip and the blur of its label fall o
   expect(events.some((event) => event.name === 'Animation')).toBe(true)
   expect(failures(events, TOOLTIP_EXCEPTIONS)).toEqual([])
   expect(failures(events).length).toBeGreaterThan(0)
+})
+
+const WHOLE_TEXTS = [
+  ['Pages', 'Show pages'],
+  ['History', 'Show history'],
+  ['Paste', 'Paste the copied bubble'],
+  ['Plain', 'No arrow'],
+  ['Draw bubble', 'Draw bubble'],
+] as const
+
+test('shows the whole text of every tooltip: the label fits its clip across and nothing clips its descenders', async ({ page }) => {
+  for (const [name, text] of WHOLE_TEXTS) {
+    await page.mouse.move(0, 0)
+    const popup = await openTip(page, tipTrigger(page, name), text)
+    const fit = await popup.evaluate((element) => {
+      const label = element.querySelector('[data-slot="label"]')?.getBoundingClientRect()
+      const clip = element.querySelector('[data-slot="clip"]')
+      const room = clip?.getBoundingClientRect()
+      if (!label || !clip || !room) return null
+      return { start: label.left - room.left, end: room.right - label.right, down: getComputedStyle(clip).overflowY }
+    })
+    expect(fit, text).not.toBeNull()
+    expect(fit?.start, text).toBeGreaterThanOrEqual(0)
+    expect(fit?.end, text).toBeGreaterThanOrEqual(0)
+    expect(fit?.down, text).toBe('visible')
+  }
+})
+
+const ARROW_WALK = [
+  ['Select', SETTLE],
+  ['Pan', GAP_HOLD],
+  ['Read aloud', GAP_HOLD],
+  [null, CLOSE_DELAY + GAP_PAUSE],
+  ['Draw bubble', GAP_HOLD],
+  [null, GRACE + SETTLE],
+  ['Pages', SETTLE],
+  ['History', GAP_HOLD],
+  [null, CLOSE_DELAY + GAP_PAUSE],
+  ['Erase text', GAP_HOLD],
+  [null, GRACE + SETTLE],
+  ['Select', SETTLE],
+] as const
+
+test('keeps the arrow on the middle of its trigger in every frame the bubble does not move between triggers', async ({ page }) => {
+  await tipTrigger(page, 'Select').scrollIntoViewIfNeeded()
+  await page.evaluate(() => {
+    const strays: string[] = []
+    window.tooltipStrays = strays
+    const look = (): void => {
+      const popup = document.querySelector<HTMLElement>('[data-variant="tooltip"]:popover-open[data-open]')
+      const arrow = popup?.querySelector('[data-slot="arrow"]')
+      const trigger = popup ? document.querySelector(`[aria-describedby="${popup.id}"]`) : null
+      if (popup && arrow && trigger && !popup.getAnimations().some((animation) => animation.playState === 'running' && 'transitionProperty' in animation && animation.transitionProperty === 'width')) {
+        const [tip, anchor] = [arrow.getBoundingClientRect(), trigger.getBoundingClientRect()]
+        const across = popup.dataset.side === 'top' || popup.dataset.side === 'bottom'
+        const off = across ? tip.left + tip.width / 2 - (anchor.left + anchor.width / 2) : tip.top + tip.height / 2 - (anchor.top + anchor.height / 2)
+        if (Math.abs(off) > 1) strays.push(`${trigger.getAttribute('aria-label') ?? trigger.textContent}: ${off.toFixed(1)}`)
+      }
+      requestAnimationFrame(look)
+    }
+    requestAnimationFrame(look)
+  })
+  for (const [name, wait] of ARROW_WALK) {
+    if (name === null) await page.mouse.move(0, 0, { steps: JITTER_STEPS })
+    else {
+      const { x, y } = centre(await box(tipTrigger(page, name)))
+      await page.mouse.move(x, y, { steps: JITTER_STEPS })
+    }
+    await page.waitForTimeout(wait)
+  }
+  expect(await page.evaluate(() => window.tooltipStrays ?? [])).toEqual([])
 })

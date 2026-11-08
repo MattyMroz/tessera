@@ -259,7 +259,8 @@
         transition: opacity var(--ts-motion-duration-press-in) var(--ts-motion-ease-out);
       }
 
-      &[data-instant] {
+      &[data-instant],
+      &:is([data-snap], [data-instant]) > [data-slot='arrow'] {
         transition-duration: calc(var(--ts-motion-duration-follow) * 0);
       }
 
@@ -276,7 +277,7 @@
         display: grid;
         justify-content: center;
         justify-items: center;
-        overflow: clip;
+        overflow: clip visible;
       }
 
       & [data-slot='label'] {
