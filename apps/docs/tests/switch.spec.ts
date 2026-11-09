@@ -17,14 +17,16 @@ const COVERED = 0.5
 
 type Box = { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 
-async function paintedOffset(page: Page, target: Locator, box: Box, state: 'off' | 'on', zoom: number): Promise<{ x: number; y: number }> {
-  const ride = target.locator('[data-recipe="indicator"]')
+type Placed = { readonly name: string; readonly box: Box; readonly state: 'off' | 'on' }
+
+async function paintedOffsets(page: Page, placed: readonly Placed[], zoom: number): Promise<{ x: number; y: number }[]> {
+  const rides = page.getByRole('region', { name: 'Switch', exact: true }).locator('[role="switch"] [data-recipe="indicator"]')
   const shot = await page.screenshot({ animations: 'disabled' })
-  await ride.evaluate((element) => element.style.setProperty('visibility', 'hidden'))
+  await rides.evaluateAll((elements) => elements.forEach((element) => (element as HTMLElement).style.setProperty('visibility', 'hidden')))
   const bare = await page.screenshot({ animations: 'disabled' })
-  await ride.evaluate((element) => element.style.removeProperty('visibility'))
+  await rides.evaluateAll((elements) => elements.forEach((element) => (element as HTMLElement).style.removeProperty('visibility')))
   return page.evaluate(
-    async ({ shots, box, state, zoom, margin, HALF }) => {
+    async ({ shots, placed, zoom, margin, HALF }) => {
       const read = async (data: string) => {
         const image = new Image()
         image.src = `data:image/png;base64,${data}`
@@ -43,6 +45,7 @@ async function paintedOffset(page: Page, target: Locator, box: Box, state: 'off'
       }
       const [light, plate] = await Promise.all(shots.map(read))
       if (!light || !plate) throw new Error('no shot')
+      return placed.map(({ box, state }) => {
       const height = box.height * zoom
       const left = box.x * zoom
       const top = box.y * zoom
@@ -65,8 +68,9 @@ async function paintedOffset(page: Page, target: Locator, box: Box, state: 'off'
       const below = sum(row + 1, Math.ceil(bottom) - 1, (y) => gapAt(column, y))
       const end = state === 'on' ? sum(column + 1, Math.ceil(right) - 1, (x) => gapAt(x, row)) : sum(Math.floor(left), column, (x) => gapAt(x, row))
       return { x: end - (above + below) / 2, y: (below - above) / 2 }
+      })
     },
-    { shots: [shot.toString('base64'), bare.toString('base64')], box, state, zoom, margin: PLATE_MARGIN, HALF: COVERED },
+    { shots: [shot.toString('base64'), bare.toString('base64')], placed, zoom, margin: PLATE_MARGIN, HALF: COVERED },
   )
 }
 
@@ -119,23 +123,27 @@ test('keeps the thumb three quarters of the track with one inset on every side a
 })
 
 test('paints the thumb in the middle of its end of the track at every browser zoom', async ({ browser }) => {
-  test.slow()
   const misses: string[] = []
   for (const zoom of ZOOMS) {
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: zoom })
     const page = await context.newPage()
     await visit(page, '/components')
     await page.mouse.move(0, 0)
+    await track(page, `${SIZES[0]} off`).scrollIntoViewIfNeeded()
+    const placed: Placed[] = []
     for (const size of SIZES) {
       for (const state of ['off', 'on'] as const) {
-        const target = track(page, `${size} ${state}`)
-        await target.scrollIntoViewIfNeeded()
-        const box = await target.boundingBox()
+        const box = await track(page, `${size} ${state}`).boundingBox()
         if (!box) throw new Error('no track')
-        const offset = await paintedOffset(page, target, box, state, zoom)
-        if (Math.hypot(offset.x, offset.y) > PAINT_TOLERANCE) misses.push(`${zoom}x ${size} ${state}: ${offset.x.toFixed(2)}, ${offset.y.toFixed(2)}`)
+        expect(box.y + box.height, `${zoom}x ${size} ${state} in the window`).toBeLessThanOrEqual(VIEWPORT.height)
+        placed.push({ name: `${size} ${state}`, box, state })
       }
     }
+    const offsets = await paintedOffsets(page, placed, zoom)
+    placed.forEach(({ name }, index) => {
+      const offset = offsets[index] ?? { x: Number.NaN, y: Number.NaN }
+      if (!(Math.hypot(offset.x, offset.y) <= PAINT_TOLERANCE)) misses.push(`${zoom}x ${name}: ${offset.x.toFixed(2)}, ${offset.y.toFixed(2)}`)
+    })
     await context.close()
   }
   expect(misses).toEqual([])
@@ -203,6 +211,7 @@ test('keeps the thumb its own shape on a press with the motion off', async ({ pa
 test('rides the thumb the same overshoot both ways and settles on its place', async ({ page }) => {
   const target = track(page, 'lg off')
   await target.scrollIntoViewIfNeeded()
+  const start = await target.evaluate((element) => new DOMMatrix(getComputedStyle(element.querySelector('[data-recipe="indicator"]') ?? element).transform).m41)
   const on = thumbPath(page, target)
   await target.click()
   const forth = await on
@@ -214,7 +223,7 @@ test('rides the thumb the same overshoot both ways and settles on its place', as
   const under = final.back - Math.min(...home)
   expect(over).toBeGreaterThan(0)
   expect(Math.abs(over - under)).toBeLessThanOrEqual(TOLERANCE)
-  expect(Math.abs(final.back - (forth[0] ?? Number.NaN))).toBeLessThanOrEqual(TOLERANCE)
+  expect(Math.abs(final.back - start)).toBeLessThanOrEqual(TOLERANCE)
 })
 
 test('sets a label beside the track at the label gap, centred on it, and presses and toggles the track from a click on the label', async ({ page }) => {
