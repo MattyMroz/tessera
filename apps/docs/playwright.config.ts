@@ -12,8 +12,9 @@ const PARALLEL = ['chromium', 'webkit']
 const PART = process.env.LAB_PART ?? ''
 const [SHARD = 0, SHARDS = 0] = /^\d+\/\d+$/.test(PART) ? PART.split('/').map(Number) : []
 const TIMED_PARTS: Readonly<Record<string, readonly string[]>> = {
-  'chromium-timed': ['chromium-timed', 'chromium-device-scale'],
+  'chromium-timed': ['chromium-timed'],
   'webkit-timed': ['webkit-timed'],
+  'device-scale': ['chromium-device-scale'],
 }
 const AFTER_PARALLEL = PART === '' ? PARALLEL : []
 

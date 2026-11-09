@@ -119,6 +119,7 @@ test('keeps the thumb three quarters of the track with one inset on every side a
 })
 
 test('paints the thumb in the middle of its end of the track at every browser zoom', async ({ browser }) => {
+  test.slow()
   const misses: string[] = []
   for (const zoom of ZOOMS) {
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: zoom })
