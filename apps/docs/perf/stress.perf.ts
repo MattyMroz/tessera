@@ -17,6 +17,7 @@ const WARM_UPS = 1
 const THROTTLED = 4
 const FULL_SPEED = 1
 const REGRESSION = 0.2
+const BROKEN = 1
 const UNSTABLE = 0.2
 const LONG_FRAME = 50
 const INTERACTION_THRESHOLD = 16
@@ -318,4 +319,10 @@ test('measures T1 to T5, N8 and S-A on the stress scene', async ({ browser }) =>
   }
   if (SAVE) writeFileSync(LAST, `${JSON.stringify(report, null, 2)}\n`)
   expect(samples).toHaveLength(RUNS)
+  const comparable = before !== undefined && before.chromium === report.chromium && before.cpu === report.cpu
+  const doubled = NAMES.filter((name) => {
+    const [now, last] = [metrics[name]?.median ?? 0, before?.metrics[name]?.median ?? 0]
+    return comparable && !SAVE && last > 0 && (now - last) / last > BROKEN
+  })
+  expect(doubled, 'more than twice as slow as apps/docs/perf/last.json').toEqual([])
 })
