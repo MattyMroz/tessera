@@ -8,6 +8,7 @@ declare global {
     tooltipLeft?: number
     tooltipStrays?: string[]
     tooltipSlide?: string[]
+    tooltipFade?: number
   }
 }
 
@@ -382,7 +383,12 @@ test('fades a tooltip in while it slides the appear shift from the trigger and n
     window.tooltipSlide = []
     document.addEventListener('transitionrun', (event) => {
       const popup = event.target
-      if (!(popup instanceof HTMLElement) || !popup.matches('[data-variant="tooltip"]') || event.propertyName !== 'translate') return
+      if (!(popup instanceof HTMLElement) || !popup.matches('[data-variant="tooltip"]')) return
+      if (event.propertyName === 'opacity') {
+        const fade = popup.getAnimations().find((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')
+        window.tooltipFade = Number(fade?.effect?.getComputedTiming().duration ?? 0)
+      }
+      if (event.propertyName !== 'translate') return
       const effect = popup.getAnimations().find((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'translate')?.effect
       const frames = effect instanceof KeyframeEffect ? effect.getKeyframes() : []
       window.tooltipSlide = frames.map((frame) => String(frame['translate'] ?? ''))
@@ -403,10 +409,9 @@ test('fades a tooltip in while it slides the appear shift from the trigger and n
   expect(tips.filter((tip) => tip.scale !== 'none' || tip.transform !== 'none')).toEqual([])
   const rising = tips.map((tip) => tip.opacity)
   expect(rising).toEqual([...rising].sort((a, b) => a - b))
-  const fadeFrames = frames.filter((frame) => frame.tips.some((tip) => tip.opacity < FULL))
-  const [from, to] = [fadeFrames[0]?.time ?? Number.NaN, (fadeFrames.at(-1)?.time ?? Number.NaN) + 1]
-  expect(to - from).toBeGreaterThan(FADE_LEAST)
-  expect(to - from).toBeLessThan(400)
+  const fade = await page.evaluate(() => window.tooltipFade ?? 0)
+  expect(fade).toBeGreaterThan(FADE_LEAST)
+  expect(fade).toBeLessThan(400)
 })
 
 for (const target of ['Save', 'Pan'] as const) {
