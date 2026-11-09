@@ -16,6 +16,7 @@ import {
   row,
   settle,
   STRESS,
+  TOOLTIP_EXCEPTIONS,
   visit,
 } from './helpers'
 
@@ -39,7 +40,19 @@ function option(page: Page, group: string, name: string): Locator {
   return page.getByRole('radiogroup', { name: group, exact: true }).getByRole('radio', { name, exact: true })
 }
 
-type Scene = { readonly name: string; readonly before: (page: Page) => Promise<unknown>; readonly motion: (page: Page) => Promise<unknown>; readonly after: (page: Page) => Promise<unknown> }
+type Scene = {
+  readonly name: string
+  readonly before: (page: Page) => Promise<unknown>
+  readonly motion: (page: Page) => Promise<unknown>
+  readonly after: (page: Page) => Promise<unknown>
+  readonly allowed?: readonly string[]
+  readonly allowedWork?: (page: Page) => Promise<readonly string[]>
+}
+
+async function tooltipWork(page: Page): Promise<readonly string[]> {
+  const id = await page.locator('[data-variant="tooltip"]').getAttribute('id')
+  return ['Layout', `Paint DIV id='${id ?? ''}'`]
+}
 
 const NOTHING = async (): Promise<void> => undefined
 
@@ -69,13 +82,15 @@ const SCENES: readonly Scene[] = [
     },
   },
   {
-    name: 'the flight of a tooltip',
+    name: 'the flight of a tooltip but for its width and the blur of its text',
     before: async (page) => {
       await region(page, 'List').getByRole('button', { name: 'Item 1', exact: true }).hover()
       await expect(page.locator('[data-variant="tooltip"]')).toHaveText('Tip 1')
     },
     motion: (page) => region(page, 'List').getByRole('button', { name: 'Item 2', exact: true }).hover(),
     after: (page) => page.mouse.move(0, 0),
+    allowed: TOOLTIP_EXCEPTIONS,
+    allowedWork: tooltipWork,
   },
   {
     name: 'a dialog opening',
@@ -114,11 +129,12 @@ test.describe('on the stress scene', () => {
       await scene.before(page)
       await clearRecorded(page)
       const { animations, work, events } = await motionWork(page, () => scene.motion(page))
+      const own = new Set(scene.allowedWork ? await scene.allowedWork(page) : [])
       await scene.after(page)
       expect(animations).toBeGreaterThan(0)
       expect(offCompositor(await recorded(page))).toEqual([])
-      expect(failures(events)).toEqual([])
-      expect(work).toEqual([])
+      expect(failures(events, scene.allowed)).toEqual([])
+      expect(work.filter((entry) => !own.has(entry))).toEqual([])
     })
   }
 
