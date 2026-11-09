@@ -123,6 +123,7 @@ function differences(page: Page, rest: Buffer, layered: Buffer, target: Target, 
 }
 
 test('draws every pressable button and anchor at rest as in the first frame of its press at real device scales', async ({ playwright, baseURL }) => {
+  test.skip(process.platform !== 'win32', 'Chromium outside Windows keeps glyphs in a layer on half pixels; docs/decisions/e3-motion.md, point 24')
   const problems: string[] = []
   let measured = 0
   for (const ratio of RATIOS) {

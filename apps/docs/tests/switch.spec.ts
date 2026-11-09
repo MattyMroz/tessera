@@ -122,7 +122,8 @@ test('keeps the thumb three quarters of the track with one inset on every side a
   }
 })
 
-test('paints the thumb in the middle of its end of the track at every browser zoom', async ({ browser }) => {
+test('paints the thumb in the middle of its end of the track at every browser zoom', async ({ browser, browserName }) => {
+  test.skip(browserName !== 'chromium', 'WebKit paints the edges of the thumb and the track up to one device pixel apart at fractional zooms; docs/decisions/e3-choices.md, Switch in WebKit')
   const misses: string[] = []
   for (const zoom of ZOOMS) {
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: zoom })

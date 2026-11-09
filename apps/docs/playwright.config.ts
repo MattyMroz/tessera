@@ -14,7 +14,6 @@ const [SHARD = 0, SHARDS = 0] = /^\d+\/\d+$/.test(PART) ? PART.split('/').map(Nu
 const TIMED_PARTS: Readonly<Record<string, readonly string[]>> = {
   'chromium-timed': ['chromium-timed'],
   'webkit-timed': ['webkit-timed'],
-  'device-scale': ['chromium-device-scale'],
 }
 const AFTER_PARALLEL = PART === '' ? PARALLEL : []
 
