@@ -232,8 +232,9 @@ test('slides "…" in from the first hidden menu on compositor properties only a
   const bar = frame(page, 'Bar A')
   await bar.scrollIntoViewIfNeeded()
   const more = bar.getByRole('menuitem', { name: 'More menus', exact: true })
-  const sampled = bar.evaluate(async (element, { count, ms }) => {
+  const seen = await bar.evaluate(async (element, { count, ms, width }) => {
     const seen: { parts: string[]; anchors: string[] }[] = []
+    if (element instanceof HTMLElement) element.style.width = `${width}px`
     for (let index = 0; index < count; index += 1) {
       const triggers = [...element.querySelectorAll<HTMLElement>('[role="menuitem"]')]
       seen.push({
@@ -243,9 +244,7 @@ test('slides "…" in from the first hidden menu on compositor properties only a
       await new Promise((resolve) => setTimeout(resolve, ms))
     }
     return seen
-  }, { count: FADE_FRAMES, ms: FRAME_MS })
-  await bar.evaluate((element, width) => (element.style.width = `${width}px`), NARROW)
-  const seen = await sampled
+  }, { count: FADE_FRAMES, ms: FRAME_MS, width: NARROW })
   await expect(more).toBeVisible()
   const properties = new Set(seen.flatMap((sample) => sample.parts))
   expect(properties.has('transform')).toBe(true)

@@ -1,11 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { choose, visit } from './helpers'
+import { choose, settle, visit } from './helpers'
 
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 const TOLERANCE = 0.5
 const STRETCH = 1.25
-const FRAME_SAMPLES = 30
-const FRAME_MS = 16
 const THUMB_SHARE = 0.75
 const SHARE_TOLERANCE = 0.001
 const LAYOUT_TOLERANCE = 0.01
@@ -92,17 +90,19 @@ function geometry(target: Locator) {
   })
 }
 
-function thumbPath(page: Page, target: Locator): Promise<number[]> {
-  return target.evaluate(async (element, { samples, frame }) => {
-    const ride = element.querySelector('[data-recipe="indicator"]')
-    if (!ride) throw new Error('no thumb')
-    const xs: number[] = []
-    for (let index = 0; index < samples; index += 1) {
-      await new Promise((resolve) => setTimeout(resolve, frame))
-      xs.push(new DOMMatrix(getComputedStyle(ride).transform).m41)
-    }
-    return xs
-  }, { samples: FRAME_SAMPLES, frame: FRAME_MS })
+async function flightOf(target: Locator): Promise<number[]> {
+  const read = (): Promise<number[]> =>
+    target.evaluate((element) => {
+      const animation = element.querySelector('[data-recipe="indicator"]')?.getAnimations()[0]
+      const frames = animation?.effect instanceof KeyframeEffect ? animation.effect.getKeyframes() : []
+      return frames.map((frame) => new DOMMatrix(String(frame['transform'] ?? 'none')).m41)
+    })
+  await expect.poll(async () => (await read()).length).toBeGreaterThan(1)
+  return read()
+}
+
+function restOf(target: Locator): Promise<number> {
+  return target.evaluate((element) => new DOMMatrix(getComputedStyle(element.querySelector('[data-recipe="indicator"]') ?? element).transform).m41)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -212,19 +212,18 @@ test('keeps the thumb its own shape on a press with the motion off', async ({ pa
 test('rides the thumb the same overshoot both ways and settles on its place', async ({ page }) => {
   const target = track(page, 'lg off')
   await target.scrollIntoViewIfNeeded()
-  const start = await target.evaluate((element) => new DOMMatrix(getComputedStyle(element.querySelector('[data-recipe="indicator"]') ?? element).transform).m41)
-  const on = thumbPath(page, target)
+  const start = await restOf(target)
   await target.click()
-  const forth = await on
-  const back = thumbPath(page, target)
+  const forth = await flightOf(target)
+  await settle(page)
   await target.click()
-  const home = await back
-  const final = { forth: forth.at(-1) ?? 0, back: home.at(-1) ?? 0 }
-  const over = Math.max(...forth) - final.forth
-  const under = final.back - Math.min(...home)
+  const home = await flightOf(target)
+  await settle(page)
+  const over = Math.max(...forth) - (forth.at(-1) ?? 0)
+  const under = (home.at(-1) ?? 0) - Math.min(...home)
   expect(over).toBeGreaterThan(0)
   expect(Math.abs(over - under)).toBeLessThanOrEqual(TOLERANCE)
-  expect(Math.abs(final.back - start)).toBeLessThanOrEqual(TOLERANCE)
+  expect(Math.abs((await restOf(target)) - start)).toBeLessThanOrEqual(TOLERANCE)
 })
 
 test('sets a label beside the track at the label gap, centred on it, and presses and toggles the track from a click on the label', async ({ page }) => {
