@@ -232,24 +232,32 @@ test('slides "…" in from the first hidden menu on compositor properties only a
   const bar = frame(page, 'Bar A')
   await bar.scrollIntoViewIfNeeded()
   const more = bar.getByRole('menuitem', { name: 'More menus', exact: true })
-  const seen = await bar.evaluate(async (element, { count, ms, width }) => {
-    const seen: { parts: string[]; anchors: string[] }[] = []
+  const anchors = await bar.evaluate(async (element, { count, ms, width }) => {
+    const store = window as unknown as { __barParts: string[] }
+    store.__barParts = []
+    const animate = Element.prototype.animate
+    Element.prototype.animate = function (keyframes, options) {
+      const animation = animate.call(this, keyframes, options)
+      const trigger = this.closest('[role="menuitem"]')
+      if (trigger && element.contains(trigger) && (this === trigger || this.parentElement === trigger)) {
+        store.__barParts.push(...Object.keys(animation.effect instanceof KeyframeEffect ? (animation.effect.getKeyframes()[0] ?? {}) : {}))
+      }
+      return animation
+    }
+    const anchors: string[] = []
     if (element instanceof HTMLElement) element.style.width = `${width}px`
     for (let index = 0; index < count; index += 1) {
       const triggers = [...element.querySelectorAll<HTMLElement>('[role="menuitem"]')]
-      seen.push({
-        parts: triggers.flatMap((trigger) => [...trigger.children, trigger].flatMap((node) => node.getAnimations().flatMap((animation) => Object.keys((animation.effect as KeyframeEffect).getKeyframes()[0] ?? {})))),
-        anchors: triggers.map((trigger) => getComputedStyle(trigger).transform).filter((transform) => transform !== 'none'),
-      })
+      anchors.push(...triggers.map((trigger) => getComputedStyle(trigger).transform).filter((transform) => transform !== 'none'))
       await new Promise((resolve) => setTimeout(resolve, ms))
     }
-    return seen
+    return anchors
   }, { count: FADE_FRAMES, ms: FRAME_MS, width: NARROW })
   await expect(more).toBeVisible()
-  const properties = new Set(seen.flatMap((sample) => sample.parts))
-  expect(properties.has('transform')).toBe(true)
-  expect([...properties].filter((property) => !['transform', 'opacity', 'offset', 'easing', 'composite', 'computedOffset'].includes(property))).toEqual([])
-  expect(seen.flatMap((sample) => sample.anchors)).toEqual([])
+  const parts = (): Promise<string[]> => page.evaluate(() => (window as unknown as { __barParts: string[] }).__barParts)
+  await expect.poll(async () => (await parts()).includes('transform')).toBe(true)
+  expect([...new Set(await parts())].filter((property) => !['transform', 'opacity', 'offset', 'easing', 'composite', 'computedOffset'].includes(property))).toEqual([])
+  expect(anchors).toEqual([])
 })
 
 test('hides the menus that no longer fit behind "…" when the frame narrows and shows them again when it widens', async ({ page }) => {
