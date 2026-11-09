@@ -27,6 +27,7 @@ for (const mode of ['light', 'dark'] as const) {
 
 async function open(page: Page): Promise<void> {
   await page.goto(FOUNDATION)
+  await hydrated(page)
   await page.evaluate(() => document.fonts.ready.then(() => undefined))
 }
 
