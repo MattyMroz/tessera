@@ -9,45 +9,41 @@ export type ArrowEdge = {
 
 type Point = { readonly x: number; readonly y: number }
 
+type Rim = { readonly corner: number; readonly centre: number; readonly end: number }
+
 const TIP_SHARE = 4
-const SEARCH_STEPS = 48
-const SLOPE_STEP = 1 / 64
 const DIGITS = 3
 
-function depthAt(edge: ArrowEdge, x: number): number {
+function rimBefore(edge: ArrowEdge): Rim {
   const corner = Math.min(edge.radius, edge.length / 2, edge.across / 2)
-  const along = edge.offset + edge.direction * x
-  const distance = Math.min(along, edge.length - along)
-  if (distance >= corner) return 0
-  if (distance <= 0) return corner
-  return corner - Math.sqrt(corner * corner - (corner - distance) ** 2)
+  const end = Math.min(-edge.offset * edge.direction, (edge.length - edge.offset) * edge.direction)
+  return { corner, centre: end + corner, end }
 }
 
-function flankMeetsEdge(depth: (x: number) => number, reach: number, limit: number): number {
-  const gap = (x: number): number => -x - reach - depth(x)
-  if (gap(-reach) >= 0) return -reach
-  const stride = (limit - reach) / SEARCH_STEPS
-  let near = -reach
-  let far = near - stride
-  while (gap(far) <= 0) {
-    if (far <= -limit) return -limit
-    near = far
-    far -= stride
-  }
-  for (let step = 0; step < SEARCH_STEPS; step += 1) {
-    const middle = (near + far) / 2
-    if (gap(middle) > 0) far = middle
-    else near = middle
-  }
-  return (near + far) / 2
+function depthAt(rim: Rim, x: number): number {
+  if (x >= rim.centre) return 0
+  if (x <= rim.end) return rim.corner
+  return rim.corner - Math.sqrt(rim.corner ** 2 - (x - rim.centre) ** 2)
 }
 
-function blend(depth: (x: number) => number, reach: number, size: number, round: number): { edge: Point; control: Point; flank: Point } {
-  const meet = flankMeetsEdge(depth, reach, size + size)
-  const x = meet - round
-  const edge = { x, y: depth(x) }
-  const slope = (depth(x + SLOPE_STEP) - depth(x - SLOPE_STEP)) / (SLOPE_STEP * 2)
-  const cx = (-reach - edge.y + slope * edge.x) / (slope + 1)
+function slopeAt(rim: Rim, x: number): number {
+  if (x >= rim.centre || x <= rim.end) return 0
+  return (x - rim.centre) / Math.sqrt(rim.corner ** 2 - (x - rim.centre) ** 2)
+}
+
+function flankMeetsRim(rim: Rim, reach: number): number {
+  if (-reach >= rim.centre) return -reach
+  const lift = rim.centre + reach + rim.corner
+  const room = rim.corner ** 2 * 2 - lift ** 2
+  if (room < 0) return rim.end
+  return rim.centre + (Math.sqrt(room) - lift) / 2
+}
+
+function blend(rim: Rim, reach: number, round: number): { edge: Point; control: Point; flank: Point } {
+  const x = Math.max(flankMeetsRim(rim, reach) - round, rim.end)
+  const edge = { x, y: depthAt(rim, x) }
+  const slope = slopeAt(rim, x)
+  const cx = (slope * edge.x - reach - edge.y) / (slope + 1)
   const control = { x: cx, y: -cx - reach }
   const span = Math.hypot(control.x - edge.x, control.y - edge.y)
   const flank = { x: control.x + span * Math.SQRT1_2, y: control.y - span * Math.SQRT1_2 }
@@ -67,13 +63,12 @@ function at(point: Point): string {
 }
 
 export function arrowPath(edge: ArrowEdge): string {
-  const { size } = edge
-  const reach = size * Math.SQRT1_2
-  const round = size / TIP_SHARE
-  const start = blend((x) => depthAt(edge, x), reach, size, round)
-  const end = blend((x) => depthAt(edge, -x), reach, size, round)
+  const reach = edge.size * Math.SQRT1_2
+  const round = edge.size / TIP_SHARE
+  const start = blend(rimBefore(edge), reach, round)
+  const end = blend(rimBefore({ ...edge, direction: edge.direction === 1 ? -1 : 1 }), reach, round)
   const tip = { x: -round * Math.SQRT1_2, y: -reach + round * Math.SQRT1_2 }
-  const floor = Math.max(size / 2, start.edge.y, end.edge.y)
+  const floor = Math.max(edge.size / 2, start.edge.y, end.edge.y)
   return [
     `M${at(start.edge)}`,
     `Q${at(start.control)} ${at(start.flank)}`,
