@@ -7,7 +7,7 @@ const RETRY_UNDER_LOAD = 1
 const ONE_AT_A_TIME = 1
 const NO_RETRY = 0
 const WEBKIT_WORKERS = 6
-const TIMED = ['budgets.spec.ts', 'menu.spec.ts', 'scale.spec.ts', 'switch.spec.ts', 'alert-dialog.spec.ts', 'sliding.spec.ts']
+const TIMED = ['budgets.spec.ts', 'button.spec.ts', 'menu.spec.ts', 'scale.spec.ts', 'switch.spec.ts', 'alert-dialog.spec.ts', 'sliding.spec.ts']
 const PARALLEL = ['chromium', 'webkit']
 
 export default defineConfig({
