@@ -115,7 +115,7 @@
     --ts-size-cap-inset: calc((var(--ts-size-step) - 1cap) / 2);
     --ts-size-icon-cap-pad: calc((var(--ts-size-icon) - 1cap) / 2);
     --ts-size-arrow: calc(var(--ts-size-height) / 4);
-    --ts-size-arrow-shift: calc(var(--ts-size-arrow) / -2);
+    --ts-size-arrow-shift: calc(var(--ts-size-arrow) * -1);
     --ts-size-arrow-reach: calc(var(--ts-size-arrow) * 0.7071);
   }
 

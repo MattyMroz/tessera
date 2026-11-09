@@ -21,6 +21,7 @@ tester.run('component-appearance', testRule(componentAppearance), {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden focusable="false"><path d="M4 12h16" /><circle cx={12} cy={12} r={4} fill="currentColor" /><polyline points="4 4 8 8" />{steps.map((step) => <rect x={2} y={step * 2} style={{ "--ts-i-value": step }} />)}</svg>',
     'type HeadingProps = { level: 1 | 2 | 3 | 4 }; function Heading({ level }: HeadingProps) { const Tag = `h${level}` as const; return <Tag tabIndex={-1} data-first={items.at(0)} data-last={items.at(-1)} /> }',
     'type Pair = [2, 3]; type Offset = 2 | -2; const box = <svg viewBox="0 0 24 24"><circle r={9} /></svg>',
+    '<svg data-slot="arrow" viewBox="-16 -16 32 32" fill="currentColor"><path d="M0 0" /></svg>',
     '<Menu.Indicator render={<svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16" /></svg>} />; <path d="M4 12h16" stroke="currentColor" />; <span {...{ "data-slot": "icon", style: { "--ts-i-value": 1 } }} />',
   ],
   invalid: [

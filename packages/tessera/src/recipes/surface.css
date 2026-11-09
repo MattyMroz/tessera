@@ -331,11 +331,11 @@
 
       & > [data-slot='arrow'] {
         position: absolute;
-        inline-size: var(--ts-size-arrow);
-        block-size: var(--ts-size-arrow);
-        border-radius: var(--ts-shape-arrow);
-        background: var(--_bg);
-        rotate: var(--ts-shape-arrow-turn);
+        display: block;
+        inline-size: calc(var(--ts-size-arrow) + var(--ts-size-arrow));
+        block-size: calc(var(--ts-size-arrow) + var(--ts-size-arrow));
+        overflow: visible;
+        color: var(--_bg);
         transition: translate var(--ts-motion-duration-follow) var(--ts-motion-ease-hover);
       }
 
@@ -353,6 +353,7 @@
 
       &[data-side='top'] > [data-slot='arrow'] {
         bottom: var(--ts-size-arrow-shift);
+        rotate: calc(var(--ts-shape-arrow-turn) + var(--ts-shape-arrow-turn));
       }
 
       &[data-side='bottom'] > [data-slot='arrow'] {
@@ -361,10 +362,12 @@
 
       &[data-side='left'] > [data-slot='arrow'] {
         right: var(--ts-size-arrow-shift);
+        rotate: var(--ts-shape-arrow-turn);
       }
 
       &[data-side='right'] > [data-slot='arrow'] {
         left: var(--ts-size-arrow-shift);
+        rotate: calc(var(--ts-shape-arrow-turn) * -1);
       }
     }
 

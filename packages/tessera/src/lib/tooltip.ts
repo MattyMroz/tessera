@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { Rect } from './flight'
 import { writeInstance } from './instance'
 import { copyScope } from './scope'
+import { arrowPath } from './tip-arrow'
 
 export const TOOLTIP_OPEN_DELAY = 400
 
@@ -24,6 +25,7 @@ type Entry = 'appear' | 'instant' | 'move'
 const FLIP: Readonly<Record<TipSide, TipSide>> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }
 const LABEL = "[data-slot='label']:not([data-leaving])"
 const LEAVING = "[data-slot='label'][data-leaving]"
+const ARROW = "[data-slot='arrow']"
 const ENTERING = 'data-entering'
 const SQUISH = 'data-squish'
 const ROOM = '--ts-i-tip-room'
@@ -254,6 +256,10 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       const chrome = element.getBoundingClientRect().width - shown
       const gap = pixels(style.marginBottom)
       const height = pixels(style.height)
+      const radius = pixels(style.borderTopLeftRadius)
+      const arrow = element.querySelector<SVGSVGElement>(ARROW)
+      const point = arrow?.querySelector('path')
+      const side = arrow ? pixels(getComputedStyle(arrow).width) / 2 : 0
       const leaving = element.querySelector<HTMLElement>(LEAVING)
       const out = leaving ? unscaled(leaving) : 0
       const anchor = trigger.getBoundingClientRect()
@@ -272,6 +278,18 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
         '--ts-i-tip-width': `${width}px`,
         '--ts-i-tip-arrow': `${place.arrow}px`,
       })
+      if (arrow && point) {
+        const across = place.side === 'top' || place.side === 'bottom'
+        arrow.setAttribute('viewBox', `${-side} ${-side} ${side * 2} ${side * 2}`)
+        point.setAttribute('d', arrowPath({
+          size: side,
+          length: across ? width : height,
+          across: across ? height : width,
+          radius,
+          offset: place.arrow,
+          direction: place.side === 'bottom' || place.side === 'left' ? 1 : -1,
+        }))
+      }
       writeInstance(label, { '--ts-i-tip-squish': entry === 'move' ? Math.min(1, shown / next) : 1 })
       if (leaving) writeInstance(leaving, { '--ts-i-tip-squish': Math.min(1, next / out) })
       label.setAttribute(SQUISH, '')

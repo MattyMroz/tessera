@@ -22,6 +22,8 @@ const TOOLS = [
   { label: 'Add text', Icon: Type },
 ] as const
 
+const SIDES = ['top', 'bottom', 'left', 'right'] as const
+
 const GROUP = ['Undo', 'Redo', 'Copy', 'Paste the copied bubble'] as const
 const COLUMN = [
   { label: 'Pages', content: 'Show pages' },
@@ -41,6 +43,15 @@ export function TooltipSection() {
           <Tooltip content="Saves the chapter">
             <Button variant="soft">Save</Button>
           </Tooltip>
+        </div>
+      </Group>
+      <Group title="Sides">
+        <div className="flex flex-wrap items-center gap-group">
+          {SIDES.map((side) => (
+            <Tooltip key={side} content={side} side={side}>
+              <Button variant="soft">{side}</Button>
+            </Tooltip>
+          ))}
         </div>
       </Group>
       <Group title="With a key">

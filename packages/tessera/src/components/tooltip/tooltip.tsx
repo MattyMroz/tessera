@@ -60,7 +60,11 @@ function Bubble({ group, arrow }: BubbleProps) {
       data-variant="tooltip"
       data-material="solid"
     >
-      {arrow ? <span data-slot="arrow" /> : null}
+      {arrow ? (
+        <svg data-slot="arrow" fill="currentColor" aria-hidden="true" focusable="false">
+          <path />
+        </svg>
+      ) : null}
       <span data-slot="clip">
         {shown.previous === null ? null : (
           <span key={shown.turn - 1} data-slot="label" data-leaving="">
