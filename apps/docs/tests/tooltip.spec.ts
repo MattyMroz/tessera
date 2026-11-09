@@ -8,7 +8,7 @@ declare global {
     tooltipLeft?: number
     tooltipStrays?: string[]
     tooltipSlide?: string[]
-    tooltipFade?: number
+    tooltipFade?: { duration: number; from: number }
   }
 }
 
@@ -385,8 +385,9 @@ test('fades a tooltip in while it slides the appear shift from the trigger and n
       const popup = event.target
       if (!(popup instanceof HTMLElement) || !popup.matches('[data-variant="tooltip"]')) return
       if (event.propertyName === 'opacity') {
-        const fade = popup.getAnimations().find((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')
-        window.tooltipFade = Number(fade?.effect?.getComputedTiming().duration ?? 0)
+        const fade = popup.getAnimations().find((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'opacity')?.effect
+        const from = fade instanceof KeyframeEffect ? Number(fade.getKeyframes()[0]?.['opacity'] ?? 1) : 1
+        window.tooltipFade = { duration: Number(fade?.getComputedTiming().duration ?? 0), from }
       }
       if (event.propertyName !== 'translate') return
       const effect = popup.getAnimations().find((animation) => animation instanceof CSSTransition && animation.transitionProperty === 'translate')?.effect
@@ -398,7 +399,6 @@ test('fades a tooltip in while it slides the appear shift from the trigger and n
   const tips = shownTips(frames)
   const [first, last] = [tips[0], tips.at(-1)]
   if (!first || !last) throw new Error('no tooltip frame')
-  expect(first.opacity).toBeLessThan(FULL)
   expect(last.opacity).toBeGreaterThanOrEqual(FULL)
   const slide = (await page.evaluate(() => window.tooltipSlide ?? [])).map((value) => Number.parseFloat(value.split(' ')[1] ?? '0'))
   expect(slide).toHaveLength(2)
@@ -409,9 +409,10 @@ test('fades a tooltip in while it slides the appear shift from the trigger and n
   expect(tips.filter((tip) => tip.scale !== 'none' || tip.transform !== 'none')).toEqual([])
   const rising = tips.map((tip) => tip.opacity)
   expect(rising).toEqual([...rising].sort((a, b) => a - b))
-  const fade = await page.evaluate(() => window.tooltipFade ?? 0)
-  expect(fade).toBeGreaterThan(FADE_LEAST)
-  expect(fade).toBeLessThan(400)
+  const fade = await page.evaluate(() => window.tooltipFade ?? { duration: 0, from: 1 })
+  expect(fade.from).toBeLessThan(FULL)
+  expect(fade.duration).toBeGreaterThan(FADE_LEAST)
+  expect(fade.duration).toBeLessThan(400)
 })
 
 for (const target of ['Save', 'Pan'] as const) {
