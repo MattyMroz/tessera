@@ -280,15 +280,17 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       })
       if (arrow && point) {
         const across = place.side === 'top' || place.side === 'bottom'
-        arrow.setAttribute('viewBox', `${-side} ${-side} ${side * 2} ${side * 2}`)
-        point.setAttribute('d', arrowPath({
+        const box = `${-side} ${-side} ${side * 2} ${side * 2}`
+        const shape = arrowPath({
           size: side,
           length: across ? width : height,
           across: across ? height : width,
           radius,
           offset: place.arrow,
           direction: place.side === 'bottom' || place.side === 'left' ? 1 : -1,
-        }))
+        })
+        if (arrow.getAttribute('viewBox') !== box) arrow.setAttribute('viewBox', box)
+        if (point.getAttribute('d') !== shape) point.setAttribute('d', shape)
       }
       writeInstance(label, { '--ts-i-tip-squish': entry === 'move' ? Math.min(1, shown / next) : 1 })
       if (leaving) writeInstance(leaving, { '--ts-i-tip-squish': Math.min(1, next / out) })
