@@ -97,8 +97,14 @@ async function flightOf(target: Locator): Promise<number[]> {
       const frames = animation?.effect instanceof KeyframeEffect ? animation.effect.getKeyframes() : []
       return frames.map((frame) => new DOMMatrix(String(frame['transform'] ?? 'none')).m41)
     })
-  await expect.poll(async () => (await read()).length).toBeGreaterThan(1)
-  return read()
+  let frames: number[] = []
+  await expect
+    .poll(async () => {
+      frames = await read()
+      return frames.length
+    })
+    .toBeGreaterThan(1)
+  return frames
 }
 
 function restOf(target: Locator): Promise<number> {
