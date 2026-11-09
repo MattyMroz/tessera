@@ -120,7 +120,9 @@ for (const media of ['light', 'dark'] as const) {
 
       test(`keeps the label of every enabled control on ${path} readable on the painted plate behind it, which axe leaves unchecked`, async ({ page }) => {
         await visit(page, path)
-        const shot = await page.screenshot({ fullPage: true, animations: 'disabled' })
+        const width = page.viewportSize()?.width ?? 0
+        await page.setViewportSize({ width, height: await page.evaluate(() => document.documentElement.scrollHeight) })
+        const shot = await page.screenshot({ animations: 'disabled' })
         const labels = await page.evaluate(
           async ({ data, inset, vivid, neutral }) => {
             const image = new Image()
