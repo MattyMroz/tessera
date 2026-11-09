@@ -15,6 +15,7 @@ import { MenubarSection } from './sections/menubar'
 import { PopoverSection } from './sections/popover'
 import { RadioSection } from './sections/radio'
 import { SelectSection } from './sections/select'
+import { SliderSection } from './sections/slider'
 import { SwitchSection } from './sections/switch'
 import { TextSection } from './sections/text'
 import { TextareaSection } from './sections/textarea'
@@ -32,6 +33,7 @@ export default function Page() {
       <CheckboxSection />
       <RadioSection />
       <SwitchSection />
+      <SliderSection />
       <MenuSection />
       <ContextMenuSection />
       <MenubarSection />

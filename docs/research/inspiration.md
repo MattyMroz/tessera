@@ -14,6 +14,20 @@ Filmy oglądane jako arkusze klatek (6x6, z czasem), bez dźwięku; czasy ruchu 
 
 Opisane: 470 pozycji · wysokie 55 · średnie 60 · niskie 132 · bez wartości 223.
 
+## Strona komponentów
+
+### ★ !!! [Arc UI · uiarc.dev](https://uiarc.dev/docs/introduction) · właściciel 2026-11-09
+
+- **Dla Tessery:** cel końcowy: strona z komponentami tego typu, prosta, biało-czarna, z akcentami. Ok. 134 komponenty w rodzinach (przyciski, gesty, menu, pola, wybory, suwaki, pickery, nawigacja, nakładki, komunikaty, postęp), darmowe i Pro, cennik na komponenty.
+
+### ★ [@CJfromJBW](https://x.com/CJfromJBW) · właściciel 2026-11-09
+
+- **Dla Tessery:** „bardzo dobry UI designer”; przeglądać jego posty przy każdym elemencie. Pierwszy zapisany: ToggleGroup z wciśnięciem opcji zamiast szarej pigułki hover (issue #7).
+
+### Arc UI: ocena
+
+- **Ocena właściciela:** większość elementów niepoprawna, część pomysłów dobra. Bierzemy pomysły, nie wykonanie; każdy komponent dopracowany w 100 %. Na razie bez strony, tylko komponenty.
+
 ## Tooltip
 
 Właściciel 2026-11-08: wzorce tooltipa, przesuwania i przejścia tekstu; opisy klatek po pobraniu (`tmp/ref/insp/x/`).

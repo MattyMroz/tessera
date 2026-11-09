@@ -18,6 +18,7 @@ const MEASURING_FILES = [
   'lib/popup-flight.ts',
   'lib/press.ts',
   'lib/select-align.ts',
+  'lib/slider.ts',
   'lib/submenu-pointer.ts',
   'lib/title-when-cut.ts',
   'lib/tooltip.ts',
@@ -347,6 +348,7 @@ it('finds every instance key missing from the size engine registry, registered w
     '--ts-i-tip-arrow: missing',
     '--ts-i-tip-room: missing',
     '--ts-i-tip-squish: missing',
+    '--ts-i-stretch: missing',
     '--ts-i-extra: not in INSTANCE_KEYS',
   ])
 })

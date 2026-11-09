@@ -90,6 +90,14 @@ Zapas `toggle-group` to 88 B. Po rundzie B (2026-11-01) `toggle-group` ma 3008 B
 - Odrzucone: cięcie innych części tooltipa (właściciel wybrał podniesienie progu).
 - 2026-11-09: próg 4096 B (4 kB). Strzałka jako jedna ścieżka SVG ze stykiem liczonym z krawędzi dymka (`lib/tip-arrow.js`) dokłada ok. 470 B, razem 4070 B. Prowadzący z upoważnienia właściciela (soft limit z 08.11).
 
+### B6: `slider` (2026-11-09)
+
+`components/slider/slider.js` z `lib/slider.js` i `lib/range.js` ma ok. 4720 B przy progu 3072 B. Próg Slidera podniesiony do 5120 B (5 kB), jako nazwany wyjątek `COMPONENT_BYTES_RAISED`; pozostałe komponenty zostają przy 3072 B.
+
+- Kto: prowadzący z upoważnienia właściciela (próg miękki z 08.11: „jeżeli potrzebujemy więcej na dany element, to trzeba więcej”). Właściciel dostał liczbę i propozycję 5120 B 09.11 i kazał commitować bez sprzeciwu; może ten próg cofnąć.
+- Dlaczego: Slider nie ma dostawcy, więc całe zachowanie jest własne: wskaźnik (chwyt, lot do wskaźnika, krok za wskaźnikiem), klawiatura, rozciąganie za kraniec, loty Web Animations, napis końca toru i przenikanie tekstu (`docs/decisions/e3-slider.md`).
+- Odrzucone: wycięcie przenikania tekstu i napisu końca (ok. 700 B, nadal ponad 3072 B); części szukane selektorem zamiast refów zostały, zysk poniżej 50 B.
+
 ### Znany błąd: regres T2, T3 i N8 od 2026-11-02 (otwarte)
 
 `bun run perf` 2026-11-09 wobec `last.json` (2026-11-02, `0a84693`): T2 hover 72,5 ms (było 12,4), T2 press 115 ms (54), T3 1x 49 ms (15), N8 row hover 65 ms (7,9), N8 row layers 7 (1). Na `ca35a38` (przed tooltipem T6) te same liczby (T2 hover 76, N8 64, T3 49, warstwy 7), więc tooltip T6 nie jest przyczyną. Bisekcja 2026-11-09 (`bun run perf`, `.worktrees/perf-ca35`, ta sama maszyna i dzień): `0a84693` T2 hover 23 ms, N8 14 ms, warstwy 1 (dryf 12 → 23 ms to obciążenie maszyny); `a94c958` 29 / 19 ms, 1; `297e1ba` (skala spoczynkowa kontrolek i części, TE) 48 / 42 ms, 1; `0408e5c` (gaśnięcie hovera `background-color` 150 ms na płytce `::before`, wyjątek B2, i krycie pigułek w `hover-out`) 76 / 65 ms, warstwy 4. Przyczyna: dwa wybrane ruchy, nie pomyłka w kodzie; liczby zgadzają się z pomiarem technik z 2026-11-03 (`e3-motion.md`, „B. Hover z wyjściem”: H1 150 ms 70,8 ms, nakładka `opacity` 79,1 ms i 9 warstw, `@property` 104,6 ms). Właściciel 09.11: gaśnięcie hovera zostaje 150 ms; hover ma tylko element pod kursorem, więc naraz gaśnie kilka płytek, a liczba elementów strony prawie nie zmienia kosztu (500 wierszy ≈ 10 przycisków). Do sprawdzenia pomiarem: koszt malowania płytki z `corner-shape` kontra zwykły promień w trakcie gaśnięcia; mniej malowań przy tym samym czasie (`steps`), z oceną płynności przez właściciela.

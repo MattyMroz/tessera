@@ -10,6 +10,8 @@ updated: 2026-11-01
 
 Tessera v3 w osobnym repo `PROJECTS/tessera`: dziewięć silników, sześć przepisów (z `text`, część 2 E2), rdzeń komponentów i strona dokumentacji = laboratorium z pięcioma ekranami testowymi (z „Skrajnościami”), zaakceptowane przez właściciela na żywo w kompozycji. Desktop MangaShift przełączony na v3 w całości, `@mangashift/ui` usunięty. Strona mangashift.com zostaje na obecnym kicie, dopóki właściciel nie zechce jej zmienić.
 
+Kierunek dalszy (właściciel 09.11): publiczna strona komponentów na wzór [Arc UI](https://uiarc.dev/docs/introduction) (`research/inspiration.md`, „Strona komponentów”), prosta, biało-czarna, z akcentami, z poprawnym wykonaniem każdego komponentu. Strona dopiero później; teraz komponenty dopracowane w 100 %, jeden po drugim.
+
 ### Wnioski właściciela 01.11 (obowiązują każdy etap)
 
 - UI składa się jak z klocków: każdy komponent jest gotowy z pudełka (wygląd, ruch, warianty jako przepisy), konsument niczego nie dostylowuje.
@@ -114,7 +116,7 @@ Otwarte pozycje z audytu `reviews/e2-foundation-gaps-2.md`; plan E3 rozstrzyga k
 
 **Największa niewiadoma:** zachowanie fundamentu (odstępy, wciśnięcie, overflow) przy kontrolkach rundy D i w ekranach; telefon (profil pomiarów Android/iPhone jeszcze nie uruchomiony).
 
-**Następny artefakt lub decyzja:** commit po zielonej bramce etapu 1 refaktoru; plansze audytu wizualnego ocenione przez prowadzącego.
+**Następny artefakt lub decyzja:** stan na 09.11: tooltip ze strzałką, kontrolki wyboru i menu są w `main` (PR #4); Slider z rundy D przyjęty do repozytorium 09.11 (`plans/e3-slider.md`, `decisions/e3-slider.md`), do dokończenia pomiar `bun run perf` na spokojnej maszynie i filmy ruchu. Następny element wybiera właściciel; kolor (M-17) po zebraniu większej liczby komponentów.
 
 ## Sposób wykonania (wszystkie etapy)
 
@@ -157,6 +159,7 @@ Wniosek właściciela 01.11 (do decyzji przy planie E4): elastyczność układu 
 | 2026-11-01 | Właściciel zaakceptował część 2 E2 („Ok”) ze zmianami reguł: W9, W14, O7, W1 (dotyk), typeahead w ToggleGroup, podział `profile` na `platform` i `typeset`                                    | streszczenie części 2 planu `e2-foundation.md`                                                                                                                                                                         | spec zmieniona w fazie 9; wykonanie faz 10–16                   |
 | 2026-11-02 | Fundament poprawiany równolegle z rundami E3, nie jako bramka przed rundą D; refaktor jakości w osobnych worktree obok rund                                                                   | właściciel: „nie da się zrobić tego bez większej ilości elementów”; przerwa na fundament po rundzie C zaczynała się kręcić w pętli poprawek                                                                            | po pakiecie R1–R11 od razu runda D; etapy 2–6 refaktoru obok    |
 | 2026-11-01 | Plan E3 bez dynamicznego pomiaru v2 na scenie „stress” (bez kopii v2 przez `git archive`): budżety B1–B8 bezwzględne, T1–T5 porównywane z poprzednim pomiarem v3, v2 tylko jako próg CSS w B6 | recenzja techniczna planu E3 (`reviews/e3-plan-tech.md` M5): CSS v2 już zmierzony (80 707 B gz kontra 8 527 B v3), a T1–T5 na DOM v2 wymagałyby adaptera harnessu (YAGNI); decyzja koordynatora                        | `plans/e3-first-round.md` D72; spec „Budżety” w fazie 0 E3      |
+| 2026-11-09 | Komponenty dopracowywane w jasnym trybie; filar koloru i ciemny tryb (M-17) odłożone do chwili, gdy będzie dość komponentów, żeby paletę ocenić w całości                                     | właściciel: „na razie robimy wszystko na light mode”, kolor „musi mieć wiele elementów, żeby to dopracować”; odrzucone: kolor przed Sliderem (rekomendacja prowadzącego)                                               | M-17 bez zmian treści, tylko termin                             |
 
 ## Nierozstrzygnięte decyzje
 

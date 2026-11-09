@@ -8,7 +8,7 @@ import { filesIn, packageDir } from './helpers'
 
 const PUBLIC_VARIABLE_BUDGET = 250
 const COMPONENT_BYTES = 3072
-const COMPONENT_BYTES_RAISED: Readonly<Record<string, number>> = { 'components/tooltip/tooltip.js': 4096 }
+const COMPONENT_BYTES_RAISED: Readonly<Record<string, number>> = { 'components/tooltip/tooltip.js': 4096, 'components/slider/slider.js': 5120 }
 const V2_CSS_BYTES = 80_707
 const CSS_SHARE_OF_V2 = 0.7
 const GZIP_LEVEL = 9
