@@ -62,6 +62,14 @@ function at(point: Point): string {
   return `${format(point.x)} ${format(point.y)}`
 }
 
+export function drawArrow(arrow: SVGSVGElement, edge: ArrowEdge): void {
+  const box = `${-edge.size} ${-edge.size} ${edge.size * 2} ${edge.size * 2}`
+  const shape = arrowPath(edge)
+  const path = arrow.firstElementChild
+  if (arrow.getAttribute('viewBox') !== box) arrow.setAttribute('viewBox', box)
+  if (path && path.getAttribute('d') !== shape) path.setAttribute('d', shape)
+}
+
 export function arrowPath(edge: ArrowEdge): string {
   const reach = edge.size * Math.SQRT1_2
   const round = edge.size / TIP_SHARE

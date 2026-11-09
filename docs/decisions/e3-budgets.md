@@ -88,6 +88,7 @@ Zapas `toggle-group` to 88 B. Po rundzie B (2026-11-01) `toggle-group` ma 3008 B
 - Kto: właściciel, 2026-11-08 („możesz podnieść limit dla tooltipa… jeżeli potrzebujemy więcej na dany element, to trzeba więcej… to jest soft limit”). Zastępuje dla tego jednego komponentu zakaz podnoszenia progu z wpisu `menubar`.
 - Dlaczego: przyrost to zachowanie, którego wymaga wybrany wariant T6 (`docs/decisions/e3-choices.md`): etykieta, która jeszcze wjeżdża, dostaje nowy tekst w miejscu (bez pustego dymka przy szybkim ruchu), ściśnięcie tekstu do szerokości dymka (`--ts-i-tip-squish`), pomiar szerokości bez bieżącej skali, Tab bez zamykania dymka między przyciskami jednej grupy, zamykanie przy Enter i Spacji.
 - Odrzucone: cięcie innych części tooltipa (właściciel wybrał podniesienie progu).
+- 2026-11-09: próg 4096 B (4 kB). Strzałka jako jedna ścieżka SVG ze stykiem liczonym z krawędzi dymka (`lib/tip-arrow.js`) dokłada ok. 470 B, razem 4070 B. Prowadzący z upoważnienia właściciela (soft limit z 08.11).
 
 ### Znany błąd: regres T2, T3 i N8 od 2026-11-02 (otwarte)
 

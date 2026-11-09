@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import type { Rect } from './flight'
 import { writeInstance } from './instance'
 import { copyScope } from './scope'
-import { arrowPath } from './tip-arrow'
+import { drawArrow } from './tip-arrow'
 
 export const TOOLTIP_OPEN_DELAY = 400
 
@@ -258,7 +258,6 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       const height = pixels(style.height)
       const radius = pixels(style.borderTopLeftRadius)
       const arrow = element.querySelector<SVGSVGElement>(ARROW)
-      const point = arrow?.querySelector('path')
       const side = arrow ? pixels(getComputedStyle(arrow).width) / 2 : 0
       const leaving = element.querySelector<HTMLElement>(LEAVING)
       const out = leaving ? unscaled(leaving) : 0
@@ -278,10 +277,9 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
         '--ts-i-tip-width': `${width}px`,
         '--ts-i-tip-arrow': `${place.arrow}px`,
       })
-      if (arrow && point) {
+      if (arrow) {
         const across = place.side === 'top' || place.side === 'bottom'
-        const box = `${-side} ${-side} ${side * 2} ${side * 2}`
-        const shape = arrowPath({
+        drawArrow(arrow, {
           size: side,
           length: across ? width : height,
           across: across ? height : width,
@@ -289,8 +287,6 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
           offset: place.arrow,
           direction: place.side === 'bottom' || place.side === 'left' ? 1 : -1,
         })
-        if (arrow.getAttribute('viewBox') !== box) arrow.setAttribute('viewBox', box)
-        if (point.getAttribute('d') !== shape) point.setAttribute('d', shape)
       }
       writeInstance(label, { '--ts-i-tip-squish': entry === 'move' ? Math.min(1, shown / next) : 1 })
       if (leaving) writeInstance(leaving, { '--ts-i-tip-squish': Math.min(1, next / out) })
