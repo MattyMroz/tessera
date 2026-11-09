@@ -6,13 +6,16 @@ const ALL_BUT_ONE_CORE = 19
 const RETRY_UNDER_LOAD = 1
 const ONE_AT_A_TIME = 1
 const NO_RETRY = 0
-const WEBKIT_WORKERS = 6
+const RUNNER_CORES = 4
+const WEBKIT_WORKERS = process.env.CI ? RUNNER_CORES / 2 : 6
+const [SHARD = 0, SHARDS = 0] = (process.env.LAB_SHARD ?? '').split('/').map(Number)
 const TIMED = ['budgets.spec.ts', 'button.spec.ts', 'menu.spec.ts', 'scale.spec.ts', 'switch.spec.ts', 'alert-dialog.spec.ts', 'sliding.spec.ts']
 const PARALLEL = ['chromium', 'webkit']
 
 export default defineConfig({
   testDir: 'tests',
-  ...(process.env.CI ? {} : { workers: ALL_BUT_ONE_CORE }),
+  workers: process.env.CI ? RUNNER_CORES : ALL_BUT_ONE_CORE,
+  shard: SHARDS > 0 ? { current: SHARD, total: SHARDS } : null,
   retries: RETRY_UNDER_LOAD,
   fullyParallel: false,
   forbidOnly: true,

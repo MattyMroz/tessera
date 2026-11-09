@@ -94,16 +94,18 @@ jobs:
         run: prek run --all-files --show-diff-on-failure
 
   check:
-    name: Check (${{ matrix.os }})
+    name: Check (${{ matrix.os }}, ${{ matrix.shard }}/3)
     needs: hooks
     strategy:
       fail-fast: false
       matrix:
         os:
           - ubuntu-latest
+        shard: [1, 2, 3]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
+      LAB_SHARD: ${{ matrix.shard }}/3
       RANGE: ${{ github.event_name == 'pull_request' && format('--from-ref {0} --to-ref HEAD', github.event.pull_request.base.sha) || '--all-files' }}
     steps:
       - uses: actions/checkout@v7
@@ -136,6 +138,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-${{ matrix.shard }}
           path: apps/docs/test-results
           retention-days: 7
