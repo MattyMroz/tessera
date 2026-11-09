@@ -1,22 +1,46 @@
 @layer components {
-  .ts-button {
+  [data-component='button'] {
     display: inline-flex;
     align-items: center;
-    gap: var(--size-gap);
-    column-gap: var(--_gap);
+    gap: var(--ts-size-gap);
+    column-gap: var(--ts-space-inset);
     flex: 1 1 0;
     flex-basis: 100%;
     order: -1;
   }
 
-  .ts-button-parts {
+  [data-component="button"] > [data-slot='parts'] {
     display: grid;
     grid-template-columns: auto 1fr max-content;
     grid-column: 1 / -1;
     grid-auto-flow: column dense;
 
+    &[data-columns='shared'] {
+      grid-template-columns: subgrid;
+    }
+
     &[data-orientation='vertical'] {
       flex-direction: column;
+    }
+
+    & > [data-slot*='icon'] {
+      order: 1;
+    }
+  }
+
+  [data-level='overlay'] [data-component='button'][data-size='lg'] {
+    display: flex;
+  }
+
+  @container (inline-size < 400px) {
+    [data-component='button'] > [data-slot='parts'] {
+      flex-direction: column;
+    }
+  }
+
+  @container (inline-size >= 400px) {
+    [data-component='button'] {
+      gap: var(--ts-space-inset);
     }
   }
 }

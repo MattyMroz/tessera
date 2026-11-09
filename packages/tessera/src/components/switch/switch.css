@@ -1,0 +1,7 @@
+@layer components {
+  [data-component='switch'][data-slot='choice'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ts-size-label-gap);
+  }
+}

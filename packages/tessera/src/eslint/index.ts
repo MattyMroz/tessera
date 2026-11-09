@@ -7,7 +7,6 @@ import { noLocalCss } from './no-local-css'
 
 export type { MotionOptions } from './compositor-motion'
 
-// The same relative path works from src/eslint and dist/eslint; ESLint keys its cache on this version.
 const { version } = createRequire(import.meta.url)('../../package.json') as { version: string }
 
 const rules = {

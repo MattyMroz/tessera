@@ -1,0 +1,5 @@
+@layer components {
+  [data-component='select'][data-slot='choice'] {
+    display: inline-flex;
+  }
+}

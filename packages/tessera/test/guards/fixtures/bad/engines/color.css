@@ -1,0 +1,11 @@
+@layer theme {
+  :root {
+    --ts-color-label: var(--ts-type-body-size);
+  }
+}
+
+.ts-button {
+  background: red;
+  border-radius: 9px;
+  transition: width 300ms;
+}

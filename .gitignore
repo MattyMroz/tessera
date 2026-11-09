@@ -294,6 +294,8 @@ logs/
 # !workspace/**/.gitkeep
 # data/raw/
 # models/
+apps/docs/test-results/
+apps/docs/playwright-report/
 
 # ── Re-includes ───────────────────────────────────────────────────────────────
 # Every keeper lives HERE, not next to the rule it escapes — a template pasted

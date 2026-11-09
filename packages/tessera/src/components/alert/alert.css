@@ -1,0 +1,18 @@
+@layer components {
+  [data-component='alert'] {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    grid-auto-flow: column;
+    align-items: start;
+    column-gap: var(--ts-space-group);
+  }
+
+  [data-component='alert']:has(> [data-slot='icon']) {
+    grid-template-columns: auto 1fr;
+  }
+
+  [data-component='alert'] > [data-slot='icon'] {
+    grid-row: 1 / -1;
+  }
+}

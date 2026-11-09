@@ -8,7 +8,7 @@ stage: E0 (b)
 
 ## Wynik
 
-Działa bez JS w Chromium 153 (WebView2) i WebKit 26.6 (Safari/macOS), sposobem B. F2 i Q7 zostają bez zmian.
+Działa bez JS w Chromium 153 (WebView2) i WebKit 26.6 (build Playwrighta na Windows), sposobem B. F2 i Q7 zostają bez zmian. Uwaga z 31.10: WebKit Playwrighta nie jest Safari stabilnym; wspiera np. `corner-shape`, którego Safari stabilne nie ma (`reviews/e2-plan-tech.md` P1), więc gałęzie zapasowe trzeba testować osobno.
 
 | Sposób                                                                          | Chromium 153                                     | WebKit 26.6          |
 | ------------------------------------------------------------------------------- | ------------------------------------------------ | -------------------- |

@@ -10,10 +10,11 @@ import { __unstable__loadDesignSystem } from 'tailwindcss'
 import { afterAll, describe, expect, it } from 'vitest'
 import { compositorMotion } from './compositor-motion'
 import tessera from './index'
+import { LAYOUT_CLASSES, LAYOUT_FAMILIES } from './layout'
 import { noLiteralColors } from './no-literal-colors'
 import { noLocalAppearance } from './no-local-appearance'
 import { noLocalCss } from './no-local-css'
-import { appearanceProperty, classColor, LAYOUT_CLASSES, LAYOUT_FAMILIES, layoutClass } from './style-policy'
+import { appearanceProperty, classColor, layoutClass } from './style-policy'
 
 RuleTester.afterAll = afterAll
 RuleTester.describe = describe
@@ -29,7 +30,8 @@ tester.run('no-local-appearance', testRule(noLocalAppearance), {
     '<div className="block inline-flex flex grid hidden md:block lg:invisible sm:visible collapse sr-only not-sr-only flex-col flex-1 grow shrink-0 basis-1/2 grid-cols-3 col-span-2 row-start-1 auto-rows-fr items-center justify-between content-end place-items-center self-start gap-4 gap-x-2 space-y-4 p-4 md:px-8 -mt-2 mx-auto w-full min-w-0 max-w-xl h-dvh size-6 aspect-square absolute relative inset-0 inset-x-0 -top-4 start-0 z-10 overflow-auto overscroll-contain order-2 columns-2 box-border float-right clear-both isolate container" />',
     '<div className="table border-collapse hover:border-separate md:border-spacing-2 text-left dark:text-right text-start text-wrap text-balance truncate whitespace-nowrap break-words hyphens-auto -translate-x-1/2 transform-gpu origin-center pointer-events-none cursor-pointer select-none touch-none resize-y scroll-mt-4 scroll-px-2 snap-x will-change-transform contain-layout field-sizing-content group group/item peer/field @container @container/main object-cover line-clamp-2 align-middle text-ellipsis" />',
     '<div className="block-4 block-full inline-full min-block-4 max-inline-4 pbs-4 pbe-4 mbs-2 -mbe-2 scroll-pbs-2 scroll-mbe-2 @container-normal @container-size/main caption-top scrollbar-gutter-stable content-center-safe scroll-smooth transform-none md:pbs-2! data-[state=open]:block-full" />',
-    '<div className="w-[calc(100%-2rem)] grid-cols-[1fr_2fr] hover:m-[4px] data-[state=open]:flex [&:nth-child(2)]:grid md:!flex tw:md:grid group-hover/item:block" />',
+    '<div className="w-[calc(100%-2rem)] grid-cols-[1fr_2fr] hover:m-[4px] data-[state=open]:flex nth-2:grid [.wide]:grid md:!flex tw:md:grid group-hover/item:block" />',
+    '<div className="has-[>svg]:flex in-[.wide]:grid group-[.wide_&]:flex peer-[&:checked]:hidden group-has-[>svg]:grid not-[&_svg]:flex" />',
     '<div className="data-[label=\'(\']:grid data-[label=\']\']:flex data-[label=\':\']:block" />',
     '<div style={{ display: "flex", padding: 4, gap: 8, width: 100, minBlockSize: 0, aspectRatio: 1, boxSizing: "border-box", position: "absolute", insetInlineStart: 0, top: 0, zIndex: 1, visibility: "hidden", flexDirection: "column", gridTemplateColumns: "1fr 2fr", rowGap: 2, order: 1, alignItems: "center", justifyContent: "end", placeSelf: "start", marginBlockStart: 4, paddingInline: 2, overflowX: "auto", overscrollBehaviorY: "contain", transform: `translateY(${start}px)`, WebkitTransform: "none", translate: "10px 0", transformOrigin: "top", pointerEvents: "none", cursor: "grab", userSelect: "none", touchAction: "none", contain: "layout", willChange: "transform", scrollMarginTop: 8, scrollPaddingInline: 4, scrollSnapType: "x mandatory", objectFit: "cover", objectPosition: "center", textAlign: "center", whiteSpace: "nowrap", wordBreak: "break-all", overflowWrap: "anywhere" }} />',
     '<table style={{ borderCollapse: "collapse", borderSpacing: 0, tableLayout: "fixed", captionSide: "top", verticalAlign: "top", float: "left", clear: "both", columns: 2, resize: "none", textOverflow: "ellipsis", lineClamp: 2, scrollbarGutter: "stable", containerType: "inline-size", isolation: "isolate" }} />',
@@ -50,11 +52,14 @@ tester.run('no-local-appearance', testRule(noLocalAppearance), {
     '<div className="@container-[inline-size] hover:@container-[size]/main!" style={{ fieldSizing: "content", scrollBehavior: "smooth", breakBefore: "page", breakAfter: "avoid", breakInside: "avoid", WebkitBoxOrient: "vertical", msFlex: 1 }} />',
   ],
   invalid: [
-    ...['hover:bg-primary', 'dark:text-foreground', 'md:text-sm', 'border', 'border-primary', 'ring-2', 'outline-none', 'shadow-lg', 'inset-shadow-sm', 'inset-ring-2', 'rounded-lg', 'font-mono', 'leading-6', 'opacity-50', 'bg-linear-to-r', 'blur-sm', 'animate-spin', 'transition-all', 'underline', 'uppercase', 'rotate-45', 'scale-105', 'indent-4', 'focus:!bg-primary', 'md:rounded-lg!', '[&:nth-child(2)]:bg-primary', 'placeholder-red-500', 'scrollbar-thumb-red-500', 'scheme-dark', 'transform-[rotate(45deg)]', 'list-[square]', 'shimmer', 'zoom-in-95', 'card-body', 'content-none', "content-['x']", 'box-decoration-clone'].map((value) => ({
+    ...['hover:bg-primary', 'dark:text-foreground', 'md:text-sm', 'border', 'border-primary', 'ring-2', 'outline-none', 'shadow-lg', 'inset-shadow-sm', 'inset-ring-2', 'rounded-lg', 'font-mono', 'leading-6', 'opacity-50', 'bg-linear-to-r', 'blur-sm', 'animate-spin', 'transition-all', 'underline', 'uppercase', 'rotate-45', 'scale-105', 'indent-4', 'focus:!bg-primary', 'md:rounded-lg!', 'nth-2:bg-primary', 'placeholder-red-500', 'scrollbar-thumb-red-500', 'scheme-dark', 'transform-[rotate(45deg)]', 'list-[square]', 'shimmer', 'zoom-in-95', 'card-body', 'content-none', "content-['x']", 'box-decoration-clone'].map((value) => ({
       code: `<div className="${value}" />`, errors: [{ messageId: 'class' as const, data: { value } }],
     })),
     ...['[width:20px]', 'hover:[margin:4px]', '[grid-template-columns:1fr_2fr]', '[all:unset]', '[color:var(--primary)]', '[--local:4px]'].map((value) => ({
       code: `<div className="${value}" />`, errors: [{ messageId: 'arbitrary' as const, data: { value } }],
+    })),
+    ...['[&>svg]:size-4', '*:h-12', '**:p-2', '[&_button]:h-12', 'md:*:flex', 'hover:[&>svg]:size-4', '[&:nth-child(2)]:grid', '[:is(&_div)]:block', '[.dark_&]:hidden', '*:bg-primary', 'data-[state=open]:**:px-10'].map((value) => ({
+      code: `<div className="${value}" />`, errors: [{ messageId: 'child' as const, data: { value } }],
     })),
     { code: 'const a = "bg-primary"; const b = a; <div className={b} />; cn({ ["rounded-lg"]: active })', errors: [{ messageId: 'class' }, { messageId: 'class' }] },
     { code: 'cva("flex", { variants: { size: { 1: "bg-primary", 2: "text-sm" } } }); cn({ [`rounded-lg`]: active })', errors: [{ messageId: 'class' }, { messageId: 'class' }, { messageId: 'class' }] },
@@ -82,6 +87,18 @@ tester.run('no-local-appearance', testRule(noLocalAppearance), {
     { code: '<div style={{ all: "unset", textIndent: 16, zoom: 1.5, clipPath: "circle(50%)", paintOrder: "stroke" }} />', errors: Array.from({ length: 5 }, () => ({ messageId: 'style' as const })) },
     { code: '<svg style={{ "--gap": "4px", boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone", scrollbarWidth: "none", forcedColorAdjust: "none", stopColor: "red", stopOpacity: 0.5, floodColor: "red", lightingColor: "blue" }} />', errors: Array.from({ length: 9 }, () => ({ messageId: 'style' as const })) },
   ],
+})
+
+describe('no-local-appearance for consumers', () => {
+  it('has one meaning and takes no options', () => {
+    expect(noLocalAppearance.meta?.schema).toEqual([])
+  })
+
+  it('leaves the source rules of Tessera components out of the consumer plugin', async () => {
+    const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [{ languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } } }, ...tessera.configs.recommended] })
+    const [result] = await eslint.lintText('const GRACE = 150; <svg viewBox="0 0 24 24" strokeWidth={1.5} width="16" data-tone="danger" />', { filePath: 'app.js' })
+    expect(result?.messages).toEqual([])
+  })
 })
 
 tester.run('no-literal-colors', testRule(noLiteralColors), {

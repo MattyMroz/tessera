@@ -1,0 +1,201 @@
+@layer theme {
+  :root {
+    --ts-in-shape-radius: 1;
+    --ts-shape-stroke: 1px;
+    --ts-shape-inner: 9999px;
+    --ts-shape-inset: 0px;
+    --_ts-shape-squircle: 0;
+    --_ts-shape-squircle-gain: 0.6;
+    --_ts-shape-min: 4px;
+    --_ts-shape-loose-inset: 16px;
+    --_ts-shape-square-ratio: calc(10 / 28);
+    --ts-shape-corner: round;
+    --ts-shape-control-corner: round;
+    --ts-shape-round-corner: round;
+  }
+
+  :root,
+  [data-corners='full'] {
+    --_ts-shape-ref: 14px;
+    --_ts-shape-ratio: 0.5;
+    --_ts-shape-capsule: 1;
+    --_ts-shape-rounded: 1;
+  }
+
+  [data-corners='none'] {
+    --_ts-shape-ref: 0px;
+    --_ts-shape-ratio: 0;
+    --_ts-shape-capsule: 0;
+    --_ts-shape-rounded: 0;
+  }
+
+  [data-corners='sm'] {
+    --_ts-shape-ref: 4px;
+    --_ts-shape-ratio: calc(4 / 28);
+    --_ts-shape-capsule: 0;
+    --_ts-shape-rounded: 1;
+  }
+
+  [data-corners='md'] {
+    --_ts-shape-ref: 6px;
+    --_ts-shape-ratio: calc(6 / 28);
+    --_ts-shape-capsule: 0;
+    --_ts-shape-rounded: 1;
+  }
+
+  [data-corners='lg'] {
+    --_ts-shape-ref: 10px;
+    --_ts-shape-ratio: var(--_ts-shape-square-ratio);
+    --_ts-shape-capsule: 0;
+    --_ts-shape-rounded: 1;
+  }
+
+  :root,
+  [data-size],
+  [data-corners],
+  [data-curve] {
+    --_ts-shape-control-curve: calc(var(--_ts-shape-squircle) * (1 - var(--_ts-shape-capsule)));
+    --_ts-shape-side-radius: min(
+      var(--_ts-shape-ratio) * var(--ts-in-shape-radius) * var(--ts-size-height),
+      var(--ts-size-height) / 2
+    );
+    --ts-shape-control: min(
+      var(--_ts-shape-ratio) * var(--ts-in-shape-radius) * var(--ts-size-height) * (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-control-curve)),
+      var(--ts-size-height) * (0.5 - 0.05 * var(--_ts-shape-control-curve))
+    );
+    --ts-shape-control-side: round(
+      max(var(--ts-size-height) - var(--ts-size-text), var(--ts-size-height) / 2) -
+        (var(--ts-size-height) / 2 - var(--_ts-shape-side-radius)) / 4,
+      0.5px
+    );
+    --ts-shape-control-side-icon: round(var(--ts-shape-control-side) * 0.6, 1px);
+    --ts-shape-box: min(
+      var(--_ts-shape-ratio) * var(--ts-in-shape-radius) * var(--ts-size-box) * (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-control-curve)),
+      var(--ts-size-box) * 0.35
+    );
+    --ts-shape-mark-inset: calc(var(--ts-size-box) / 8 - var(--ts-shape-stroke));
+    --ts-shape-track: calc(var(--ts-size-track-block) / 2);
+    --ts-shape-thumb: calc(var(--ts-size-thumb) / 2);
+    --ts-shape-arrow-turn: 90deg;
+  }
+
+  @supports (corner-shape: superellipse(2)) {
+    :root,
+    [data-curve='squircle'] {
+      --_ts-shape-squircle: 1;
+      --ts-shape-corner: superellipse(2);
+    }
+
+    [data-curve='round'] {
+      --_ts-shape-squircle: 0;
+      --ts-shape-corner: round;
+    }
+
+    :root,
+    [data-corners],
+    [data-curve] {
+      --ts-shape-control-corner: superellipse(calc(1 + var(--_ts-shape-control-curve)));
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    :root {
+      --ts-shape-stroke: 2px;
+    }
+  }
+
+  [data-surface] {
+    --_ts-shape-gap: var(--ts-space-inset);
+    --_ts-shape-spread: 1;
+  }
+
+  [data-surface][data-inset='group'] {
+    --_ts-shape-gap: var(--ts-space-group);
+    --_ts-shape-spread: 1;
+  }
+
+  [data-surface][data-inset='card'] {
+    --_ts-shape-gap: var(--ts-space-card);
+    --_ts-shape-spread: 0.5;
+  }
+
+  [data-surface][data-inset='card-small'] {
+    --_ts-shape-gap: var(--ts-space-card-small);
+    --_ts-shape-spread: 0.5;
+  }
+
+  [data-surface] {
+    --_ts-shape-round: calc(var(--ts-shape-surface) / (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-squircle)));
+    --ts-shape-inset: calc(var(--_ts-shape-gap) + var(--ts-shape-stroke) + var(--_ts-shape-round) / 4);
+  }
+
+  [data-surface='track'],
+  [data-surface='joined'],
+  [data-surface='bar'],
+  [data-surface][data-content='controls'] {
+    --_ts-shape-gap: var(--ts-size-wrap);
+    --ts-shape-inset: calc(var(--_ts-shape-gap) + var(--ts-shape-stroke));
+  }
+
+  [data-surface='']:not([data-content='controls'], [data-surface] [data-surface]) {
+    --ts-shape-surface: calc(
+      (
+          var(--_ts-shape-ref) * var(--ts-in-shape-radius) + var(--_ts-shape-rounded) * var(--_ts-shape-spread) *
+            var(--_ts-shape-gap)
+        ) *
+        (1 + var(--_ts-shape-squircle-gain) * var(--_ts-shape-squircle))
+    );
+    --_ts-shape-c1: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
+    --ts-shape-inner: var(--_ts-shape-c1);
+  }
+
+  [data-surface] [data-surface='']:not([data-content='controls'], [data-surface] [data-surface] [data-surface]) {
+    --ts-shape-surface: var(--_ts-shape-c1);
+    --_ts-shape-c2: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
+    --ts-shape-inner: var(--_ts-shape-c2);
+  }
+
+  [data-surface] [data-surface] [data-surface='']:not([data-content='controls'], [data-surface] [data-surface] [data-surface] [data-surface]) {
+    --ts-shape-surface: var(--_ts-shape-c2);
+    --_ts-shape-c3: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
+    --ts-shape-inner: var(--_ts-shape-c3);
+  }
+
+  [data-surface] [data-surface] [data-surface] [data-surface='']:not([data-content='controls'], [data-surface] [data-surface] [data-surface] [data-surface] [data-surface]) {
+    --ts-shape-surface: var(--_ts-shape-c3);
+    --_ts-shape-c4: max(var(--ts-shape-surface) - var(--ts-shape-inset), var(--_ts-shape-min) * var(--_ts-shape-rounded));
+    --ts-shape-inner: var(--_ts-shape-c4);
+  }
+
+  [data-surface='track'],
+  [data-surface='bar'],
+  [data-surface][data-content='controls'] {
+    --ts-shape-surface: calc(var(--ts-shape-control) + var(--_ts-shape-rounded) * var(--ts-shape-inset));
+    --ts-shape-inner: var(--ts-shape-control);
+    --ts-shape-corner: var(--ts-shape-control-corner);
+  }
+
+  :root,
+  [data-size],
+  [data-corners],
+  [data-curve],
+  [data-surface] {
+    --_ts-shape-loose: clamp(0, sign(var(--ts-shape-inset) - var(--_ts-shape-loose-inset)) + 1, 1);
+    --_ts-shape-tight: max(
+      min(var(--ts-shape-control), var(--ts-shape-inner)),
+      var(--_ts-shape-capsule) * var(--ts-shape-control)
+    );
+    --_ts-shape-fit: calc(var(--_ts-shape-tight) * (1 - var(--_ts-shape-loose)) + var(--ts-shape-control) * var(--_ts-shape-loose));
+    --ts-shape-control-radius: var(--_ts-shape-fit);
+    --ts-shape-concentric: calc(
+      min(var(--ts-shape-inner), var(--ts-size-height) / 2) * (1 - var(--_ts-shape-loose)) + var(--ts-shape-control) *
+        var(--_ts-shape-loose)
+    );
+  }
+
+  [data-surface='joined'] {
+    --ts-shape-surface: var(--_ts-shape-fit);
+    --ts-shape-corner: var(--ts-shape-control-corner);
+    --ts-shape-control-radius: 0px;
+  }
+}

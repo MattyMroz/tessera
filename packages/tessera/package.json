@@ -6,14 +6,33 @@
   "files": ["dist", "docs"],
   "sideEffects": ["**/*.css"],
   "exports": {
+    "./lib/theme-script": {
+      "source": "./src/lib/theme-script.tsx",
+      "types": "./dist/lib/theme-script.d.ts",
+      "default": "./dist/lib/theme-script.js"
+    },
     "./lib/*": {
       "source": "./src/lib/*.ts",
       "types": "./dist/lib/*.d.ts",
       "default": "./dist/lib/*.js"
     },
+    "./components/*": {
+      "source": "./src/components/*.tsx",
+      "types": "./dist/components/*.d.ts",
+      "default": "./dist/components/*.js"
+    },
+    "./themes/*": {
+      "source": "./src/themes/*.ts",
+      "types": "./dist/themes/*.d.ts",
+      "default": "./dist/themes/*.js"
+    },
     "./tessera.css": {
       "source": "./src/styles/tessera.css",
       "default": "./dist/styles/tessera.css"
+    },
+    "./tailwind.css": {
+      "source": "./src/styles/tailwind.css",
+      "default": "./dist/styles/tailwind.css"
     },
     "./eslint": {
       "source": "./src/eslint/index.ts",
@@ -25,6 +44,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "generate:colors": "bun scripts/colors.ts",
     "typecheck": "bun node_modules/typescript7/bin/tsc -p tsconfig.json"
   },
   "peerDependencies": {
@@ -34,23 +54,33 @@
     "tailwindcss": "^4.3"
   },
   "peerDependenciesMeta": {
-    "eslint": { "optional": true }
+    "eslint": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@babel/core": "^8.0.10",
     "@rolldown/plugin-babel": "^0.3.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@typescript-eslint/parser": "8.72.1",
     "@typescript-eslint/rule-tester": "8.72.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^10.14.0",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "rolldown": "~1.2.16",
     "tailwindcss": "^4.3.3",
     "tsdown": "^0.23.4",
     "typescript": "catalog:",
     "typescript7": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@fontsource-variable/cascadia-code": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "lucide-react": "catalog:"
   }
 }

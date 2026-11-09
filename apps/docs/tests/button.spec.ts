@@ -1,0 +1,496 @@
+import { THEME_CONFIG } from '@mattymroz/tessera/lib/theme'
+import { TONES } from '@mattymroz/tessera/lib/tone'
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { box, colorOf, pressReport, raisedShadow, settle, srgbOf, TONE_ROLES, visit } from './helpers'
+
+const PAGE = '/components'
+const EDGES = '/screens/edges'
+const PRESSED_SCALE = '0.97'
+const STILL_FRAMES = 60
+const STILL_EVERY = 8
+const PRESS_HOLD = 250
+const SCALES = [1, 1.25, 1.5] as const
+const MIN_BEFORE = 3
+const BEFORE_PRESS = 60
+const VARIANTS = ['solid', 'soft', 'outline', 'raised', 'ghost'] as const
+const BLOCKED = ['Busy submit', 'Disabled submit', 'Busy link', 'Disabled link'] as const
+const LINK_WAIT = 600
+const TOLERANCE = 0.5
+const PIXEL_ROUNDING = 0.01
+const DISABLED_OPACITY = '0.4'
+const LONG = 'Export every chapter of this volume as one continuous vertical video'
+const LABEL_MIN = 2.5
+
+function variant(page: Page, name: string): Locator {
+  return page.getByRole('region', { name: 'Button', exact: true }).getByRole('button', { name, exact: true })
+}
+
+function blockedForm(page: Page): Locator {
+  return page.getByRole('form', { name: 'Blocked activation', exact: true })
+}
+
+function blocked(page: Page, name: string): Locator {
+  return blockedForm(page).getByRole(name.endsWith('link') ? 'link' : 'button', { name, exact: true })
+}
+
+async function counts(page: Page): Promise<{ clicks: string | null; submits: string | null }> {
+  const form = blockedForm(page)
+  return { clicks: await form.getByLabel('Clicks', { exact: true }).textContent(), submits: await form.getByLabel('Submits', { exact: true }).textContent() }
+}
+
+function edgeButtons(page: Page, container: 'narrow' | 'full'): Locator {
+  return page.getByRole('region', { name: 'Button', exact: true }).getByTestId(container)
+}
+
+function solid(page: Page): Locator {
+  return variant(page, 'solid')
+}
+
+test.beforeEach(async ({ page }) => {
+  await visit(page, PAGE)
+})
+
+test('gives a button with a tone its data-tone and the colours of the tone in every variant', async ({ page }) => {
+  for (const tone of TONES) {
+    const [fill, text] = TONE_ROLES[tone]
+    const expected = {
+      fill: await colorOf(page, `var(--ts-color-${fill})`),
+      paint: await srgbOf(page, `var(--ts-color-${fill})`),
+      text: await colorOf(page, `var(--ts-color-${text})`),
+    }
+    const looks = await variant(page, tone).evaluateAll((buttons) =>
+      buttons.map((button) => ({
+        tone: button.getAttribute('data-tone'),
+        variant: button.getAttribute('data-variant'),
+        background: getComputedStyle(button, '::before').backgroundColor,
+        color: getComputedStyle(button).color,
+      })),
+    )
+    expect(looks.map((look) => look.variant), tone).toEqual([...VARIANTS])
+    for (const look of looks) {
+      const painted = { ...look, background: await srgbOf(page, look.background) }
+      const colours = look.variant === 'solid' ? { background: expected.paint, color: expected.text } : { color: expected.fill }
+      expect(painted, `${tone} ${look.variant}`).toMatchObject({ tone, ...colours })
+    }
+  }
+})
+
+test('lifts the raised button with the raised shadow of its plate and no outline', async ({ page }) => {
+  const shadow = await raisedShadow(page)
+  expect(shadow).not.toBe('none')
+  const look = await variant(page, 'raised').evaluate((element) => {
+    const plate = getComputedStyle(element, '::before')
+    return { shadow: plate.boxShadow, border: plate.borderTopColor }
+  })
+  expect(look).toEqual({ shadow, border: 'rgba(0, 0, 0, 0)' })
+  expect(await variant(page, 'ghost').evaluate((element) => getComputedStyle(element, '::before').boxShadow)).toBe('none')
+})
+
+test('keeps the raised shadow of the plate under the focus ring of a raised button', async ({ page }) => {
+  const shadow = await raisedShadow(page)
+  const raised = variant(page, 'raised')
+  await variant(page, 'outline').focus()
+  await page.keyboard.press('Tab')
+  await expect(raised).toBeFocused()
+  const look = await raised.evaluate((element) => ({
+    outline: getComputedStyle(element).outlineStyle,
+    shadow: getComputedStyle(element).boxShadow,
+    plate: getComputedStyle(element, '::before').boxShadow,
+  }))
+  expect(look.outline).toBe('solid')
+  expect(look.plate).toBe(shadow)
+  expect(look.shadow).not.toContain(shadow)
+})
+
+test('replaces the icon of a busy button with the turning spinner in its slot and centres the spinner without an icon', async ({ page }) => {
+  const section = page.getByRole('region', { name: 'Button', exact: true })
+  const slots = (name: string): Promise<{ slot: string | null; glyph: string; spin: string; opacity: string }[]> =>
+    section
+      .getByRole('button', { name, exact: true })
+      .locator(':scope > [data-slot]')
+      .evaluateAll((parts) =>
+        parts.map((part) => ({
+          slot: part.getAttribute('data-slot'),
+          glyph: part.querySelector('svg')?.getAttribute('class') ?? '',
+          spin: getComputedStyle(part).animationName,
+          opacity: getComputedStyle(part).opacity,
+        })),
+      )
+  const exporting = await slots('Exporting')
+  expect(exporting.map(({ slot, spin, opacity }) => ({ slot, spin, opacity }))).toEqual([
+    { slot: 'icon', spin: 'ts-spin', opacity: '1' },
+    { slot: 'label', spin: 'none', opacity: '1' },
+    { slot: 'icon', spin: 'none', opacity: '1' },
+  ])
+  expect(exporting[0]?.glyph).toContain('lucide-loader-circle')
+  expect(exporting[0]?.glyph).not.toContain('lucide-plus')
+  expect(exporting[2]?.glyph).toContain('lucide-chevron-down')
+  expect((await slots('Loading')).map(({ slot, spin, opacity }) => ({ slot, spin, opacity }))).toEqual([
+    { slot: 'busy', spin: 'ts-spin', opacity: '1' },
+    { slot: 'label', spin: 'none', opacity: '0' },
+  ])
+  const glyph = await section
+    .getByRole('button', { name: 'Loading', exact: true })
+    .locator(':scope > [data-slot="busy"] > svg')
+    .evaluate((svg) => ({
+      icon: svg.classList.contains('lucide-loader-circle'),
+      viewBox: svg.getAttribute('viewBox'),
+      hidden: svg.getAttribute('aria-hidden'),
+      stroke: Number.parseFloat(getComputedStyle(svg).strokeWidth),
+      engine: Number.parseFloat(getComputedStyle(svg).getPropertyValue('--ts-size-icon-stroke')),
+    }))
+  expect({ icon: glyph.icon, viewBox: glyph.viewBox, hidden: glyph.hidden }).toEqual({ icon: true, viewBox: '0 0 24 24', hidden: 'true' })
+  expect(glyph.engine).toBeGreaterThan(0)
+  expect(glyph.stroke).toBeCloseTo(glyph.engine, 3)
+})
+
+test('presses the whole button while the pointer is down', async ({ page }) => {
+  const button = solid(page)
+  await button.hover()
+  await page.mouse.down()
+  await expect(button).toHaveAttribute('data-pressing', '')
+  await expect.poll(() => button.evaluate((element) => getComputedStyle(element).scale)).toBe(PRESSED_SCALE)
+  expect(await button.evaluate((element) => getComputedStyle(element, '::before').scale)).toBe('none')
+  await page.mouse.up()
+  await expect(button).not.toHaveAttribute('data-pressing')
+})
+
+test('lifts the press of a menu trigger on release although the menu opened on pointer down', async ({ page }) => {
+  for (const trigger of [page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true }), page.getByRole('button', { name: /^accent / })]) {
+    await trigger.scrollIntoViewIfNeeded()
+    const target = await box(trigger)
+    await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2)
+    await page.mouse.down()
+    await expect(page.getByRole('menu')).toBeVisible()
+    await expect(trigger).toHaveAttribute('data-pressing', '')
+    await page.waitForTimeout(PRESS_HOLD)
+    await page.mouse.up()
+    await expect(trigger).not.toHaveAttribute('data-pressing')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('menu')).toHaveCount(0)
+  }
+})
+
+test('presses the whole control of every button and only the parts and the plate of an anchor, so no anchor or ancestor of an anchor is ever transformed', async ({ page }) => {
+  for (const path of [PAGE, EDGES, '/screens/overlays']) {
+    await visit(page, path)
+    const report = await pressReport(page, ['scale', 'anchor'])
+    expect(report.counts.scale ?? 0, path).toBeGreaterThan(0)
+    expect(report.counts.anchor ?? 0, path).toBeGreaterThan(0)
+    expect(report.problems, path).toEqual([])
+  }
+})
+
+type StillFrame = { readonly trigger: string; readonly popup: string; readonly animations: number }
+type StillRun = { readonly frames: readonly StillFrame[]; readonly down: number }
+type StillPopup = { readonly selector: string; readonly index: number }
+
+async function pressWatched(page: Page, trigger: Locator, popup: StillPopup, open: (() => Promise<void>) | null): Promise<StillRun> {
+  if (open) {
+    await open()
+    await expect(page.locator(popup.selector).nth(popup.index)).toBeVisible()
+    await settle(page)
+  }
+  await trigger.scrollIntoViewIfNeeded()
+  await trigger.evaluate((element) => element.setAttribute('data-still-trigger', ''))
+  await page.evaluate(
+    ({ count, every, selector, index }) => {
+      const rect = (found: Element | undefined): string => {
+        const bounds = found?.getBoundingClientRect()
+        return bounds ? [bounds.x, bounds.y, bounds.width, bounds.height].map((value) => value.toFixed(2)).join(' ') : ''
+      }
+      const frames: { trigger: string; popup: string; animations: number }[] = []
+      const store = { frames, down: -1 }
+      Object.assign(window, { stillRun: store })
+      document.addEventListener('pointerdown', () => (store.down = frames.length), { capture: true, once: true })
+      const sample = (): void => {
+        const found = document.querySelectorAll(selector)[index]
+        const visible = found?.checkVisibility({ opacityProperty: true, visibilityProperty: true }) === true
+        frames.push({
+          trigger: rect(document.querySelector('[data-still-trigger]') ?? undefined),
+          popup: visible ? rect(found) : '',
+          animations: visible ? found?.getAnimations({ subtree: true }).length ?? 0 : 0,
+        })
+      }
+      sample()
+      const timer = setInterval(() => {
+        sample()
+        if (frames.length >= count) clearInterval(timer)
+      }, every)
+    },
+    { count: STILL_FRAMES, every: STILL_EVERY, selector: popup.selector, index: popup.index },
+  )
+  const target = await box(trigger)
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2)
+  await page.waitForTimeout(BEFORE_PRESS)
+  await page.mouse.down()
+  await page.waitForTimeout(PRESS_HOLD)
+  await page.mouse.up()
+  const run =(): Promise<StillRun> => page.evaluate(() => (window as unknown as { stillRun: StillRun }).stillRun)
+  await expect.poll(async () => (await run()).frames.length).toBe(STILL_FRAMES)
+  const result = await run()
+  await trigger.evaluate((element) => element.removeAttribute('data-still-trigger'))
+  await page.keyboard.press('Escape')
+  await page.mouse.move(0, 0)
+  return result
+}
+
+function shape(frames: readonly StillFrame[]): string {
+  return frames.map((frame) => (frame.popup === '' ? '_' : '#')).join('')
+}
+
+function expectStill(name: string, { frames }: StillRun): void {
+  const shown = frames.filter((frame) => frame.popup !== '')
+  expect(shown.length, `${name} popup shown`).toBeGreaterThan(0)
+  expect(new Set(frames.map((frame) => frame.trigger)).size, `${name} trigger`).toBe(1)
+  expect(new Set(shown.map((frame) => frame.popup)).size, `${name} popup`).toBe(1)
+  expect(shown.filter((frame) => frame.animations > 0), `${name} animations`).toEqual([])
+}
+
+for (const scale of SCALES) {
+  test.describe(`at a device scale of ${scale}`, () => {
+    test.use({ deviceScaleFactor: scale })
+
+    test('keeps a popup that the press of its trigger opens and the trigger still in every frame from the opening on', async ({ page }) => {
+      const menuTrigger = page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true })
+      const popoverTrigger = page.getByRole('button', { name: 'Details', exact: true })
+      const panelTrigger = page.getByRole('button', { name: /^corners / })
+      const cases: readonly (readonly [string, Locator, StillPopup])[] = [
+        ['menu', menuTrigger, { selector: '[role="menu"]', index: 0 }],
+        ['popover', popoverTrigger, { selector: '[role="dialog"]', index: 0 }],
+        ['menu of the trigger width', panelTrigger, { selector: '[role="menu"]', index: 0 }],
+      ]
+      for (const [name, trigger, popup] of cases) {
+        const run = await pressWatched(page, trigger, popup, null)
+        expect(shape(run.frames), name).toMatch(/^_*#+$/)
+        expectStill(name, run)
+      }
+    })
+
+    test('keeps a popup and its trigger still before the trigger is pressed and shows no popup again once it has closed on the press', async ({ page }) => {
+      const tooltipTrigger = page.getByRole('region', { name: 'Tooltip', exact: true }).getByRole('button', { name: 'Save', exact: true })
+      const menuTrigger = page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true })
+      const exportRow = page.getByRole('menu').getByRole('menuitem', { name: 'Export', exact: true })
+      const tooltip = await pressWatched(page, tooltipTrigger, { selector: '[data-variant="tooltip"]', index: 0 }, () => tooltipTrigger.hover())
+      expect(shape(tooltip.frames), 'tooltip').toMatch(/^#+_+$/)
+      expect(tooltip.down, 'tooltip frames before the press').toBeGreaterThanOrEqual(MIN_BEFORE)
+      expect(shape(tooltip.frames.slice(0, tooltip.down)), 'tooltip before the press').toMatch(/^#+$/)
+      expectStill('tooltip before the press', { frames: tooltip.frames.slice(0, tooltip.down), down: tooltip.down })
+      expect(new Set(tooltip.frames.map((frame) => frame.trigger)).size, 'tooltip trigger through the press').toBe(1)
+      await menuTrigger.click()
+      const submenu = await pressWatched(page, exportRow, { selector: '[role="menu"]', index: 1 }, () => exportRow.hover())
+      expect(shape(submenu.frames), 'submenu').toMatch(/^#+_*$/)
+      expect(submenu.down, 'submenu frames before the press').toBeGreaterThanOrEqual(MIN_BEFORE)
+      expect(shape(submenu.frames.slice(0, submenu.down)), 'submenu before the press').toMatch(/^#+$/)
+      expectStill('submenu', submenu)
+    })
+  })
+}
+
+test('shows the cursor of the platform on controls and rows, the default one on disabled parts and a text cursor on fields', async ({ page }) => {
+  const options = page.getByRole('radiogroup', { name: 'With a disabled option', exact: true })
+  await page.getByRole('region', { name: 'Menu', exact: true }).getByRole('button', { name: 'Project', exact: true }).click()
+  const menu = page.getByRole('menu').first()
+  const rows = menu.locator('[role^="menuitem"]')
+  const parts = {
+    button: solid(page),
+    option: options.getByRole('radio', { name: 'Day' }),
+    row: rows.filter({ hasText: 'Open' }),
+    disabledOption: options.getByRole('radio', { name: 'Week' }),
+    disabledRow: rows.filter({ hasText: 'Revert' }),
+    field: page.getByRole('textbox', { name: 'Name', exact: true }).locator('..'),
+  }
+  const cursors = async (): Promise<Record<string, string>> => {
+    const found: Record<string, string> = {}
+    for (const [name, part] of Object.entries(parts)) found[name] = await part.evaluate((element) => getComputedStyle(element).cursor)
+    return found
+  }
+  for (const [platform, cursor] of [['desktop', 'default'], ['web', 'pointer']] as const) {
+    await page.evaluate((value) => document.documentElement.setAttribute('data-platform', value), platform)
+    expect(await cursors(), platform).toEqual({
+      button: cursor,
+      option: cursor,
+      row: cursor,
+      disabledOption: 'default',
+      disabledRow: 'default',
+      field: 'text',
+    })
+  }
+})
+
+test('holds a short click pressed until the press hold of the engine has passed', async ({ page }) => {
+  const button = solid(page)
+  const pressedAfterRelease = await button.evaluate((element) => {
+    element.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true }))
+    window.dispatchEvent(new PointerEvent('pointerup', { button: 0 }))
+    return element.hasAttribute('data-pressing')
+  })
+  expect(pressedAfterRelease).toBe(true)
+  await expect(button).not.toHaveAttribute('data-pressing')
+})
+
+test('keeps a busy or aria-disabled button and link in the Tab order and lets no click, key or submit through', async ({ page, browserName }) => {
+  const field = blockedForm(page).getByRole('textbox', { name: 'Chapter title', exact: true })
+  await field.focus()
+  for (const name of BLOCKED) {
+    if (browserName === 'webkit' && name.endsWith('link')) await blocked(page, name).focus()
+    else await page.keyboard.press('Tab')
+    await expect(blocked(page, name), name).toBeFocused()
+    await page.keyboard.press('Enter')
+    if (!name.endsWith('link')) await page.keyboard.press('Space')
+    await blocked(page, name).click({ force: true })
+  }
+  await field.focus()
+  await page.keyboard.press('Enter')
+  expect(await counts(page)).toEqual({ clicks: '0', submits: '0' })
+  expect(new URL(page.url()).hash).toBe('')
+  await blockedForm(page).getByRole('button', { name: 'Submit', exact: true }).click()
+  expect(await counts(page)).toEqual({ clicks: '1', submits: '1' })
+})
+
+test('opens no tab for a middle click on a blocked link', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'only headless Chromium opens a middle-clicked link in a new page')
+  const opened: string[] = []
+  page.context().on('page', (next) => opened.push(next.url()))
+  await blocked(page, 'Busy link').click({ button: 'middle' })
+  await blocked(page, 'Disabled link').click({ button: 'middle', force: true })
+  await page.waitForTimeout(LINK_WAIT)
+  expect(opened).toEqual([])
+  await page.getByRole('navigation', { name: 'Button links', exact: true }).getByRole('link', { name: 'Get started', exact: true }).click({ button: 'middle' })
+  await expect.poll(() => opened.length).toBe(1)
+})
+
+test('dims an aria-disabled button but not a busy one, and neither presses nor scales them', async ({ page }) => {
+  expect(await blocked(page, 'Disabled submit').evaluate((element) => getComputedStyle(element).opacity)).toBe(DISABLED_OPACITY)
+  expect(await blocked(page, 'Busy submit').evaluate((element) => getComputedStyle(element).opacity)).toBe('1')
+  for (const name of ['Busy submit', 'Disabled submit'] as const) {
+    const button = blocked(page, name)
+    await button.hover()
+    await page.mouse.down()
+    await expect(button).not.toHaveAttribute('data-pressing')
+    expect(await button.evaluate((element) => [getComputedStyle(element).scale, getComputedStyle(element, '::before').scale]), name).toEqual(['none', 'none'])
+    await page.mouse.up()
+  }
+})
+
+test('keeps the width of a busy button and turns a spinner in place of its icon', async ({ page }) => {
+  const form = blockedForm(page)
+  const upload = form.getByRole('button', { name: 'Upload', exact: true })
+  const chapter = form.getByRole('button', { name: 'Upload chapter', exact: true })
+  const before = await Promise.all([box(upload), box(chapter)])
+  await form.getByRole('button', { name: 'Work', exact: true }).click()
+  await expect(chapter).toHaveAttribute('aria-busy', 'true')
+  const after = await Promise.all([box(upload), box(chapter)])
+  for (const [index, rect] of after.entries()) {
+    expect(Math.abs(rect.width - (before[index]?.width ?? 0)), `button ${index}`).toBeLessThanOrEqual(TOLERANCE)
+  }
+  const glyphs = await upload.locator(':scope > [data-slot="icon"] > svg').evaluateAll((svgs) => svgs.map((svg) => svg.getAttribute('class') ?? ''))
+  expect(glyphs).toHaveLength(1)
+  expect(glyphs[0]).toContain('lucide-loader-circle')
+  const [spinner, button] = await Promise.all([box(chapter.locator(':scope > [data-slot="busy"]')), box(chapter)])
+  expect(Math.abs(spinner.x + spinner.width / 2 - (button.x + button.width / 2))).toBeLessThanOrEqual(TOLERANCE)
+  expect(Math.abs(spinner.y + spinner.height / 2 - (button.y + button.height / 2))).toBeLessThanOrEqual(TOLERANCE)
+  await form.getByRole('button', { name: 'Work', exact: true }).click()
+  await expect(upload.locator(':scope > [data-slot="icon"] > svg.lucide-upload')).toHaveCount(1)
+})
+
+test('keeps a lone button with a label at least 2.5 heights wide, and a hug button, a segment of a joined group and an icon-only button as narrow as their content allows', async ({ page }) => {
+  const section = page.getByRole('region', { name: 'Button', exact: true })
+  const rects = (buttons: Locator): Promise<{ width: number; height: number }[]> =>
+    buttons.evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect()).map(({ width, height }) => ({ width, height })))
+  const least = await rects(section.getByRole('group', { name: 'Least width', exact: true }).getByRole('button'))
+  const hugged = await rects(section.getByRole('group', { name: 'Hug', exact: true }).getByRole('button'))
+  expect(least).toHaveLength(THEME_CONFIG.axes.size.length)
+  expect(hugged).toHaveLength(least.length)
+  for (const [index, { width, height }] of least.entries()) {
+    expect(Math.abs(width - height * LABEL_MIN), `least ${index}`).toBeLessThanOrEqual(TOLERANCE)
+    const hug = hugged[index] ?? { width: 0, height: 0 }
+    expect(Math.abs(hug.height - height), `hug ${index}`).toBeLessThanOrEqual(PIXEL_ROUNDING)
+    expect(hug.width, `hug ${index}`).toBeLessThan(height * LABEL_MIN - TOLERANCE)
+    expect(hug.width, `hug ${index}`).toBeGreaterThanOrEqual(height - TOLERANCE)
+  }
+  const icons = await rects(section.getByRole('button', { name: /^Add \(/ }))
+  expect(icons.length).toBeGreaterThan(0)
+  for (const { width, height } of icons) expect(Math.abs(width - height)).toBeLessThanOrEqual(TOLERANCE)
+  const segments = await rects(
+    page
+      .locator('[data-surface="joined"]')
+      .getByRole('button')
+      .filter({ hasText: /^(xs|sm|md|lg|xl)$/ }),
+  )
+  expect(segments).toHaveLength(THEME_CONFIG.axes.size.length)
+  for (const { width, height } of segments) expect(width).toBeLessThan(height * LABEL_MIN - TOLERANCE)
+})
+
+test('renders a link as an anchor with its href and no type, with the pointer cursor on every platform', async ({ page }) => {
+  const links = page.getByRole('navigation', { name: 'Button links', exact: true })
+  const started = links.getByRole('link', { name: 'Get started', exact: true })
+  await expect(started).toHaveAttribute('href', '#button-title')
+  expect(await started.evaluate((element) => ({ tag: element.localName, type: element.getAttribute('type'), recipe: element.getAttribute('data-recipe') }))).toEqual({
+    tag: 'a',
+    type: null,
+    recipe: 'control',
+  })
+  await expect(page.getByRole('region', { name: 'Button', exact: true }).getByRole('button', { name: 'Get started' })).toHaveCount(0)
+  for (const platform of ['desktop', 'web'] as const) {
+    await page.evaluate((value) => document.documentElement.setAttribute('data-platform', value), platform)
+    const cursors = await links.getByRole('link').evaluateAll((anchors) => anchors.map((anchor) => getComputedStyle(anchor).cursor))
+    expect(cursors, platform).toEqual(['pointer', 'pointer', 'pointer'])
+  }
+  await started.hover()
+  await page.mouse.down({ button: 'middle' })
+  await expect(started).not.toHaveAttribute('data-pressing')
+  await page.mouse.up({ button: 'middle' })
+})
+
+test('navigates a link with the anchor component of the framework without reloading the page', async ({ page }) => {
+  await page.evaluate(() => document.documentElement.setAttribute('data-lab-before-navigation', ''))
+  await page.getByRole('navigation', { name: 'Button links', exact: true }).getByRole('link', { name: 'Edges screen', exact: true }).click()
+  await expect(page).toHaveURL(/\/screens\/edges$/)
+  await expect(page.getByRole('heading', { name: 'Edges', level: 1 })).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('data-lab-before-navigation', '')
+})
+
+test('draws the focus ring of a button with a tone other than the accent without the neon glow', async ({ page }) => {
+  await page.evaluate(() => {
+    document.documentElement.setAttribute('data-neon', 'mini')
+    document.documentElement.setAttribute('data-accent', 'violet')
+  })
+  const glow = await colorOf(page, 'var(--ts-color-glow)')
+  const ring = async (tone: string): Promise<string> => {
+    const button = variant(page, tone).first()
+    await expect(button).toBeFocused()
+    return button.evaluate((element) => getComputedStyle(element).boxShadow)
+  }
+  await variant(page, 'neutral').first().focus()
+  await page.keyboard.press('Tab')
+  expect(await ring('accent')).toContain(glow)
+  await page.keyboard.press('Tab')
+  expect(await ring('danger')).not.toContain(glow)
+})
+
+test('names a cut label with a title on hover and focus, never over a title of the consumer or a tooltip, and drops it when the label fits', async ({ page }) => {
+  await visit(page, EDGES)
+  const narrow = edgeButtons(page, 'narrow')
+  const cut = narrow.getByRole('button', { name: LONG, exact: true })
+  const plain = cut.and(narrow.locator('[data-variant="outline"]:not([title="Own title"])'))
+  await plain.hover()
+  await expect(plain).toHaveAttribute('title', LONG)
+  const link = narrow.getByRole('link', { name: LONG, exact: true })
+  await link.focus()
+  await expect(link).toHaveAttribute('title', LONG)
+  const own = narrow.locator('[title="Own title"]')
+  await own.hover()
+  await expect(own).toHaveAttribute('title', 'Own title')
+  const tipped = cut.and(narrow.locator('[data-variant="soft"]:not([aria-busy])'))
+  await tipped.hover()
+  await expect(page.locator('[data-variant="tooltip"]')).toBeVisible()
+  await expect(tipped).not.toHaveAttribute('title')
+  const short = edgeButtons(page, 'full').getByRole('button', { name: 'A', exact: true })
+  await short.hover()
+  await expect(short).not.toHaveAttribute('title')
+  await narrow.evaluate((element) => element.style.setProperty('width', 'max-content'))
+  await plain.hover()
+  await expect(plain).not.toHaveAttribute('title')
+})

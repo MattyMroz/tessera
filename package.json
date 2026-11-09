@@ -11,16 +11,19 @@
       "@types/react": "^19.3.0",
       "@types/react-dom": "^19.3.0",
       "@types/node": "^26.6.6",
+      "lucide-react": "^1.66.0",
       "typescript": "^6.0.3",
       "typescript7": "npm:typescript@^7.0.2",
       "vitest": "^5.0.5"
     }
   },
   "scripts": {
-    "check": "bun run typecheck && bun run lint && bun run build && bunx vitest run",
+    "check": "bun run typecheck && bun run build && bun run lint && bunx vitest run --maxWorkers=6 && bun run --filter @mattymroz/tessera-docs test:browser",
     "typecheck": "bun run --filter '*' typecheck",
     "lint": "eslint .",
     "build": "bun run --filter '*' build",
+    "perf": "bun run build && bun run --filter @mattymroz/tessera-docs perf",
+    "perf:save": "PERF_SAVE=1 bun run perf",
     "dev": "bun run --filter '*' --parallel dev"
   },
   "devDependencies": {
