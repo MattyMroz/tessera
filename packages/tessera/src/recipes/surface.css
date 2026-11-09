@@ -334,9 +334,15 @@
         display: block;
         inline-size: calc(var(--ts-size-arrow) + var(--ts-size-arrow));
         block-size: calc(var(--ts-size-arrow) + var(--ts-size-arrow));
-        overflow: visible;
         color: var(--_bg);
         transition: translate var(--ts-motion-duration-follow) var(--ts-motion-ease-hover);
+      }
+
+      & > [data-slot='arrow'] > svg {
+        display: block;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: visible;
       }
 
       &:is([data-side='top'], [data-side='bottom']) > [data-slot='arrow'] {

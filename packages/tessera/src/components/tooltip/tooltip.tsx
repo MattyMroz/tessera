@@ -61,9 +61,11 @@ function Bubble({ group, arrow }: BubbleProps) {
       data-material="solid"
     >
       {arrow ? (
-        <svg data-slot="arrow" fill="currentColor" aria-hidden="true" focusable="false">
-          <path />
-        </svg>
+        <span data-slot="arrow">
+          <svg fill="currentColor" aria-hidden="true" focusable="false">
+            <path />
+          </svg>
+        </span>
       ) : null}
       <span data-slot="clip">
         {shown.previous === null ? null : (

@@ -131,3 +131,11 @@ jobs:
 
       - name: Heavy tests
         run: prek run --stage manual $RANGE --show-diff-on-failure
+
+      - name: Failed browser test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: apps/docs/test-results
+          retention-days: 7

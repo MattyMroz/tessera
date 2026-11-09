@@ -137,6 +137,7 @@ const ROW_MARK_GLYPH = "[data-recipe='row'] > [data-slot='mark'] > svg"
 const CHOICE_HOST = "[data-slot='choice']:has(> [data-recipe='control'])"
 const ROW_ICON_GLYPH = "[data-recipe='row'] [data-slot='icon'] > svg"
 const SURFACE_ICON_GLYPH = "[data-recipe='surface'] > [data-slot='icon'] > svg"
+const TIP_ARROW_SHAPE = "[data-recipe='surface'][data-variant='tooltip'] > [data-slot='arrow'] > svg"
 const INDICATOR_HOST = ":has(> [data-recipe='indicator'])"
 const INDICATOR_REPLACES_CONTROL_INK = "[data-recipe='indicator'] ~ [data-recipe='control']::before"
 const INDICATOR_CHOICE_LABEL = "[data-recipe='indicator'] ~ [data-recipe='control'][aria-checked='true']:not(:disabled, [data-disabled])"
@@ -146,7 +147,7 @@ const RECIPE_SELECTOR_EXCEPTIONS: Readonly<Record<string, readonly string[]>> = 
   control: [ICON_GLYPH, BUSY_GLYPH, DOT_GLYPH, MARK_GLYPH, LISTBOX_CHEVRON, LISTBOX_CHEVRON_OPEN, CHOICE_HOST],
   indicator: [INDICATOR_HOST, INDICATOR_REPLACES_CONTROL_INK, INDICATOR_CHOICE_LABEL, MARK_DRAWING, MARK_CHECKED, MARK_MIXED],
   row: [ROW_ICON_GLYPH, ROW_MARK_GLYPH],
-  surface: [...POSITIONER_LAYERS, SURFACE_ICON_GLYPH, PAGE_SCROLLER],
+  surface: [...POSITIONER_LAYERS, SURFACE_ICON_GLYPH, TIP_ARROW_SHAPE, PAGE_SCROLLER],
 }
 const ARIA_LEVEL_INDENT: Readonly<Record<string, string>> = {
   "[data-recipe='row'][aria-level]": '--_level: 7',

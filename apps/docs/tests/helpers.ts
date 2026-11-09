@@ -923,7 +923,7 @@ export function overflowProblems(frames: Locator): Promise<string[]> {
           if (!scrollsByDesign(element) && element.scrollWidth > element.clientWidth + ROUNDING && element.clientWidth > 0) {
             problems.push(`${name}: ${labelOf(element)} scrolls ${element.scrollWidth} px in ${element.clientWidth} px`)
           }
-          visit(element, clipped || clips(element))
+          if (!pointsOut) visit(element, clipped || clips(element))
         }
       }
       visit(frame, clips(frame))

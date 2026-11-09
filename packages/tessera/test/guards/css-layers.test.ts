@@ -198,6 +198,7 @@ it('rejects color-mix outside oklab, system colors outside forced colors, unlist
     ["[data-recipe='surface']", 'rule outside @layer components'],
     ["[data-side]:has(> [data-recipe='surface'][data-level='overlay'])", 'unused selector exception'],
     ["[data-recipe='surface'] > [data-slot='icon'] > svg", 'unused selector exception'],
+    ["[data-recipe='surface'][data-variant='tooltip'] > [data-slot='arrow'] > svg", 'unused selector exception'],
     [":root:has(> [data-recipe='surface'][data-variant='page'])", 'unused selector exception'],
     ["[data-recipe='surface'][data-variant='tooltip']", 'unused value exception'],
     ["[data-recipe='surface'][data-variant='tooltip'][data-open]", 'unused value exception'],

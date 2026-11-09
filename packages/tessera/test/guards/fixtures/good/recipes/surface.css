@@ -13,6 +13,10 @@
     & [data-slot='label'] {
       transition: opacity var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), filter var(--ts-motion-duration-follow) var(--ts-motion-ease-hover), scale var(--ts-motion-duration-follow) var(--ts-motion-ease-hover);
     }
+
+    & > [data-slot='arrow'] > svg {
+      inline-size: 100%;
+    }
   }
 
   :root:has(> [data-recipe='surface'][data-variant='page']) {

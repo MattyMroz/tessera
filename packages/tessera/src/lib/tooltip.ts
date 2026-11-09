@@ -26,6 +26,7 @@ const FLIP: Readonly<Record<TipSide, TipSide>> = { top: 'bottom', bottom: 'top',
 const LABEL = "[data-slot='label']:not([data-leaving])"
 const LEAVING = "[data-slot='label'][data-leaving]"
 const ARROW = "[data-slot='arrow']"
+const ARROW_SHAPE = `${ARROW} > svg`
 const ENTERING = 'data-entering'
 const SQUISH = 'data-squish'
 const ROOM = '--ts-i-tip-room'
@@ -257,7 +258,7 @@ export function createTipGroup(options: TipGroupOptions): TipGroup {
       const gap = pixels(style.marginBottom)
       const height = pixels(style.height)
       const radius = pixels(style.borderTopLeftRadius)
-      const arrow = element.querySelector<SVGSVGElement>(ARROW)
+      const arrow = element.querySelector<SVGSVGElement>(ARROW_SHAPE)
       const side = arrow ? pixels(getComputedStyle(arrow).width) / 2 : 0
       const leaving = element.querySelector<HTMLElement>(LEAVING)
       const out = leaving ? unscaled(leaving) : 0
