@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref } from 'react'
 import { composeRefs } from '../../lib/compose-refs'
 import type { InstanceValues } from '../../lib/instance'
-import { fractionOf, isStepped, stopsOf, widestValues, type Range } from '../../lib/range'
+import { fractionOf, isStepped, onlyDigitsChange, stopsOf, widestValues, type Range } from '../../lib/range'
 import { driveSlider, swapText, type SliderDrive } from '../../lib/slider'
 import type { Choices } from '../../lib/theme'
 
@@ -39,7 +39,7 @@ type Latest = {
   readonly onValueCommit: ((value: number) => void) | undefined
 }
 
-type ValueTextProps = { readonly value: number; readonly format: (value: number) => string; readonly swaps: boolean }
+type ValueTextProps = { readonly value: number; readonly format: (value: number) => string }
 
 function createValueStore(initial: number): ValueStore {
   let value = initial
@@ -68,10 +68,10 @@ function fadeOut(label: HTMLSpanElement | null): void {
   if (label) swapText(label, true)
 }
 
-function ValueText({ value, format, swaps }: ValueTextProps) {
+function ValueText({ value, format }: ValueTextProps) {
   const text = format(value)
   const [shown, setShown] = useState<{ readonly text: string; readonly left: string | null }>({ text, left: null })
-  if (shown.text !== text) setShown({ text, left: swaps ? shown.text : null })
+  if (shown.text !== text) setShown({ text, left: onlyDigitsChange(shown.text, text) ? null : shown.text })
   const swapped = shown.left !== null
 
   return (
@@ -88,9 +88,9 @@ function ValueText({ value, format, swaps }: ValueTextProps) {
   )
 }
 
-function OwnValue({ store, format, swaps }: Omit<ValueTextProps, 'value'> & { readonly store: ValueStore }) {
+function OwnValue({ store, format }: Omit<ValueTextProps, 'value'> & { readonly store: ValueStore }) {
   const value = useSyncExternalStore(store.subscribe, store.get, store.get)
-  return <ValueText value={value} format={format} swaps={swaps} />
+  return <ValueText value={value} format={format} />
 }
 
 export function Slider({
@@ -202,7 +202,7 @@ export function Slider({
             {format(sample)}
           </span>
         ))}
-        {value === undefined ? <OwnValue store={store} format={format} swaps={stepped} /> : <ValueText value={value} format={format} swaps={stepped} />}
+        {value === undefined ? <OwnValue store={store} format={format} /> : <ValueText value={value} format={format} />}
       </span>
     </div>
   )

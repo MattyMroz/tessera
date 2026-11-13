@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { bandStretch, fractionOf, isStepped, keyStop, MAX_MARKS, stopsOf, trailingStop, valueOfStop, widestValues, type Range } from './range'
+import { bandStretch, fractionOf, isStepped, keyStop, MAX_MARKS, onlyDigitsChange, stopsOf, trailingStop, valueOfStop, widestValues, type Range } from './range'
 
 const PERCENT: Range = { min: 0, max: 100, step: 1 }
 const EFFORT: Range = { min: 0, max: 3, step: 1 }
 const WEIGHT: Range = { min: 100, max: 900, step: 100 }
 const TENTHS: Range = { min: 0, max: 1, step: 0.1 }
+
+describe('text change', () => {
+  it('treats a new number with the same symbols and units as a change of digits', () => {
+    expect(onlyDigitsChange('$100', '$200')).toBe(true)
+    expect(onlyDigitsChange('9%', '10%')).toBe(true)
+    expect(onlyDigitsChange('1,000 px', '980 px')).toBe(true)
+  })
+
+  it('treats a new word as a change of text', () => {
+    expect(onlyDigitsChange('Low', 'Medium')).toBe(false)
+    expect(onlyDigitsChange('Off', '50%')).toBe(false)
+  })
+})
 
 describe('stops', () => {
   it('counts the steps between the ends of the range', () => {

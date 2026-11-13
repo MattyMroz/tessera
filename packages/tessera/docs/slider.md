@@ -38,7 +38,7 @@ While it is used the host carries `data-dragging` (pointer down), `data-moving` 
 - Stepped range: the pill stands on a step and flies to the next one when the pointer reaches it, never ahead of the pointer; the flight is the choice flight of the indicator (`lib/flight.ts`: 220 ms, overshoot 0.1 × the height, kept inside the track).
 - Past an end the track stretches towards the pointer, at most 2/7 of the height, and springs back when released.
 - Keys: arrows step (mirrored from right to left), Page Up and Page Down step by a tenth of the range, Home and End jump to the ends. Each key flies the pill and commits at once.
-- Text: a continuous range changes its text in the same frame; a stepped range fades the old text out and the new one in with the swap blur for `--ts-motion-duration-choice`, the time of the flight of the pill.
+- Text: a number changes in the same frame, so the new value is readable at once; a word (Low → Medium) fades the old text out and the new one in with the swap blur for `--ts-motion-duration-choice`, the time of the flight of the pill. A change is a number change when the two texts differ only in digits, separators and spaces (`$100` → `$200`, `9%` → `10%`).
 - Motion uses compositor properties only (`translate` of the ride, `scale` of the bar and of the track); layers exist from the first move to the release. With `motion: off` and reduced motion the pill stands at its place in one frame and nothing stretches.
 
 ## Example

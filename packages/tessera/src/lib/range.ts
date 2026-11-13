@@ -64,6 +64,12 @@ export function keyStop(key: string, stop: number, stops: number, rtl: boolean):
   return moved === undefined ? undefined : Math.min(stops, Math.max(0, moved))
 }
 
+const DIGITS = /[\d.,\s]/g
+
+export function onlyDigitsChange(from: string, to: string): boolean {
+  return from.replace(DIGITS, '') === to.replace(DIGITS, '')
+}
+
 export function widestValues(range: Range): number[] {
   const stops = stopsOf(range)
   const picked = isStepped(range) ? Array.from({ length: stops + 1 }, (_, stop) => stop) : [0, 1, stops - 1, stops]
