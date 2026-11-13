@@ -262,6 +262,22 @@ Właściciel przekazał prowadzącemu wybory („przy wyborze wybieraj te najlep
 - Komponent przyjęty do repozytorium: „Komituj, puszuj… Popraw tylko ten jeden element… i lecimy dalej”. Status w laboratorium: przyjęty z pracą do dokończenia (pomiary wydajności na spokojnej maszynie, filmy ruchu).
 - Kto, kiedy: właściciel, 2026-11-09.
 
+## Slider: liczby bez przejścia, słowa z rozmyciem (13.11)
+
+- Wybrano: liczba zmienia się w tej samej klatce, słowo przenika się z rozmyciem w czasie lotu pigułki. Zmiana liczby to dwa teksty różne tylko cyframi, separatorami i spacjami (`onlyDigitsChange` w `lib/range.ts`): `$100` → `$200` od razu, `Low` → `Medium` z rozmyciem. Dotyczy suwaka ciągłego i krokowego tak samo.
+- Dlaczego: „dla słów właśnie ma być rozmycie… dla liczb ma być normalnie… informacja, że liczby się zmieniają, musi być od razu”. Zgłoszenie: „$100, $200, $300… one się zmieniają zamiast normalnie się zmieniać”.
+- Odrzucone: rozmycie dla każdego suwaka krokowego (09.11, punkt 10a w `e3-slider.md`) — przy liczbach opóźniało odczyt; cyfry skaczące góra–dół — każda animacja opóźnia odczyt liczby.
+- Znany przypadek brzegowy: zmiana odmiany jednostki („1 day” → „2 days”) liczy się jako zmiana słowa.
+- Kto, kiedy: właściciel, 2026-11-13. PR #8 bez merge do dokończenia Slidera (właściciel).
+
+## Slider: rodzina na /proposals i layout przed dalszymi wariantami (13.11)
+
+- Wybrano: Slider zostaje w formie E; prototypy rodziny (oś czasu, głośność ze squishy ikonami, kroki, nazwa i wartość nad torem, mały bez tekstu, dymek nad kciukiem, Scrub) i makiety (odtwarzacz, inspektor „Rectangle 4”, czytnik, wysiłek modelu, filtr ceny) idą do repo jako `/proposals`, bo „wiele rzeczy jest fajnie zrobionych”, choć nie w 100 %. Kolejny krok to system layoutu (wyspy, podział na panele, uchwyty), dopiero w nim dalsze warianty Slidera.
+- Dlaczego: elementy budowane w próżni mogą się nie komponować; ekran i layout są studium przypadku („Slider nas teraz ogranicza… zrobimy od ogółu”).
+- Ustalenia z rozmowy: to jeden Slider z ustawieniami (`variant`: `pill` / `line`; miejsce wartości: `inside` / `above` / `bubble` / `none`; ikony `start` / `end`), nie osiem elementów; dymek bez strzałki, pokazywany przy chwycie i fokusie, przy najechaniu tylko na osi czasu; wypełnienie szare albo białe, nie akcent; rogi z osi `corners`, nie kwadratowy wariant; squish tylko tam, gdzie coś przeciągasz o granicę, z jednego źródła w silniku `motion`. Scrub to osobny element (pole).
+- Odrzucone: pierwsza wersja `/proposals` (13.11), „każdy z tych elementów jest błędny”; kwadratowy wariant jako osobny wygląd (błąd zlecenia: Kevin miał kwadratowy, właściciel go nie zamówił).
+- Kto, kiedy: właściciel, 2026-11-13.
+
 ## Do decyzji właściciela (otwarte)
 
 - Szara pigułka hover prześwituje przez półprzezroczystą pigułkę `active`, gdy na nią najeżdża (zrzut właściciela 05.11, `ToggleGroup` w karcie). 06.11: wariant „szara znika w locie nad wybraną” zrobiony i odrzucony przez właściciela („ona miała przelatywać pomiędzy, pod spodem”, „co z tego, że prześwitywała”), cofnięty. Wymaganie: szara pigułka przelatuje pod wybraną z widocznym ruchem przy przejściu na lewo i na prawo od wybranej opcji. Prześwit nie jest błędem do usunięcia kosztem tego przelotu. 07.11 (właściciel): obecne zachowanie zostaje („to, co jest obecnie, jest ok”); przy przezroczystej wybranej przelot pod nią ma być widoczny. Potencjalny problem do standaryzacji przesuwania (sliding), gdy będą wszystkie elementy z przesuwaniem: dziś pigułka niczego nie pamięta i wynik zależy od prędkości myszy. Wolny przejazd Day → Week (wybrana) → Month gasi ją nad Day przez 150 ms i zapala na Month bez lotu; szybki przelatuje z Day przez Week na Month (`fly` w `lib/indicator.ts`: pigułka, która zgasła, nie leci). Opcje: czysty hover bez pamięci, chowanie się pod wybraną, pamięć ostatniego widocznego miejsca (było w MangaShift przy przesuwaniu). Model właściciela: szara pigułka nie chowa się pod wybraną, a kliknięcie zamienia je miejscami.

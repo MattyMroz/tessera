@@ -120,8 +120,9 @@ tessera/
         │   ├── components/        # page.tsx: każdy komponent w kilku sytuacjach; sections/<komponent>.tsx
         │   ├── stress/            # page.tsx: scena pomiarowa budżetów (D71), montowana w kliencie przyciskiem
         │   │                      # „Mount scene”; nie liczy się do F12
-        │   ├── proposals/         # tylko w trakcie rundy E3 (R4–R6): page.tsx i sections/<komponent>.tsx, propozycje
-        │   │                      # wyglądu pod [data-proposal]; nie liczy się do F12, znika w R6
+        │   ├── proposals/         # prototypy rodziny suwaków i makiety (decyzja właściciela 13.11): własny CSS i klasy
+        │   │                      # wyglądu (blok lintu lab/proposals-draw-prototypes-locally); nie liczy się do F12,
+        │   │                      # poza listami stron testów; znika, gdy elementy wejdą do paczki
         │   └── screens/           # ekrany testowe: overlays (E2), edges (Skrajności, E2); settings, workbench, site (E3);
         │                          # edges/: page.tsx (sekcje fundamentu), edge.tsx (ramka sekcji Edge, 320 px i pełna),
         │                          # sections/<komponent>.tsx (sekcja data-edge-component), indicator-samples.tsx, scope-sample.tsx,
