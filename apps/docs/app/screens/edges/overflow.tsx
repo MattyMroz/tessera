@@ -34,6 +34,7 @@ import {
 } from '@mattymroz/tessera/components/popover/popover'
 import { Radio, RadioGroup } from '@mattymroz/tessera/components/radio/radio'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@mattymroz/tessera/components/select/select'
+import { Slider } from '@mattymroz/tessera/components/slider/slider'
 import { Switch } from '@mattymroz/tessera/components/switch/switch'
 import { Heading } from '@mattymroz/tessera/components/text/heading'
 import { Text } from '@mattymroz/tessera/components/text/text'
@@ -92,6 +93,7 @@ const COMPONENTS: readonly (readonly [string, Render])[] = [
       </Field>
     ),
   ],
+  ['slider', (text) => <Slider min={0} max={100} defaultValue={40} end={text} aria-label={text} />],
   [
     'radio',
     (text) => (

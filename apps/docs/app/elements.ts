@@ -16,6 +16,7 @@ import { MenubarSection } from './components/sections/menubar'
 import { PopoverSection } from './components/sections/popover'
 import { RadioSection } from './components/sections/radio'
 import { SelectSection } from './components/sections/select'
+import { SliderSection } from './components/sections/slider'
 import { SwitchSection } from './components/sections/switch'
 import { TextSection } from './components/sections/text'
 import { TextareaSection } from './components/sections/textarea'
@@ -53,6 +54,7 @@ export const LAB_ELEMENTS: readonly {
   { id: 'popover', name: 'Popover', status: 'not-ready', Section: PopoverSection },
   { id: 'radio', name: 'Radio', status: 'accepted', Section: RadioSection },
   { id: 'select', name: 'Select', status: 'not-ready', Section: SelectSection },
+  { id: 'slider', name: 'Slider', status: 'accepted', Section: SliderSection },
   { id: 'switch', name: 'Switch', status: 'accepted', Section: SwitchSection },
   { id: 'text', name: 'Text', status: 'not-ready', Section: TextSection },
   { id: 'textarea', name: 'Textarea', status: 'not-ready', Section: TextareaSection },

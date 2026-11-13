@@ -334,10 +334,10 @@ test.describe('optical symmetry', () => {
     }
   })
 
-  test('pads a card, a popover and a dialog composed of their parts alone evenly at every corner and size, with the actions at the end', async ({ page }) => {
-    await visit(page, EDGES)
-    const composition = region(page, 'Composition')
-    for (const corners of CORNERS) {
+  for (const corners of CORNERS) {
+    test(`pads a card, a popover and a dialog composed of their parts alone evenly at every size, with the actions at the end (${corners})`, async ({ page }) => {
+      await visit(page, EDGES)
+      const composition = region(page, 'Composition')
       for (const size of COMPOSED_SIZES) {
         const label = `${corners} ${size}`
         const card = composition.getByTestId(`composed-card-${corners}-${size}`)
@@ -352,8 +352,8 @@ test.describe('optical symmetry', () => {
         await expectComposed(dialog, `${label} dialog`)
         await closed(page, dialog)
       }
-    }
-  })
+    })
+  }
 
   for (const corners of CORNER_CLOSE) {
     test(`puts the close button of a dialog and a popover and the action of a card header in the corner, concentric when tight and with its own radius when roomy, with the title centred on it (${corners})`, async ({ page }) => {

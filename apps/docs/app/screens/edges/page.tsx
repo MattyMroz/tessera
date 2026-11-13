@@ -32,6 +32,7 @@ import { MenubarEdge } from './sections/menubar'
 import { PopoverEdge } from './sections/popover'
 import { RadioEdge } from './sections/radio'
 import { SelectEdge } from './sections/select'
+import { SliderEdge } from './sections/slider'
 import { SwitchEdge } from './sections/switch'
 import { TextEdge } from './sections/text'
 import { TextareaEdge } from './sections/textarea'
@@ -125,6 +126,7 @@ export default function Page() {
       <ToggleGroupEdge />
       <CheckboxEdge />
       <SwitchEdge />
+      <SliderEdge />
       <RadioEdge />
       <MenuEdge />
       <ContextMenuEdge />

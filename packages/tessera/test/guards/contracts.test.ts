@@ -18,6 +18,7 @@ const MEASURING_FILES = [
   'lib/popup-flight.ts',
   'lib/press.ts',
   'lib/select-align.ts',
+  'lib/slider.ts',
   'lib/submenu-pointer.ts',
   'lib/title-when-cut.ts',
   'lib/tooltip.ts',
@@ -212,6 +213,8 @@ const LAB_BLOCKS: Readonly<Record<string, string>> = {
   'lab/tessera-consumer': "files: ['apps/docs/**/*.{js,mjs,ts,tsx}'], extends: [tessera.configs.recommended],",
   'lab/foundation-draws-engine-outputs-inline':
     "files: ['apps/docs/app/foundation/page.tsx'], rules: { 'tessera/no-local-appearance': 'off' },",
+  'lab/proposals-draw-prototypes-locally':
+    "files: ['apps/docs/app/proposals/**/*.tsx'], rules: { 'tessera/no-local-appearance': 'off', 'tessera/no-local-css': 'off' },",
   'lab/first-frame-probe':
     "files: ['apps/docs/tests/lab.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the anti-FOUC test reads the theme attributes in the first rendering frame' }, ], },",
   'lab/tooltip-frame-probe':
@@ -220,12 +223,13 @@ const LAB_BLOCKS: Readonly<Record<string, string>> = {
     "files: ['apps/docs/tests/sliding.spec.ts'], rules: { 'tessera/compositor-motion': [ 'error', { animationFrameReason: 'the sliding guards read the pill and the menus in every rendering frame' }, ], },",
 }
 
-it('configures the lab with the consumer plugin, one rule turned off for the foundation page and one rule configured for each frame probe', () => {
+it('configures the lab with the consumer plugin, one rule turned off for the foundation page, the appearance rules turned off for the proposals prototypes and one rule configured for each frame probe', () => {
   const blocks = [...eslintConfig.matchAll(CONFIG_BLOCK)].map(([, body = '']) => body.replace(/\s+/g, ' ').trim())
   const lab = blocks.filter((body) => body.includes('apps/docs'))
   expect(Object.fromEntries(lab.map((body) => [BLOCK_NAME.exec(body)?.[1], body.replace(BLOCK_NAME, '').trim()]))).toEqual(LAB_BLOCKS)
   expect(blocks.filter((body) => RULE_DISABLED.test(body))).toEqual([
     `name: 'lab/foundation-draws-engine-outputs-inline', ${LAB_BLOCKS['lab/foundation-draws-engine-outputs-inline']}`,
+    `name: 'lab/proposals-draw-prototypes-locally', ${LAB_BLOCKS['lab/proposals-draw-prototypes-locally']}`,
   ])
 })
 
@@ -347,6 +351,7 @@ it('finds every instance key missing from the size engine registry, registered w
     '--ts-i-tip-arrow: missing',
     '--ts-i-tip-room: missing',
     '--ts-i-tip-squish: missing',
+    '--ts-i-stretch: missing',
     '--ts-i-extra: not in INSTANCE_KEYS',
   ])
 })
