@@ -77,6 +77,7 @@ test('renders every component as its element and role', async ({ page }) => {
   only(await roles(region('Checkbox'), '[data-slot="box"]'), ['checkbox'], 'Checkbox')
   only(await tags(region('Checkbox'), '[data-component="checkbox"][data-slot="choice"]:has(> [data-variant="label"])'), ['label'], 'Checkbox label')
   only(await roles(region('Switch'), '[data-slot="track"]'), ['switch'], 'Switch')
+  only(await roles(region('Slider'), '[data-component="slider"]'), ['slider'], 'Slider')
   only(await roles(region('Radio'), '[data-component="radio"]:not([data-slot])'), ['radiogroup'], 'RadioGroup')
   only(await roles(region('Radio'), '[data-slot="box"]'), ['radio'], 'Radio')
   for (const [trigger, role] of [

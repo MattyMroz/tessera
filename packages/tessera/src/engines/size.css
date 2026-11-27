@@ -52,6 +52,12 @@
   initial-value: 1;
 }
 
+@property --ts-i-stretch {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
 @layer theme {
   :root,
   [data-size='lg'] {
@@ -111,6 +117,8 @@
     --ts-size-track-inline: calc(var(--ts-size-track-block) + var(--ts-size-thumb));
     --ts-size-thumb-stretch: calc(var(--ts-size-thumb) / 4);
     --ts-size-rail: max(2px, round(var(--ts-size-height) / 7, 1px));
+    --ts-size-half: calc(var(--ts-size-height) / 2);
+    --ts-size-grip: round(var(--ts-size-height) * 2 / 5, 2px);
     --ts-size-cap-pad: calc((var(--ts-size-leading) - 1cap) / 2);
     --ts-size-cap-inset: calc((var(--ts-size-step) - 1cap) / 2);
     --ts-size-icon-cap-pad: calc((var(--ts-size-icon) - 1cap) / 2);

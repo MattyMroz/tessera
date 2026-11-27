@@ -197,9 +197,92 @@ Właściciel przekazał prowadzącemu wybory („przy wyborze wybieraj te najlep
 - Kto, kiedy: właściciel, 2026-11-09.
 - Rozstrzygnięcie (09.11): grot to jeden `<svg data-slot="arrow">`, którego ścieżkę `lib/tip-arrow.ts` liczy raz na ustawienie dymka z rzeczywistej krawędzi pod grotem (długość boku, promień rogu, położenie grotu). Czubek zaokrąglony promieniem ¼ boku, boki pod 45° biegną do krawędzi, a przejście to krzywa Béziera styczna do boku i do krawędzi, prostej albo łuku kapsuły. Odpadły także stałe ścieżki: (6) proste boki do krawędzi bez przejścia — ostry kąt na łuku; (7) wklęsły łuk liczony tylko dla kapsuły — błędny przy innych rogach i przesuniętym grocie; (8) Bézier do prostej y = 0 — kolce na łuku. Ograniczenie: przy `curve="squircle"` róg liczony jak łuk koła. Właściciel: „ma być grot… jeden element, który będzie zawsze wyglądał tak samo niezależnie od niczego”.
 
+## Slider: wymagania właściciela przed kartą (09.11)
+
+- Slider to rodzina, nie jeden element: suwak z torem, liczba przeciągana w bok jak w Premiere (kursor ze strzałką lewo–prawo, zmiana zależna od odległości wyjścia), przełącznik lewo–prawo nad elementem jak w MangaShift. Strzałki góra–dół przy liczbie odrzucone („mi się akurat nie podobają”).
+- Kciuk w kropce to nie optymalny wygląd. Kierunek: pigułka zrobiona jak pigułka `ToggleGroup`, która się rozciąga i rośnie (wzór X). Ruch squishy.
+- Liczba: odrzucona animacja cyfr spadających od góry (wzór Emila Kowalskiego), bo wartość widać dopiero po chwili. Szybkość informacji ma pierwszeństwo: bieżąca wartość czytelna w tej samej klatce co ruch.
+- Referencja do zbadania: [@nitishkmrk · 2119695845679665608](https://x.com/nitishkmrk/status/2119695845679665608?a=eptGeftS6bLGc9kuVdk&s=20) („może być ok”), wszystkie slidery z inspiracji z X, Arc UI (Slider, Elastic slider, Range histogram slider, Ruler slider, Scrub input, Number field) i biblioteki komponentów.
+- Dalsze referencje: [@rezailmi · 2119238478575878597](https://x.com/rezailmi/status/2119238478575878597), [@mikkmartin · 1683083545810436097](https://x.com/mikkmartin/status/1683083545810436097) i [mikkmartin.co/repo/slider](https://mikkmartin.co/repo/slider) (tor z kropkami kroków), [@pacovitiello · 1857381157186240827](https://x.com/pacovitiello/status/1857381157186240827), [@colmtuite · 2059209881794576511](https://x.com/colmtuite/status/2059209881794576511), [@alibey_10 · 2044697870473842750](https://x.com/alibey_10/status/2044697870473842750), [@Pratyusshmd · 2115776460913066141](https://x.com/Pratyusshmd/status/2115776460913066141); do odnalezienia w inspiracjach: trzystopniowy suwak mocy myślenia modelu LLM („poprawnie zrobiony”), z tej samej serii co wzór Checkboxa, Radio i kwadratowego Switcha.
+- Elastic: tak. Linijka (ruler): nie („to są takie bariery”). Zakres z dwoma kciukami: nieważny. Kciuk-kulka, jeśli będzie, też squishy. Otwarte: jeden Slider czy dwa warianty (kulka i kwadratowa pigułka).
+- Właściciel: „jeszcze nie widziałem optymalnego tego slidera”. Następny krok: karta elementu i warianty do wyboru.
+- Kto, kiedy: właściciel, 2026-11-09.
+
+## Slider: runda 1 wariantów (09.11)
+
+- Pokazane na żywo (`/proposals`, próby do wyrzucenia): A „Kevin” (tor Switcha, wypełnienie akcentem, kciuk-kreska rosnący w kulkę), B „Nitish” (tor ToggleGroup, pigułka akcentu z wartością w środku), C „Mikk” (wiersz-pole z cichym wypełnieniem), D „kulka” (cienka szyna, okrągły kciuk).
+- Odrzucone przez właściciela:
+  - D w całości; spłaszczanie kulki przy kliknięciu to błąd;
+  - kulka pojawiająca się przy chwycie w A („ta kulka mi się nie podoba”);
+  - wypełnienie akcentem („akcent strasznie dużo zabiera… za bardzo po oczach”);
+  - w C wypełnienie, które nigdy nie znika do końca.
+- Przyjęte kierunki:
+  - odstępy i proporcje z B („odległość najlepsza jest w B”);
+  - pigułka stonowana: biała jak pigułka `raised` ToggleGroup („biały jest lepszy”) albo szara jak w C, do rozstrzygnięcia na żywo;
+  - kroki z przyciąganiem do kroku bez skakania, jak w A, wyczuwalne także w układzie B;
+  - docelowo połączenie tych elementów („połączenie tych wszystkich elementów daje optymalne rozwiązanie”).
+- Uwaga właściciela poza zakresem Slidera: znaki Radio, Checkboxa i podobne też powinny być białe w jasnym trybie, ale zależy to od filaru koloru (M-17); teraz bez zmian.
+- Kto, kiedy: właściciel, 2026-11-09. Zrzut rundy: `e3-choices/slider-round-1.png`.
+
+## Slider: runda 2 i 3 wariantów (09.11)
+
+- Pokazane na żywo: E (biała pigułka jak `raised` ToggleGroup) i F (szara jak `active`), każda w dwóch układach: wartość w pigułce albo etykieta i wartość w torze z pigułką-uchwytem.
+- Wybór właściciela: **E, biała pigułka** („wariant E jest bardzo ładny”, „ten biały jest taki fajny”, w ciemnym trybie „pięknie to wygląda”, kwadratowe rogi „też ładnie”). Kolorowe akcenty odrzucone ponownie. Układ z pigułką-uchwytem: „chyba nie”, bez ostatecznej decyzji.
+- Wymagania właściciela z oceny na żywo:
+  - kliknięcie nie zmienia niczego poza pigułką: tor i tekst nie drgają o piksel („każdy piksel ma być przemyślany”);
+  - tor rozciąga się tylko przy ciągnięciu za kraniec i ma twardy limit;
+  - kroki przyciągają, a przejście między krokami jest gładkie; ciągłe „lgnięcie” pod ręką (wykładnik 3) odrzucone („źle to działa”);
+  - szybki chwyt nie może spowalniać pigułki;
+  - nazwa kroku zmienia się jak tekst tooltipa (bez pewności: „chyba”, „nwm”);
+  - etykieta końca toru („100%”) przycięta przez pigułkę wygląda źle.
+- Rozstrzygnięcia prowadzącego w próbie (do oceny właściciela):
+  - kroki: pigułka stoi na kroku i dojeżdża do następnego przejściem `choice`, gdy wskaźnik minie połowę odstępu; przy skrajnych krokach bez odbicia;
+  - chwyt za pigułkę nie przesuwa jej (ruch względny 1:1), klik w pusty tor wysyła pigułkę lotem, który ląduje pod wskaźnikiem po czasie `choice` także przy ruchu ręki; klik w pigułkę bez ruchu ustawia wartość po puszczeniu;
+  - warstwy kompozytora powstają dopiero przy pierwszym ruchu, a warstwa toru tylko za krańcem; pomiar: klik bez ruchu nie zmienia żadnego piksela przy DSF 1 / 1,25 / 1,5 / 2;
+  - rozciągnięcie toru najwyżej 8 px, osiągane 120 px za krańcem;
+  - etykieta końca gaśnie, zanim pigułka do niej dojedzie;
+  - tekst nazwany (Low, Medium…) przenika się z rozmyciem w `follow`, liczby zmieniają się natychmiast.
+- Kto, kiedy: właściciel i prowadzący z upoważnienia, 2026-11-09. Zrzut rundy 2: `e3-choices/slider-round-2.png`.
+
+## Slider: wybór właściciela po rundzie 3 (09.11)
+
+- **Wariant E przyjęty jako wzór do planu** („Wariant E dla mnie jest tutaj po prostu już idealny”, „nie mam się do czego przyczepić”). Warunek właściciela: szybkość i optymalizacja.
+- Kroki: pigułka rusza dopiero, gdy kursor dojedzie do kropki kroku, nigdy przed kursorem („to nie powinno tak działać, że wyprzedza myszkę”); przeskok w połowie odstępu odrzucony. Tryb „Snap” najlepszy; pozostałe tryby mogą zostać jako przełączana mechanika, ale budujemy zachowanie domyślne.
+- Chwyt: bez skoku tylko w niewidocznej strefie wokół kreski („jako taka kulka… niewidoczne, ale jednak”); wciśnięcie w środku pigułki albo w pustym torze sprowadza koniec pigułki pod kursor. Łapanie pigułki za środek i ciągnięcie względne odrzucone („trochę dziwnie działa”).
+- Klik blisko kreski przesuwa pigułkę w kliknięte miejsce, a nie tylko odbija kreskę.
+- Kursor: zwykły; łapka odrzucona („łapka jest jednak do dupy, zwykła myszka jest ok”).
+- Kto, kiedy: właściciel, 2026-11-09.
+
+## Slider: uwagi właściciela do komponentu w laboratorium (09.11)
+
+- Plan przyjęty: „Dobra, dodaj do tej głównej strony ten komponent i tyle” (decyzje techniczne i pomiary: `e3-slider.md`).
+- Zgłoszenie: rosnąca wartość poszerzała stronę (poziomy pasek). Naprawione w przepisie (`e3-slider.md`, punkt 6).
+- Obserwacja, bez decyzji („nieważne, nie słuchaj mnie”): przy „Low” pigułka suwaka Effort ma za dużo miejsca, bo jej początek ma szerokość najdłuższego tekstu („Extra high”). Zostaje stała szerokość; powód w `e3-slider.md`, punkt 3.
+- Uwaga: liczby suwaka krokowego zmieniały się bez widocznego rozmycia („Liczby się nie zmieniają… nie mają tej animacji bluru”). Poprawione na słowo właściciela: przenikanie trwa tyle, co lot pigułki (`e3-slider.md`, punkt 10a). Suwak ciągły zostaje bez przenikania (plan, P5).
+- Komponent przyjęty do repozytorium: „Komituj, puszuj… Popraw tylko ten jeden element… i lecimy dalej”. Status w laboratorium: przyjęty z pracą do dokończenia (pomiary wydajności na spokojnej maszynie, filmy ruchu).
+- Kto, kiedy: właściciel, 2026-11-09.
+
+## Slider: liczby bez przejścia, słowa z rozmyciem (13.11)
+
+- Wybrano: liczba zmienia się w tej samej klatce, słowo przenika się z rozmyciem w czasie lotu pigułki. Zmiana liczby to dwa teksty różne tylko cyframi, separatorami i spacjami (`onlyDigitsChange` w `lib/range.ts`): `$100` → `$200` od razu, `Low` → `Medium` z rozmyciem. Dotyczy suwaka ciągłego i krokowego tak samo.
+- Dlaczego: „dla słów właśnie ma być rozmycie… dla liczb ma być normalnie… informacja, że liczby się zmieniają, musi być od razu”. Zgłoszenie: „$100, $200, $300… one się zmieniają zamiast normalnie się zmieniać”.
+- Odrzucone: rozmycie dla każdego suwaka krokowego (09.11, punkt 10a w `e3-slider.md`) — przy liczbach opóźniało odczyt; cyfry skaczące góra–dół — każda animacja opóźnia odczyt liczby.
+- Znany przypadek brzegowy: zmiana odmiany jednostki („1 day” → „2 days”) liczy się jako zmiana słowa.
+- Kto, kiedy: właściciel, 2026-11-13. PR #8 bez merge do dokończenia Slidera (właściciel).
+
+## Slider: rodzina na /proposals i layout przed dalszymi wariantami (13.11)
+
+- Wybrano: Slider zostaje w formie E; prototypy rodziny (oś czasu, głośność ze squishy ikonami, kroki, nazwa i wartość nad torem, mały bez tekstu, dymek nad kciukiem, Scrub) i makiety (odtwarzacz, inspektor „Rectangle 4”, czytnik, wysiłek modelu, filtr ceny) idą do repo jako `/proposals`, bo „wiele rzeczy jest fajnie zrobionych”, choć nie w 100 %. Kolejny krok to system layoutu (wyspy, podział na panele, uchwyty), dopiero w nim dalsze warianty Slidera.
+- Dlaczego: elementy budowane w próżni mogą się nie komponować; ekran i layout są studium przypadku („Slider nas teraz ogranicza… zrobimy od ogółu”).
+- Ustalenia z rozmowy: to jeden Slider z ustawieniami (`variant`: `pill` / `line`; miejsce wartości: `inside` / `above` / `bubble` / `none`; ikony `start` / `end`), nie osiem elementów; dymek bez strzałki, pokazywany przy chwycie i fokusie, przy najechaniu tylko na osi czasu; wypełnienie szare albo białe, nie akcent; rogi z osi `corners`, nie kwadratowy wariant; squish tylko tam, gdzie coś przeciągasz o granicę, z jednego źródła w silniku `motion`. Scrub to osobny element (pole).
+- Odrzucone: pierwsza wersja `/proposals` (13.11), „każdy z tych elementów jest błędny”; kwadratowy wariant jako osobny wygląd (błąd zlecenia: Kevin miał kwadratowy, właściciel go nie zamówił).
+- Kto, kiedy: właściciel, 2026-11-13.
+
 ## Do decyzji właściciela (otwarte)
 
 - Szara pigułka hover prześwituje przez półprzezroczystą pigułkę `active`, gdy na nią najeżdża (zrzut właściciela 05.11, `ToggleGroup` w karcie). 06.11: wariant „szara znika w locie nad wybraną” zrobiony i odrzucony przez właściciela („ona miała przelatywać pomiędzy, pod spodem”, „co z tego, że prześwitywała”), cofnięty. Wymaganie: szara pigułka przelatuje pod wybraną z widocznym ruchem przy przejściu na lewo i na prawo od wybranej opcji. Prześwit nie jest błędem do usunięcia kosztem tego przelotu. 07.11 (właściciel): obecne zachowanie zostaje („to, co jest obecnie, jest ok”); przy przezroczystej wybranej przelot pod nią ma być widoczny. Potencjalny problem do standaryzacji przesuwania (sliding), gdy będą wszystkie elementy z przesuwaniem: dziś pigułka niczego nie pamięta i wynik zależy od prędkości myszy. Wolny przejazd Day → Week (wybrana) → Month gasi ją nad Day przez 150 ms i zapala na Month bez lotu; szybki przelatuje z Day przez Week na Month (`fly` w `lib/indicator.ts`: pigułka, która zgasła, nie leci). Opcje: czysty hover bez pamięci, chowanie się pod wybraną, pamięć ostatniego widocznego miejsca (było w MangaShift przy przesuwaniu). Model właściciela: szara pigułka nie chowa się pod wybraną, a kliknięcie zamienia je miejscami.
+
+- ToggleGroup bez szarej pigułki hover: hover to podświetlenie opcji, wciśnięcie skaluje opcję jak przycisk, jedzie tylko wybrana pigułka ([@CJfromJBW](https://x.com/CJfromJBW/status/2112532936847139122), issue #7, właściciel 09.11: „też jest clean… on jest też poprawny”). Do rozstrzygnięcia przy przeglądzie ToggleGroup: drugi wariant `track` czy zamiana.
 
 - Budżet B6 `menubar.js` (3586 B > 3072 B): odchudzić pasek albo podnieść limit.
 

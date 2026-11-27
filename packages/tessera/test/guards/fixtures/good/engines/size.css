@@ -52,6 +52,12 @@
   initial-value: 1;
 }
 
+@property --ts-i-stretch {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
 @layer theme {
   :root,
   [data-size] {

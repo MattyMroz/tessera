@@ -14,6 +14,50 @@ Filmy oglądane jako arkusze klatek (6x6, z czasem), bez dźwięku; czasy ruchu 
 
 Opisane: 470 pozycji · wysokie 55 · średnie 60 · niskie 132 · bez wartości 223.
 
+## Strona komponentów
+
+### ★ !!! [Arc UI · uiarc.dev](https://uiarc.dev/docs/introduction) · właściciel 2026-11-09
+
+- **Dla Tessery:** cel końcowy: strona z komponentami tego typu, prosta, biało-czarna, z akcentami. Ok. 134 komponenty w rodzinach (przyciski, gesty, menu, pola, wybory, suwaki, pickery, nawigacja, nakładki, komunikaty, postęp), darmowe i Pro, cennik na komponenty.
+
+### ★ [@CJfromJBW](https://x.com/CJfromJBW) · właściciel 2026-11-09
+
+- **Dla Tessery:** „bardzo dobry UI designer”; przeglądać jego posty przy każdym elemencie. Pierwszy zapisany: ToggleGroup z wciśnięciem opcji zamiast szarej pigułki hover (issue #7).
+
+## Pasek narzędzi
+
+### ★ !!! [@rezailmi · 2020667598170452244](https://x.com/rezailmi/status/2020667598170452244) · właściciel 2026-11-13
+
+- **Dla Tessery:** „to jest to: rail jako pasek narzędzi”. Pływający pasek ikon (zaznaczona ikona na czarnej płytce, kreska-uchwyt z lewej, separatory, „⋮” z menu motywu i skrótów). Przeciągany za uchwyt i dokowany do krawędzi: przy dole poziomy, przy boku pionowy, zwinięty do małej pigułki z dwiema ikonami. Tooltip z nazwą i skrótem nad ikoną („Show rulers ⇧ R”). Klatki: `tmp/ref/insp/x/2026-02-09-x-reza-always-sweat-the-details-*`.
+
+## Układ wysp
+
+Właściciel 2026-11-13: „idealny układ Tessery, ale to jeszcze nie jest to”; wygląd do przedyskutowania. Klatki w `tmp/ref/insp/x/2026-11-0[13]-x-reza-*`.
+
+### ★ !!! [@rezailmi · 2117627221812875415](https://x.com/rezailmi/status/2117627221812875415) · właściciel 2026-11-13
+
+- **Dla Tessery:** „rubber band”: wyspy jak karty z odstępem, między nimi niewidoczny uchwyt; pod kursorem krótka kreska i kursor ↕, przeciąganie zmienia podział, za granicą wyspa rozciąga się z oporem i wraca.
+
+### ★ [@rezailmi · 2116835254560522404](https://x.com/rezailmi/status/2116835254560522404) · właściciel 2026-11-13
+
+- **Dla Tessery:** „pull handle”: ten sam uchwyt w pionie i w poziomie (krawędź okna ◂▸), kreska widoczna tylko pod kursorem; zamiast naszych trzech kropek między wyspami.
+
+### ★ [@rezailmi · 2116827519639027869](https://x.com/rezailmi/status/2116827519639027869) · właściciel 2026-11-13
+
+- **Dla Tessery:** „perfecting the edges”: zmiana rozmiaru podglądu za krawędź z wymiarem w plakietce (390 × 752) i panelem Inspect z polami X, Y, W, H.
+
+### [Sketch · sketch.com](https://www.sketch.com/) · właściciel 2026-11-13
+
+- **Dla Tessery:** układ edytora: lewa wyspa z drzewem warstw, płótno, prawa wyspa Inspect; pływające pigułki narzędzi u góry. Pola inspektora z etykietą w polu (`X 0`, `W 1729`, `↔ 72`), czyli kandydaci na Scrub; przełącznik kierunku stosu jako segmenty. Zrzut: `tmp/ref/insp/sketch/2026-11-13-inspector.png`.
+
+### Reza „handmade” · inspektor elementu · właściciel 2026-11-13 (zrzut w rozmowie)
+
+- **Dla Tessery:** pływający panel z zakładkami (Layout, Radius, Border, Shadow, Text); pola liczb z ikoną z lewej i strzałkami kroku ↕ z prawej („W 126”, „H 37 Fit”), padding z ikonami ↔ ↕, kierunek flex jako dwa segmenty, siatka wyrównania 3 × 3 z kropkami. Kandydat na drugi wygląd Scruba (ze strzałkami kroku).
+
+### Arc UI: ocena
+
+- **Ocena właściciela:** większość elementów niepoprawna, część pomysłów dobra. Bierzemy pomysły, nie wykonanie; każdy komponent dopracowany w 100 %. Na razie bez strony, tylko komponenty.
+
 ## Tooltip
 
 Właściciel 2026-11-08: wzorce tooltipa, przesuwania i przejścia tekstu; opisy klatek po pobraniu (`tmp/ref/insp/x/`).

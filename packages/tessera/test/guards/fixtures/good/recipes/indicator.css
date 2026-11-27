@@ -17,6 +17,15 @@
     stroke-dashoffset: 0;
   }
 
+  [data-recipe='indicator'][data-variant='fill'] > [data-slot='lane'] {
+    container-type: inline-size;
+    touch-action: pan-y;
+  }
+
+  [data-recipe='indicator'][data-variant='fill'] > [data-slot='lane'] > [data-slot='ride'] {
+    translate: calc(var(--ts-i-value) * 100cqi) 0;
+  }
+
   @media (forced-colors: active) {
     [data-recipe='indicator'] ~ [data-recipe='control'][aria-checked='true']:not(:disabled, [data-disabled]) {
       color: HighlightText;

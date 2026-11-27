@@ -1,0 +1,23 @@
+@layer components {
+  [data-component='slider'] {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  [data-component='slider'] > [data-slot='value'] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  [data-component='slider'] > [data-slot='marks'] {
+    grid-column: auto / -1;
+    grid-row: 1;
+  }
+
+  [data-component='slider'] > [data-slot='end'] {
+    grid-column: auto / -1;
+    grid-row: 1;
+    justify-self: end;
+  }
+}

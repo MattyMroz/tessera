@@ -58,7 +58,7 @@ const RECIPE_KEYWORDS = new Set([
   'clip', 'scroll', 'ellipsis', 'left', 'right', 'top', 'bottom', 'middle', 'isolate', 'solid', 'pointer', 'default', 'text',
   'pre', 'break-word', 'anywhere', 'border-box', 'content-box', 'cover', 'contain', 'both', 'uppercase', 'linear',
   'infinite', 'thin', 'balance', 'pretty', 'tabular-nums', 'trim-both', 'trim-start', 'trim-end', 'cap', 'alphabetic', 'content',
-  'inline-size', 'in', 'oklab',
+  'inline-size', 'in', 'oklab', 'pan-y',
 ])
 
 const SYSTEM_COLORS = new Set(['canvas', 'canvastext', 'buttonface', 'buttontext', 'highlight', 'highlighttext', 'graytext'])
@@ -72,6 +72,8 @@ const MATH_FUNCTIONS = new Set(['calc', 'min', 'max', 'clamp'])
 const RECIPE_FUNCTIONS = new Set([...MATH_FUNCTIONS, 'color-mix'])
 
 const SMALL_NUMBER = /^(?:0|-?1|100%)$/
+
+const LANE_LENGTH = '100cqi'
 
 const NUMBER = /(?<![\w.-])-?(?:\d+\.?\d*|\.\d+)[a-z%]*/g
 
@@ -359,7 +361,7 @@ function colorSpaceProblem(value: string): string | undefined {
 function recipePolicies(vendor: Readonly<Record<string, string>>): RecipePolicies {
   const plain: Policy = {
     functions: RECIPE_FUNCTIONS,
-    token: (token) => RECIPE_KEYWORDS.has(token) || SMALL_NUMBER.test(token),
+    token: (token) => RECIPE_KEYWORDS.has(token) || SMALL_NUMBER.test(token) || token === LANE_LENGTH,
     variable: (name) => ENGINE_OUTPUT.test(name) || PART_LOCAL.test(name) || INSTANCE_NAMES.has(name) || Object.hasOwn(vendor, name),
     keyword: (token) => (SYSTEM_COLORS.has(token) ? `system color outside @media ${FORCED_COLORS}` : LITERAL),
   }

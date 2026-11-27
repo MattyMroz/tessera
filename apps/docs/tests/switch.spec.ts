@@ -90,10 +90,23 @@ function geometry(target: Locator) {
   })
 }
 
-async function flightOf(target: Locator): Promise<number[]> {
+type Flown = HTMLElement & { flight?: Animation }
+
+async function flightOf(target: Locator, act: () => Promise<void>): Promise<number[]> {
+  await target.evaluate((element) => {
+    const ride = element.querySelector<Flown>('[data-recipe="indicator"]')
+    if (!ride) throw new Error('no thumb')
+    delete ride.flight
+    ride.animate = (...args: Parameters<Element['animate']>): Animation => {
+      const animation = Element.prototype.animate.apply(ride, args)
+      ride.flight ??= animation
+      return animation
+    }
+  })
+  await act()
   const read = (): Promise<number[]> =>
     target.evaluate((element) => {
-      const animation = element.querySelector('[data-recipe="indicator"]')?.getAnimations()[0]
+      const animation = element.querySelector<Flown>('[data-recipe="indicator"]')?.flight
       const frames = animation?.effect instanceof KeyframeEffect ? animation.effect.getKeyframes() : []
       return frames.map((frame) => new DOMMatrix(String(frame['transform'] ?? 'none')).m41)
     })
@@ -219,11 +232,9 @@ test('rides the thumb the same overshoot both ways and settles on its place', as
   const target = track(page, 'lg off')
   await target.scrollIntoViewIfNeeded()
   const start = await restOf(target)
-  await target.click()
-  const forth = await flightOf(target)
+  const forth = await flightOf(target, () => target.click())
   await settle(page)
-  await target.click()
-  const home = await flightOf(target)
+  const home = await flightOf(target, () => target.click())
   await settle(page)
   const over = Math.max(...forth) - (forth.at(-1) ?? 0)
   const under = (home.at(-1) ?? 0) - Math.min(...home)

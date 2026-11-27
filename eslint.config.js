@@ -32,6 +32,11 @@ export default defineConfig([
     rules: { 'tessera/no-local-appearance': 'off' },
   },
   {
+    name: 'lab/proposals-draw-prototypes-locally',
+    files: ['apps/docs/app/proposals/**/*.tsx'],
+    rules: { 'tessera/no-local-appearance': 'off', 'tessera/no-local-css': 'off' },
+  },
+  {
     name: 'lab/first-frame-probe',
     files: ['apps/docs/tests/lab.spec.ts'],
     rules: {
