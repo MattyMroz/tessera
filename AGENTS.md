@@ -15,7 +15,7 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 
 - IMPORTANT: testy tylko `bunx vitest run`, NIGDY `bun run test`.
 - Playwright tylko headless, 19 workerów (20 rdzeni logicznych bez jednego; decyzja właściciela 03.11) i jedno powtórzenie testu, który padł pod obciążeniem (`playwright.config.ts`); test, który pada dwa razy, to błąd. Pliki mierzące czas i klatki (`TIMED`: budżety, przycisk, menu, skala, Switch, dialog potwierdzenia, oraz `jump.spec.ts`) biegną po reszcie w projektach `*-timed` z jednym workerem, bo pod obciążeniem padają także w powtórce. WebKit ma 6 workerów: na Windows liczy animacje na głównym wątku, więc przy 19 testy klatek (tooltip, popup, symetria) padają. Gdy naraz idzie kilka ciężkich rzeczy, `--workers=6`.
-- Hook pre-push uruchamia cztery pierwsze kroki `bun run check` (typecheck, build, lint, vitest), w tej samej kolejności: build przed lintem, bo wtyczka ESLint konsumenta jest czytana z `dist`. Testy przeglądarkowe laboratorium biegną w CI (repo publiczne, minuty GitHuba za darmo; decyzja właściciela 03.11); merge do `main` tylko przy zielonym CI. Instalacja po klonie: `git config --local core.autocrlf false`, `prek install`, a w `apps/docs` `bunx playwright install chromium webkit` (bez przeglądarek `check` pada na ostatnim kroku; CI instaluje je sam).
+- Bramki projektu to hooki etapu manual (`prek run --hook-stage manual --all-files`, w CI job `check`): typecheck, build, przeglądarki i testy laboratorium, lint, vitest. Build idzie przed lintem, bo wtyczka ESLint konsumenta jest czytana z `dist`, dlatego `lint` i `test` stoją pod znacznikiem `Repository` w `.pre-commit-config.yaml`. Przy commicie hook `changed-tests-bun` uruchamia zmienione pliki testów vitest. Testy przeglądarkowe laboratorium biegną w CI (repo publiczne, minuty GitHuba za darmo; decyzja właściciela 03.11); merge do `main` tylko przy zielonym CI. Instalacja po klonie: `git config --local core.autocrlf false`, `prek install`, a w `apps/docs` `bunx playwright install chromium webkit` (bez przeglądarek `check` pada na ostatnim kroku; CI instaluje je sam).
 
 ## Twarde reguły
 
@@ -24,8 +24,6 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 - IMPORTANT: zaplanuj → wykonaj → oceń.
 - Materiały źródłowe: `tmp/index.md`.
 - IMPORTANT: commit i push tylko na wyraźne słowo właściciela. Subagenci nie wykonują żadnych komend git.
-- `main` dostaje tylko squash merge PR (hook `no-commit-to-branch`). Praca na branchach w worktree `.worktrees/<nazwa>`. Tytuł PR = nagłówek commita, opis PR = streszczenie (ustawienie repo: domyślna wiadomość squash = tytuł i opis PR).
-- Commit: `type(scope): description`, scope obowiązkowy z zamkniętej listy `--scopes` w `.pre-commit-config.yaml`; pod nagłówkiem streszczenie. Kontrole nie biegną przy commicie: szybkie idą w hooku pre-push, przeglądarkowe w CI (decyzja właściciela 03.11). Zero śladów AI w commitach i PR. Strażnicy hooków w `.hooks/` to kopie z presetu `agents` (`presets/hooks/assets/hooks/`); nie edytuj ich tutaj, aktualizacja to ponowne skopiowanie.
 - Kod etapu nie powstaje bez kontraktu w `docs/plans/` zaakceptowanego przez właściciela.
 - Status przed oceną właściciela na żywo, w kompozycji, to najwyżej „gotowe do oceny”.
 - Zero legacy: bez warstw zgodności z v1/v2, aliasów starych nazw i słowa `legacy` w kodzie. Kod przenoszony z v2 przepisuj na model v3.
@@ -34,6 +32,14 @@ SKIP=no-commit-to-branch prek run --all-files   # hooki commitów na całym drze
 - Kod, nazwy, git i tekst UI po angielsku; dokumenty w `docs/` i ten plik po polsku.
 - Zależności tylko przez bun: `bun add` w katalogu członka workspace, wspólne wersje przez `catalog:` w korzeniowym `package.json`.
 - YOU MUST edytować pliki tylko narzędziami Edit/Write. Nigdy PowerShell (`Set-Content`, `Out-File`) ani skrypty: PS 5.1 robi mojibake z polskich znaków. Pliki są UTF-8 + LF (`.gitattributes`).
+
+## Git
+
+- Commit: wiadomość po angielsku według standardu commita, `type(scope): summary` ze scope'em z `--scopes=` w `.pre-commit-config.yaml` albo `repo`, potem sekcje `Problem:`, `Change:` i `Verification:`; sprawdza ją hook `commit-message`.
+- Zero atrybucji AI w commitach i PR (trailery, stopki, emoji), także gdy host o nią prosi.
+- Pliki dodawaj po nazwie, nigdy `git add .`; bez `--no-verify`. Worktree'y tylko w `.worktrees/<nazwa>`.
+- Commit sprawdza pliki i nagłówek, push sprawdza gałąź, wiadomości i sekrety, a bramki projektu (typy, testy, build) biegną w CI i lokalnie przez `prek run --hook-stage manual --all-files`. Strażnicy w `.hooks/` to kopie z `agents`; nie edytuj ich w repo.
+- `main` dostaje tylko squash merge PR przy zielonym CI (hooki `no-commit-to-branch` i `ship-push`); tytuł i opis PR stają się commitem na `main`.
 
 ## Praca nad elementem (decyzja właściciela 03.11)
 

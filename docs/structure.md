@@ -22,15 +22,16 @@ tessera/
 ├── vitest.config.ts               # projects: ["packages/*"], żeby nie zbierać testów z .worktrees/
 ├── eslint.config.js               # ESLint (U34): tryb komponentów, wtyczka konsumenta dla apps/docs, dwa wyjątki D23
 ├── _typos.toml                    # wyjątki słownika hooka typos
-├── .pre-commit-config.yaml        # preset agents: CORE, DATA FILES, SPELLING, MARKDOWN + FRONTEND (pre-push = kroki check)
+├── .pre-commit-config.yaml        # szablon bramek agents; bramki projektu (kroki check) w etapie manual
+├── .hooks/                        # kopie strażników z agents
 ├── .gitignore / .gitattributes    # preset agents + wyjątek na wzorce zrzutów
 ├── .agent-skills
 ├── .claude/settings.json
 ├── .worktrees/.gitkeep            # worktree w repo, nie obok (preset agents)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/            # bug, feature, task, config
-│   ├── pull_request_template.md   # Summary + Validation (preset agents)
-│   └── workflows/ci.yml           # przeglądarki Playwrighta, bun run check, prek, kształt commitów na main
+│   ├── pull_request_template.txt  # Problem, Change, Verification (preset agents)
+│   └── workflows/ci.yml           # szablon CI agents: job hooks (hooki, tytuł i opis PR), job check (etapy pre-push i manual)
 ├── docs/                          # dokumenty projektu (nie trafiają do paczki)
 │   ├── specification.md           # jedyne źródło decyzji
 │   ├── structure.md
